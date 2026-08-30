@@ -1,0 +1,53 @@
+name: nf-codonyat CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nextflow
+        uses: nf-core/setup-nextflow@v1
+        with:
+          version: latest
+
+      - name: Lint pipeline
+        run: nextflow lint .
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        profile: [conda, docker]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nextflow
+        uses: nf-core/setup-nextflow@v1
+        with:
+          version: latest
+
+      - name: Build Docker image
+        if: matrix.profile == 'docker'
+        run: docker build -t nf-codonyat:test .
+
+      - name: Pull Docker image
+        if: matrix.profile == 'docker'
+        run: docker pull nf-codonyat:test || true
+
+      - name: Run tests
+        run: |
+          nextflow run . \
+            -profile test,!{matrix.profile} \
+            --outdir /tmp/nf-codonyat-test \
+            --samplesheet assets/testdata/samplesheet.csv \
+            --reference assets/testdata/reference.fasta \
+            --amplicons assets/testdata/amplicons.tsv
+        env:
+          NXF_ANSI_LOG: false

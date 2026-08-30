@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "nf-codonyat samplesheet",
+  "type": "object",
+  "required": [
+    "sample",
+    "sam"
+  ],
+  "properties": {
+    "sample": {
+      "type": "string",
+      "description": "Sample identifier"
+    },
+    "sam": {
+      "type": "string",
+      "description": "Path to SAM file"
+    }
+  }
+}

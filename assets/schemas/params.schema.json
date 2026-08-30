@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "nf-codonyat params",
+  "type": "object",
+  "required": [
+    "samplesheet",
+    "reference",
+    "amplicons"
+  ],
+  "properties": {
+    "samplesheet": {
+      "type": "string",
+      "description": "CSV with columns: sample,sam"
+    },
+    "reference": {
+      "type": "string",
+      "description": "Annotated reference FASTA (header must contain protein annotations)"
+    },
+    "amplicons": {
+      "type": "string",
+      "description": "Amplicon definitions TSV (7 columns: label,protein,reference,5p_seq,3p_seq,start,end)"
+    },
+    "protein": {
+      "type": "string",
+      "default": "RT",
+      "description": "Protein name to analyse"
+    },
+    "ratio_upper": {
+      "type": "number",
+      "default": 3.16227766,
+      "description": "Strand ratio upper threshold"
+    },
+    "ratio_lower": {
+      "type": "number",
+      "default": 0.316227766,
+      "description": "Strand ratio lower threshold"
+    },
+    "entropy_threshold": {
+      "type": "number",
+      "default": 0.0,
+      "description": "Minimum Shannon entropy per position"
+    },
+    "outdir": {
+      "type": "string",
+      "default": "results"
+    },
+    "publish_dir_mode": {
+      "type": "string",
+      "default": "copy"
+    }
+  }
+}
