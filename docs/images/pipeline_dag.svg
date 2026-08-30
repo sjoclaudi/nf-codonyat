@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 480" font-family="sans-serif">
+  <!-- Background -->
+  <rect width="820" height="480" fill="#1e1e2e"/>
+
+  <!-- Title -->
+  <text x="410" y="32" text-anchor="middle" fill="#cdd6f4" font-size="18" font-weight="bold">nf-codonyat — Pipeline DAG</text>
+
+  <!-- === Legend === -->
+  <rect x="600" y="52" width="200" height="130" rx="6" fill="#313244" stroke="#585b70" stroke-width="1"/>
+  <text x="615" y="72" fill="#cdd6f4" font-size="12" font-weight="bold">Legend</text>
+
+  <!-- Legend items -->
+  <rect x="610" y="82" width="16" height="16" rx="3" fill="#89b4fa"/>
+  <text x="634" y="95" fill="#cdd6f4" font-size="11">Process</text>
+
+  <rect x="610" y="108" width="16" height="16" rx="3" fill="#a6e3a1"/>
+  <text x="634" y="121" fill="#cdd6f4" font-size="11">Subworkflow</text>
+
+  <rect x="610" y="134" width="16" height="16" rx="3" fill="#cba6f7"/>
+  <text x="634" y="147" fill="#cdd6f4" font-size="11">Output / File</text>
+
+  <rect x="610" y="160" width="16" height="16" rx="3" fill="#f38ba8"/>
+  <text x="634" y="173" fill="#cdd6f4" font-size="11">Gate / Check</text>
+
+  <!-- === VALIDATE_INPUT subworkflow === -->
+  <rect x="20" y="80" width="160" height="80" rx="8" fill="#a6e3a1" opacity="0.15" stroke="#a6e3a1" stroke-width="2"/>
+  <text x="100" y="105" text-anchor="middle" fill="#a6e3a1" font-size="13" font-weight="bold">VALIDATE_INPUT</text>
+  <text x="100" y="122" text-anchor="middle" fill="#cdd6f4" font-size="10">subworkflow</text>
+  <line x1="100" y1="80" x2="100" y2="68" stroke="#6c7086" stroke-width="1.5"/>
+  <text x="100" y="64" text-anchor="middle" fill="#6c7086" font-size="9">params:</text>
+  <text x="100" y="74" text-anchor="middle" fill="#6c7086" font-size="9">samplesheet,</text>
+  <text x="100" y="82" text-anchor="middle" fill="#6c7086" font-size="9">reference, amplicons</text>
+
+  <!-- Validation checks inside subworkflow box -->
+  <rect x="30" y="118" width="140" height="10" rx="2" fill="#313244"/>
+  <text x="100" y="127" text-anchor="middle" fill="#cdd6f4" font-size="9">✓ header cols</text>
+  <rect x="30" y="132" width="140" height="10" rx="2" fill="#313244"/>
+  <text x="100" y="141" text-anchor="middle" fill="#cdd6f4" font-size="9">✓ SAM files exist</text>
+  <rect x="30" y="146" width="140" height="10" rx="2" fill="#313244"/>
+  <text x="100" y="155" text-anchor="middle" fill="#cdd6f4" font-size="9">✓ 7-col amplicons</text>
+
+  <!-- Arrow from VALIDATE_INPUT to scatter -->
+  <line x1="180" y1="120" x2="215" y2="120" stroke="#89b4fa" stroke-width="2"/>
+  <polygon points="215,116 223,120 215,124" fill="#89b4fa"/>
+  <text x="198" y="114" text-anchor="middle" fill="#89b4fa" font-size="10">3 validated</text>
+  <text x="198" y="124" text-anchor="middle" fill="#89b4fa" font-size="10">files</text>
+
+  <!-- === SAMPLESHEET === -->
+  <rect x="225" y="88" width="120" height="64" rx="6" fill="#cba6f7" opacity="0.2" stroke="#cba6f7" stroke-width="1.5"/>
+  <text x="285" y="112" text-anchor="middle" fill="#cba6f7" font-size="12" font-weight="bold">samplesheet.csv</text>
+  <text x="285" y="128" text-anchor="middle" fill="#cdd6f4" font-size="10">sample, sam</text>
+  <text x="285" y="142" text-anchor="middle" fill="#cdd6f4" font-size="10">(N rows)</text>
+
+  <!-- Arrow from SAMPLESHEET down -->
+  <line x1="285" y1="152" x2="285" y2="175" stroke="#89b4fa" stroke-width="1.5"/>
+  <polygon points="281,175 285,183 289,175" fill="#89b4fa"/>
+
+  <!-- === SCATTER label === -->
+  <rect x="225" y="185" width="120" height="24" rx="4" fill="#313244" stroke="#f38ba8" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="285" y="201" text-anchor="middle" fill="#f38ba8" font-size="11">scatter (per sample)</text>
+
+  <!-- === CODONYAT_RUN boxes (3x) === -->
+  <!-- Box 1 -->
+  <rect x="40" y="220" width="160" height="80" rx="8" fill="#89b4fa" opacity="0.15" stroke="#89b4fa" stroke-width="2"/>
+  <text x="120" y="244" text-anchor="middle" fill="#89b4fa" font-size="13" font-weight="bold">CODONYAT_RUN</text>
+  <line x1="55" y1="252" x2="185" y2="252" stroke="#585b70" stroke-width="0.5"/>
+  <text x="120" y="266" text-anchor="middle" fill="#cdd6f4" font-size="10">codonyat-runner</text>
+  <text x="120" y="280" text-anchor="middle" fill="#cdd6f4" font-size="10">--csv-path, --xml-path</text>
+  <text x="120" y="294" text-anchor="middle" fill="#6c7086" font-size="9">sample_1.sam →</text>
+  <text x="120" y="304" text-anchor="middle" fill="#6c7086" font-size="9">sample_1.tsv + .xml</text>
+
+  <!-- Box 2 -->
+  <rect x="220" y="220" width="160" height="80" rx="8" fill="#89b4fa" opacity="0.15" stroke="#89b4fa" stroke-width="2"/>
+  <text x="300" y="244" text-anchor="middle" fill="#89b4fa" font-size="13" font-weight="bold">CODONYAT_RUN</text>
+  <line x1="235" y1="252" x2="365" y2="252" stroke="#585b70" stroke-width="0.5"/>
+  <text x="300" y="266" text-anchor="middle" fill="#cdd6f4" font-size="10">codonyat-runner</text>
+  <text x="300" y="280" text-anchor="middle" fill="#cdd6f4" font-size="10">--csv-path, --xml-path</text>
+  <text x="300" y="294" text-anchor="middle" fill="#6c7086" font-size="9">sample_2.sam →</text>
+  <text x="300" y="304" text-anchor="middle" fill="#6c7086" font-size="9">sample_2.tsv + .xml</text>
+
+  <!-- Box 3 -->
+  <rect x="400" y="220" width="160" height="80" rx="8" fill="#89b4fa" opacity="0.15" stroke="#89b4fa" stroke-width="2"/>
+  <text x="480" y="244" text-anchor="middle" fill="#89b4fa" font-size="13" font-weight="bold">CODONYAT_RUN</text>
+  <line x1="415" y1="252" x2="545" y2="252" stroke="#585b70" stroke-width="0.5"/>
+  <text x="480" y="266" text-anchor="middle" fill="#cdd6f4" font-size="10">codonyat-runner</text>
+  <text x="480" y="280" text-anchor="middle" fill="#cdd6f4" font-size="10">--csv-path, --xml-path</text>
+  <text x="480" y="294" text-anchor="middle" fill="#6c7086" font-size="9">sample_N.sam →</text>
+  <text x="480" y="304" text-anchor="middle" fill="#6c7086" font-size="9">sample_N.tsv + .xml</text>
+
+  <!-- Ellipsis -->
+  <text x="570" y="262" fill="#6c7086" font-size="18">⋯</text>
+
+  <!-- Arrows from SAMPLESHEET down to each box -->
+  <line x1="100" y1="209" x2="120" y2="220" stroke="#89b4fa" stroke-width="1.5"/>
+  <line x1="285" y1="209" x2="300" y2="220" stroke="#89b4fa" stroke-width="1.5"/>
+  <line x1="285" y1="209" x2="480" y2="220" stroke="#89b4fa" stroke-width="1.5"/>
+
+  <!-- Reference + amplicons to each CODONYAT_RUN -->
+  <line x1="60" y1="160" x2="120" y2="220" stroke="#89b4fa" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="160" y1="160" x2="300" y2="220" stroke="#89b4fa" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="160" y1="160" x2="480" y2="220" stroke="#89b4fa" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- === Arrow down from CODONYAT_RUNs === -->
+  <line x1="480" y1="300" x2="480" y2="325" stroke="#89b4fa" stroke-width="2"/>
+  <polygon points="476,325 480,333 484,325" fill="#89b4fa"/>
+  <text x="500" y="318" fill="#89b4fa" font-size="10">all TSVs</text>
+
+  <!-- === CODONYAT_SUMMARY === -->
+  <rect x="380" y="335" width="200" height="70" rx="8" fill="#89b4fa" opacity="0.15" stroke="#89b4fa" stroke-width="2"/>
+  <text x="480" y="359" text-anchor="middle" fill="#89b4fa" font-size="13" font-weight="bold">CODONYAT_SUMMARY</text>
+  <line x1="395" y1="367" x2="565" y2="367" stroke="#585b70" stroke-width="0.5"/>
+  <text x="480" y="381" text-anchor="middle" fill="#cdd6f4" font-size="10">codonyat_summary.py</text>
+  <text x="480" y="395" text-anchor="middle" fill="#cdd6f4" font-size="10">merge TSVs → SAMPLE col</text>
+
+  <!-- === Output files === -->
+  <rect x="630" y="340" width="160" height="60" rx="6" fill="#cba6f7" opacity="0.2" stroke="#cba6f7" stroke-width="1.5"/>
+  <text x="710" y="360" text-anchor="middle" fill="#cba6f7" font-size="11" font-weight="bold">results/</text>
+  <text x="710" y="376" text-anchor="middle" fill="#cdd6f4" font-size="10">codonyat_summary.tsv</text>
+  <text x="710" y="390" text-anchor="middle" fill="#cdd6f4" font-size="10">samples/{id}/*.tsv,*.xml</text>
+
+  <!-- Arrow to output -->
+  <line x1="580" y1="370" x2="625" y2="370" stroke="#cba6f7" stroke-width="1.5"/>
+  <polygon points="625,366 633,370 625,374" fill="#cba6f7"/>
+
+  <!-- === Footer === -->
+  <line x1="20" y1="450" x2="800" y2="450" stroke="#313244" stroke-width="1"/>
+  <text x="20" y="465" fill="#6c7086" font-size="10">nf-codonyat v0.1.0  ·  https://github.com/sjoclaudi/nf-codonyat  ·  MIT License</text>
+  <text x="800" y="465" text-anchor="end" fill="#6c7086" font-size="10">Nextflow DSL2</text>
+</svg>
