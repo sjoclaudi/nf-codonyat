@@ -20,6 +20,19 @@ jobs:
       - name: Lint pipeline
         run: nextflow lint .
 
+      - name: Install nf-test
+        run: |
+          # nf-test is a standalone binary
+          curl -sL https://github.com/askimed/nf-test/releases/download/0.8.0/nf-test -o /usr/local/bin/nf-test
+          chmod +x /usr/local/bin/nf-test
+          nf-test --version
+
+      - name: Run nf-tests
+        run: nf-test test/main.nf.test
+        env:
+          NXF_ANSI_LOG: false
+          JAVA_HOME: /usr/lib/jvm/default-java
+
   test:
     runs-on: ubuntu-latest
     strategy:

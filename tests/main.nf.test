@@ -1,0 +1,131 @@
+/*
+ * nf-codonyat — main pipeline test
+ *
+ * Requires:  nf-test  (https://code.askimed.com/nf-test/)
+ * Run with:  nf-test test/main.nf.test
+ */
+
+nextflow_pipeline {
+
+    name "nf-codonyat – full pipeline"
+    script "main.nf"
+
+    test("Full pipeline: single sample produces TSV + XML + summary") {
+
+        set {
+            params.samplesheet = "${projectDir}/assets/testdata/samplesheet.csv"
+            params.reference   = "${projectDir}/assets/testdata/reference.fasta"
+            params.amplicons   = "${projectDir}/assets/testdata/amplicons.tsv"
+            params.outdir      = "${outputDir}"
+        }
+
+        when {
+            process {
+                """
+                main()
+                """
+            }
+        }
+
+        then {
+            // Per-sample outputs
+            def sampleDir = path("${outputDir}/samples/sample1")
+            assert sampleDir.exists()                              : "Per-sample directory missing"
+            assert sampleDir.resolve("sample1.tsv").exists()       : "sample1.tsv missing"
+            assert sampleDir.resolve("sample1.xml").exists()       : "sample1.xml missing"
+
+            // TSV header checks
+            def tsv = path("${outputDir}/samples/sample1/sample1.tsv")
+            def lines = tsv.readLines()
+            assert lines.size() >= 2          : "TSV must have header + >=1 data row, got ${lines.size()}"
+            assert lines[0].contains("FILE")  : "TSV header missing FILE column"
+            assert lines[0].contains("PROTEIN") : "TSV header missing PROTEIN column"
+            assert lines[0].contains("FREQ")  : "TSV header missing FREQ column"
+            assert lines[0].contains("RATIO") : "TSV header missing RATIO column"
+
+            // All data rows belong to RT protein (single-protein run)
+            lines.drop(1).each { line ->
+                assert line.contains("RT") : "Non-RT row in RT-only run: ${line}"
+            }
+
+            // XML structure checks
+            def xml = path("${outputDir}/samples/sample1/sample1.xml")
+            def xmlText = xml.text
+            assert xmlText.contains("<SamContainer>") : "XML missing <SamContainer> root"
+            assert xmlText.contains("<Position")      : "XML missing <Position> elements"
+
+            // Combined summary TSV
+            def summaryTsv = path("${outputDir}/codonyat_summary.tsv")
+            assert summaryTsv.exists() : "codonyat_summary.tsv missing"
+            def summaryLines = summaryTsv.readLines()
+            assert summaryLines.size() >= 2           : "Summary must have header + >=1 row"
+            assert summaryLines[0].contains("SAMPLE") : "Summary header missing SAMPLE column"
+            assert summaryLines.drop(1).any { it.contains("sample1") } :
+                "Summary missing sample1 entry"
+
+            // Pipeline info directory
+            assert path("${outputDir}/pipeline_info").exists() :
+                "pipeline_info directory missing"
+        }
+    }
+
+    test("Pipeline fails when --samplesheet is missing") {
+        set {
+            params.reference = "${projectDir}/assets/testdata/reference.fasta"
+            params.amplicons = "${projectDir}/assets/testdata/amplicons.tsv"
+        }
+
+        when {
+            process {
+                """
+                main()
+                """
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert workflow.exitStatus == 1
+        }
+    }
+
+    test("Pipeline fails when --reference is missing") {
+        set {
+            params.samplesheet = "${projectDir}/assets/testdata/samplesheet.csv"
+            params.amplicons   = "${projectDir}/assets/testdata/amplicons.tsv"
+        }
+
+        when {
+            process {
+                """
+                main()
+                """
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert workflow.exitStatus == 1
+        }
+    }
+
+    test("Pipeline fails when --amplicons is missing") {
+        set {
+            params.samplesheet = "${projectDir}/assets/testdata/samplesheet.csv"
+            params.reference   = "${projectDir}/assets/testdata/reference.fasta"
+        }
+
+        when {
+            process {
+                """
+                main()
+                """
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert workflow.exitStatus == 1
+        }
+    }
+}
