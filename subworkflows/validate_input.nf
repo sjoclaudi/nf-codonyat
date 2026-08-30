@@ -3,106 +3,114 @@
  *  subworkflows/validate_input.nf
  *
  *  Checks:
- *    • samplesheet exists and has header: sample,sam
- *    • reference FASTA is non-empty, single-record, annotated
+ *    • samplesheet exists, has header sample,sam, SAMs are real
+ *    • reference FASTA is non-empty and has protein annotations
  *    • amplicons TSV has exactly 7 columns
+ *
+ *  Input (plain values, not channels):
+ *    val samplesheet_path  — path string
+ *    val reference_path    — path string
+ *    val amplicons_path    — path string
+ *
  *  Emits:
- *    • samplesheet_ch  — same path (pass-through)
- *    • reference_ch    — same path (pass-through)
- *    • amplicons_ch    — same path (pass-through)
+ *    out.samplesheet      — path (raw CSV)
+ *    out.samples          — [val(sample_id), path(sam_file)] channel
+ *    out.reference         — path (validated FASTA)
+ *    out.amplicons        — path (validated TSV)
  * =========================================================
  */
 
 workflow VALIDATE_INPUT {
     take:
-    // Channels created from params.* at the call site
-    samplesheet_ch  // path (nullable)
-    reference_ch    // path (nullable)
-    amplicons_ch    // path (nullable)
+    samplesheet_val  // String — file path
+    reference_val    // String — file path
+    amplicons_val    // String — file path
 
     main:
 
-    // ── 1. Check samplesheet ──────────────────────────────
-    if (samplesheet_ch.isEmpty()) {
-        log.error('ERROR: --samplesheet is required. See --help.')
-        exit 1
-    }
-
+    // ── 1. Samplesheet ────────────────────────────────────
     Channel
-        .fromPath(samplesheet_ch, checkIfExists: true)
-        .ifEmpty { log.error("Samplesheet not found: ${samplesheet_ch}"); exit 1 }
+        .fromPath(samplesheet_val, checkIfExists: true)
+        .ifEmpty {
+            log.error "Samplesheet not found: ${samplesheet_val}"
+            exit 1
+        }
         .set { ss_path_ch }
 
-    // Parse samplesheet: validate header + at least one data row
+    // Parse samplesheet, validate header, emit [sample_id, sam_path]
     ss_valid_ch = ss_path_ch
         .splitCsv(header: true, sep: ',')
         .map { row ->
             if (!row.containsKey('sample') || !row.containsKey('sam')) {
-                log.error("Samplesheet must have columns: sample,sam")
+                log.error "Samplesheet must have columns: sample,sam"
                 exit 1
             }
-            if (!file(row.sam).exists()) {
-                log.error("SAM file not found: ${row.sam}")
+            def samFile = file(row.sam)
+            if (!samFile.exists()) {
+                log.error "SAM file not found: ${row.sam}"
                 exit 1
             }
-            [ row.sample, file(row.sam) ]
+            [ row.sample, samFile ]
         }
-        .ifEmpty { log.error('Samplesheet is empty or has no valid rows'); exit 1 }
-        .set { sample_sam_ch }   // [sample_id, sam_path]
+        .ifEmpty {
+            log.error 'Samplesheet is empty or has no valid rows'
+            exit 1
+        }
 
-    // ── 2. Check reference FASTA ──────────────────────────
-    if (reference_ch.isEmpty()) {
-        log.error('ERROR: --reference is required.')
-        exit 1
-    }
-
+    // ── 2. Reference FASTA ─────────────────────────────────
     Channel
-        .fromPath(reference_ch, checkIfExists: true)
-        .ifEmpty { log.error("Reference not found: ${reference_ch}"); exit 1 }
+        .fromPath(reference_val, checkIfExists: true)
+        .ifEmpty {
+            log.error "Reference not found: ${reference_val}"
+            exit 1
+        }
         .set { ref_path_ch }
 
-    // Validate FASTA structure: must contain protein annotation header
-    ref_valid_ch = ref_path_ch
-        .splitFasta(record: [id: true, sequence: true])
+    // Validate: FASTA header must contain protein annotation parentheses
+    ref_path_ch
+        .splitFasta(record: [id: true])
         .first()
         .map { rec ->
             if (!rec.id.contains('(') || !rec.id.contains(')')) {
-                log.warn("Reference header may lack protein annotation. Expected: '>ID PR(Desc):start-end;RT(...);...'")
+                log.warn "Reference header may lack protein annotation. " +
+                         "Expected format: '>ID PR(Desc):start-end;RT(...);...'"
             }
-            rec.sequence
         }
-        .first()     // take only the sequence text (pass reference path forward)
-        .map { ref_path_ch }   // emit the path, not the sequence
-        .set { reference_validated_ch }
+        .subscribe { /* just the side-effect */ }
 
-    // ── 3. Check amplicons TSV ───────────────────────────
-    if (amplicons_ch.isEmpty()) {
-        log.error('ERROR: --amplicons is required.')
-        exit 1
-    }
+    // Emit the reference path (validated)
+    ref_valid_ch = ref_path_ch
 
+    // ── 3. Amplicons TSV ───────────────────────────────────
     Channel
-        .fromPath(amplicons_ch, checkIfExists: true)
-        .ifEmpty { log.error("Amplicons file not found: ${amplicons_ch}"); exit 1 }
+        .fromPath(amplicons_val, checkIfExists: true)
+        .ifEmpty {
+            log.error "Amplicons file not found: ${amplicons_val}"
+            exit 1
+        }
         .set { amp_path_ch }
 
-    // Validate 7-column TSV format (allow both tab and comma)
-    amp_valid_ch = amp_path_ch
-        .splitCsv(sep: /\t|,\s*/)
+    // Validate: must have exactly 7 tab-separated columns
+    amp_path_ch
+        .splitCsv(sep: '\t')
         .first()
         .map { fields ->
             if (fields.size() != 7) {
-                log.error("Amplicons file must have 7 columns (label,protein,reference,5p_seq,3p_seq,start,end). Found: ${fields.size()}")
+                log.error "Amplicons file must have 7 columns " +
+                          "(label,protein,reference,5p_seq,3p_seq,start,end). " +
+                          "Found: ${fields.size()}"
                 exit 1
             }
         }
-        .map { amp_path_ch }   // emit the path
-        .set { amplicons_validated_ch }
+        .subscribe { /* just the side-effect */ }
+
+    // Emit the amplicons path (validated)
+    amp_valid_ch = amp_path_ch
 
     // ── Emit ──────────────────────────────────────────────
     emit:
-    samplesheet = ss_path_ch            // path (raw CSV file)
-    samples     = sample_sam_ch         // [sample_id, sam_path]
-    reference   = reference_validated_ch // path
-    amplicons   = amplicons_validated_ch // path
+    samplesheet = ss_path_ch      // path
+    samples     = ss_valid_ch     // [val(sample_id), path(sam)]
+    reference   = ref_valid_ch    // path
+    amplicons   = amp_valid_ch    // path
 }

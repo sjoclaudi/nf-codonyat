@@ -32,13 +32,25 @@ def printVersion() {
     """.stripIndent()
 }
 
-// ─── Load subworkflows ──────────────────────────────────────
+// ─── Validate required params before any expensive work ─────
+
+if (!params.samplesheet) {
+    log.error 'ERROR: --samplesheet is required. See --help.'
+    exit 1
+}
+if (!params.reference) {
+    log.error 'ERROR: --reference is required.'
+    exit 1
+}
+if (!params.amplicons) {
+    log.error 'ERROR: --amplicons is required.'
+    exit 1
+}
+
+// ─── Load subworkflows & workflows ─────────────────────────
 
 include { VALIDATE_INPUT } from './subworkflows/validate_input'
-
-// ─── Load workflows ─────────────────────────────────────────
-
-include { CODONYAT } from './workflows/codonyat'
+include { CODONYAT }       from './workflows/codonyat'
 
 // ─── Main workflow ─────────────────────────────────────────
 
@@ -46,12 +58,20 @@ workflow {
     printVersion()
 
     // Validate samplesheet, reference, and amplicons
-    def (samplesheet_ch, reference_ch, amplicons_ch) = VALIDATE_INPUT()
+    // Pass plain values (not channels) — subworkflow wraps them internally
+    VALIDATE_INPUT(
+        params.samplesheet,
+        params.reference,
+        params.amplicons
+    )
 
     // Run the codonyat pipeline
+    // VALIDATE_INPUT.out.samples  → [val(sample_id), path(sam_file)]
+    // VALIDATE_INPUT.out.reference → path
+    // VALIDATE_INPUT.out.amplicons → path
     CODONYAT(
-        samplesheet_ch,     // [val(sample_id), path(sam_file)]
-        reference_ch,       // path(reference.fasta)
-        amplicons_ch        // path(amplicons.tsv)
+        VALIDATE_INPUT.out.samples,
+        VALIDATE_INPUT.out.reference,
+        VALIDATE_INPUT.out.amplicons
     )
 }

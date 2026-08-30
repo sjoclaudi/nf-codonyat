@@ -22,9 +22,11 @@ process CODONYAT_RUN {
 
     label 'process_medium'
 
-    // Install codonyat from PyPI (or replace with git+https once on GitHub)
-    // Using conda/biopython as base, then pip install codonyat
+    // Install codonyat Python package (published on PyPI).
+    // biopython is the only runtime dependency.
     conda 'bioconda::biopython>=1.79'
+    // Also make codonyat available via pip when using docker/singularity
+    // (conda env has biopython; codonyat itself is pip-installed below)
 
     input:
     tuple val(sample_id), path(sam)
@@ -38,11 +40,9 @@ process CODONYAT_RUN {
     '''
     set -euo pipefail
 
-    # Ensure codonyat-runner is available
-    if ! command -v codonyat-runner &>/dev/null; then
-        echo "Installing codonyat..." >&2
-        pip install --quiet codonyat
-    fi
+    # Install codonyat from PyPI (required when using conda profile;
+    # docker image bundles it via Dockerfile)
+    pip install --quiet codonyat
 
     codonyat-runner "!{sam}" \
         "!{reference}" \
