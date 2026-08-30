@@ -20,20 +20,8 @@ jobs:
       - name: Lint pipeline
         run: nextflow lint .
 
-      - name: Install nf-test
-        run: |
-          # nf-test is a standalone binary
-          curl -sL https://github.com/askimed/nf-test/releases/download/0.8.0/nf-test -o /usr/local/bin/nf-test
-          chmod +x /usr/local/bin/nf-test
-          nf-test --version
-
-      - name: Run nf-tests
-        run: nf-test test/main.nf.test
-        env:
-          NXF_ANSI_LOG: false
-          JAVA_HOME: /usr/lib/jvm/default-java
-
-  test:
+  nf-tests:
+    needs: lint
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -54,7 +42,40 @@ jobs:
         if: matrix.profile == 'docker'
         run: docker pull nf-codonyat:test || true
 
-      - name: Run tests
+      - name: Install nf-test
+        run: |
+          curl -sL https://github.com/askimed/nf-test/releases/download/0.8.0/nf-test -o /usr/local/bin/nf-test
+          chmod +x /usr/local/bin/nf-test
+          nf-test --version
+
+      - name: Run nf-tests
+        run: nf-test test/main.nf.test
+        env:
+          NXF_ANSI_LOG: false
+
+  test:
+    needs: lint
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        profile: [conda, docker]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nextflow
+        uses: nf-core/setup-nextflow@v1
+        with:
+          version: latest
+
+      - name: Build Docker image
+        if: matrix.profile == 'docker'
+        run: docker build -t nf-codonyat:test .
+
+      - name: Pull Docker image
+        if: matrix.profile == 'docker'
+        run: docker pull nf-codonyat:test || true
+
+      - name: Run pipeline
         run: |
           nextflow run . \
             -profile test,${{ matrix.profile }} \
