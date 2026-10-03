@@ -66,8 +66,8 @@ jobs:
           miniforge-version: latest
           channels: conda-forge,bioconda
           conda-remove-defaults: "true"
-          auto-activate-base: true
-          activate-environment: ""
+          auto-activate: true
+          activate-environment: base
 
       - name: nf-test
         run: nf-test test --ci --profile ${{ matrix.profile }} --verbose
