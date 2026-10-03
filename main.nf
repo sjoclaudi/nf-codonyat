@@ -41,6 +41,15 @@ workflow {
         error "Missing required parameter(s): ${missing.collect { name -> '--' + name }.join(', ')}"
     }
 
+    // The execution reports are placed using params.outdir as it was when
+    // nextflow.config was read (see the note there). A -c config that changes
+    // params.outdir afterwards would split results and reports, so stop now.
+    if (params.pipeline_info_outdir && file(params.pipeline_info_outdir.toString()) != file(params.outdir.toString())) {
+        error "params.outdir was changed by a config file passed with -c (now '${params.outdir}'), " +
+              "after the execution reports were already set to '${params.pipeline_info_outdir}/pipeline_info'. " +
+              "Set the output folder with --outdir or -params-file instead, so results and reports stay together."
+    }
+
     printHeader()
 
     VALIDATE_INPUT(

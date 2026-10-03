@@ -30,6 +30,10 @@ nextflow run sjoclaudi/nf-codonyat [options]
 | `--outdir` | `results` | Output directory |
 | `--publish_dir_mode` | `copy` | Publish mode: `copy`, `symlink`, or `move` |
 
+Set `--outdir` on the command line or in a `-params-file`, not in a config file passed with `-c`.
+Nextflow reads `-c` files after the pipeline config has already placed the execution reports
+(`<outdir>/pipeline_info/`), so the pipeline stops with an error if `-c` changes `outdir`.
+
 ## Profiles
 
 Use `-profile` to select an execution environment:

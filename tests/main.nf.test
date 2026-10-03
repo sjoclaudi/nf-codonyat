@@ -33,6 +33,11 @@ nextflow_pipeline {
                 { assert path("${outputDir}/samples/sample2/sample2.tsv").exists() },
                 { assert path("${outputDir}/samples/sample2/sample2.xml").text.contains('<Position') },
 
+                // execution reports follow the outdir (nf-test redirects the trace to its own meta/ folder)
+                { assert path("${outputDir}/pipeline_info/execution_report.html").exists() },
+                { assert path("${outputDir}/pipeline_info/execution_timeline.html").exists() },
+                { assert path("${outputDir}/pipeline_info/pipeline_dag.html").exists() },
+
                 // merged summary: real rows from both samples
                 { assert header == ['SAMPLE', 'FILE', 'REFERENCE', 'PROTEIN', 'VARIANT', 'POSITION',
                                     'FREQ', 'FWCOV', 'RVCOV', 'TOTALCOV', 'RATIO'] },
@@ -89,6 +94,25 @@ nextflow_pipeline {
         then {
             assert workflow.failed
             assert workflow.stdout.any { line -> line.contains('no annotation for --protein NEF') }
+        }
+    }
+
+    test("stops early when --outdir is changed by a -c config file") {
+
+        config "./outdir_from_c.config"
+
+        when {
+            params {
+                samplesheet = "${projectDir}/assets/testdata/samplesheet.csv"
+                reference   = "${projectDir}/assets/testdata/reference.fasta"
+                amplicons   = "${projectDir}/assets/testdata/amplicons.tsv"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert workflow.trace.tasks().size() == 0
+            assert workflow.stdout.any { line -> line.contains('params.outdir was changed by a config file passed with -c') }
         }
     }
 }

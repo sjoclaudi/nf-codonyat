@@ -82,6 +82,9 @@ jobs:
           echo "samples in summary: $n"
           [ "$n" = "sample1 sample2 " ]
 
+      - name: Check execution reports are in the outdir
+        run: ls -l results-test/pipeline_info/{execution_report.html,execution_timeline.html,execution_trace.txt,pipeline_dag.html}
+
       - name: Upload results on failure
         if: failure()
         uses: actions/upload-artifact@v7
