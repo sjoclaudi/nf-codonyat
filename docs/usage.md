@@ -3,7 +3,7 @@
 ## Command Line
 
 ```bash
-nextflow run mnoguera/nf-codonyat [options]
+nextflow run sjoclaudi/nf-codonyat [options]
 ```
 
 ## Required Parameters
@@ -34,16 +34,28 @@ nextflow run mnoguera/nf-codonyat [options]
 
 Use `-profile` to select an execution environment:
 
-- `docker` — Docker container (recommended)
-- `singularity` — Singularity container
-- `conda` — Conda/mamba environment
-- `standard` — local execution (no container)
+- `docker` — Docker, using `ghcr.io/sjoclaudi/nf-codonyat:0.1.0` (recommended)
+- `singularity` — Singularity/Apptainer, same image
+- `conda` — Conda environment from `modules/codonyat/run/environment.yml`
+- `mamba` — same environment, created with mamba
+- `test` — bundled two-sample test dataset (combine with one of the above, e.g. `-profile test,docker`)
+- `standard` — local execution; `codonyat-runner` must already be on your `PATH`
+
+## Samplesheet
+
+```csv
+sample,sam
+sample1,sample1.sam
+sample2,/data/run42/sample2.sam
+```
+
+Relative SAM paths are resolved against the folder that contains the samplesheet.
 
 ## Examples
 
 ### With Docker
 ```bash
-nextflow run mnoguera/nf-codonyat \
+nextflow run sjoclaudi/nf-codonyat \
     -profile docker \
     --samplesheet samples.csv \
     --reference ref.fasta \
@@ -53,7 +65,7 @@ nextflow run mnoguera/nf-codonyat \
 
 ### With Conda
 ```bash
-nextflow run mnoguera/nf-codonyat \
+nextflow run sjoclaudi/nf-codonyat \
     -profile conda \
     --samplesheet samples.csv \
     --reference ref.fasta \
@@ -62,7 +74,7 @@ nextflow run mnoguera/nf-codonyat \
 
 ### Custom thresholds
 ```bash
-nextflow run mnoguera/nf-codonyat \
+nextflow run sjoclaudi/nf-codonyat \
     -profile docker \
     --samplesheet samples.csv \
     --reference ref.fasta \
