@@ -3,8 +3,9 @@
  *  subworkflows/validate_input.nf
  *
  *  Checks:
- *    • samplesheet exists, has columns sample,sam and every SAM exists
- *      (relative SAM paths are resolved against the samplesheet's folder)
+ *    • samplesheet exists; each row has a sample and either FASTQ
+ *      (fastq_1, optional fastq_2) or a SAM; every file exists
+ *      (relative paths are resolved against the samplesheet's folder)
  *    • reference FASTA header carries protein annotations, including the
  *      requested --protein
  *    • amplicons TSV has 7 tab-separated columns
@@ -12,7 +13,8 @@
  *  Any failed check stops the run with a clear error message.
  *
  *  Emits:
- *    samples   — queue channel of [ val(sample_id), path(sam) ]
+ *    fastq     — queue channel of [ meta, [ fastq_1, (fastq_2) ] ]
+ *    sam       — queue channel of [ meta, sam ]
  *    reference — value channel: path to the reference FASTA
  *    amplicons — value channel: path to the amplicons TSV
  * =========================================================
@@ -27,23 +29,39 @@ workflow VALIDATE_INPUT {
     main:
 
     // ── 1. Samplesheet ────────────────────────────────────
+    // Columns: sample, and either fastq_1 (+ optional fastq_2) or sam.
+    // A sheet with only sample,sam (the original format) still works.
     def ss_file = file(samplesheet_path, checkIfExists: true)
 
-    samples_ch = channel
+    rows_ch = channel
         .fromPath(ss_file)
         .splitCsv(header: true, sep: ',')
         .map { row ->
-            if (!row.sample || !row.sam) {
-                error "Samplesheet ${ss_file} must have non-empty columns 'sample,sam' (offending row: ${row})"
+            def sample = row.sample?.trim()
+            def fq1    = row.fastq_1?.trim()
+            def fq2    = row.fastq_2?.trim()
+            def sam    = row.sam?.trim()
+            if (!sample) {
+                error "Samplesheet ${ss_file}: every row needs a 'sample' value (offending row: ${row})"
             }
-            def sam = row.sam.contains('://') || row.sam.startsWith('/')
-                ? file(row.sam)
-                : ss_file.parent.resolve(row.sam)
-            if (!sam.exists()) {
-                error "SAM file for sample '${row.sample}' not found: ${sam}"
+            if (!fq1 == !sam) {
+                error "Samplesheet ${ss_file}: sample '${sample}' must have either fastq_1 or sam (not both, not neither)"
             }
-            tuple(row.sample, sam)
+            if (fq2 && !fq1) {
+                error "Samplesheet ${ss_file}: sample '${sample}' has fastq_2 but no fastq_1"
+            }
+            sam
+                ? tuple([id: sample], 'sam', [resolveSheetPath(ss_file, sample, sam)])
+                : tuple([id: sample, single_end: !fq2], 'fastq', fq2 ? [resolveSheetPath(ss_file, sample, fq1), resolveSheetPath(ss_file, sample, fq2)] : [resolveSheetPath(ss_file, sample, fq1)])
         }
+
+    fastq_ch = rows_ch
+        .filter { _meta, type, _files -> type == 'fastq' }
+        .map { meta, _type, files -> tuple(meta, files) }
+
+    sam_ch = rows_ch
+        .filter { _meta, type, _files -> type == 'sam' }
+        .map { meta, _type, files -> tuple(meta, files[0]) }
 
     // ── 2. Reference FASTA ────────────────────────────────
     // Value channel so it is reused for every sample
@@ -72,7 +90,17 @@ workflow VALIDATE_INPUT {
     amplicons_ch = channel.value(amp_file)
 
     emit:
-    samples   = samples_ch
+    fastq     = fastq_ch       // [ meta, [ fastq_1, (fastq_2) ] ]
+    sam       = sam_ch         // [ meta, sam ]
     reference = reference_ch
     amplicons = amplicons_ch
+}
+
+// Relative paths in the samplesheet are resolved against its folder
+def resolveSheetPath(sheet, String sample, String p) {
+    def f = p.contains('://') || p.startsWith('/') ? file(p) : sheet.parent.resolve(p)
+    if (!f.exists()) {
+        error "File for sample '${sample}' not found: ${f}"
+    }
+    return f
 }

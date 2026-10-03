@@ -60,7 +60,8 @@ workflow {
     )
 
     CODONYAT(
-        VALIDATE_INPUT.out.samples,
+        VALIDATE_INPUT.out.fastq,
+        VALIDATE_INPUT.out.sam,
         VALIDATE_INPUT.out.reference,
         VALIDATE_INPUT.out.amplicons
     )

@@ -1,6 +1,6 @@
 /*
  * =========================================================
- *  modules/codonyat/summary/main.nf
+ *  modules/local/codonyat/summary/main.nf
  *
  *  Process: CODONYAT_SUMMARY
  *  Merges per-sample TSV files into one table, prepending a

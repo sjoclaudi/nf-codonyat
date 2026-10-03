@@ -1,6 +1,6 @@
 # Task image for nf-codonyat processes (CODONYAT_RUN, CODONYAT_SUMMARY).
 # Nextflow itself runs on the host; this image only carries the tools.
-# Keep versions in sync with modules/codonyat/run/environment.yml.
+# Keep versions in sync with modules/local/codonyat/run/environment.yml.
 FROM python:3.12-slim
 
 LABEL org.opencontainers.image.source="https://github.com/sjoclaudi/nf-codonyat"

@@ -1,19 +1,33 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "nf-codonyat samplesheet",
+  "title": "nf-codonyat samplesheet row",
+  "description": "Each row has a sample and either FASTQ reads (fastq_1, optional fastq_2) or an aligned SAM file. Relative paths are resolved against the samplesheet's folder.",
   "type": "object",
-  "required": [
-    "sample",
-    "sam"
-  ],
+  "required": ["sample"],
   "properties": {
     "sample": {
       "type": "string",
-      "description": "Sample identifier"
+      "pattern": "^\\S+$",
+      "description": "Sample identifier (no spaces)"
+    },
+    "fastq_1": {
+      "type": "string",
+      "pattern": "^\\S+\\.f(ast)?q\\.gz$",
+      "description": "Gzipped FASTQ, read 1 (or single-end reads)"
+    },
+    "fastq_2": {
+      "type": "string",
+      "pattern": "^\\S+\\.f(ast)?q\\.gz$",
+      "description": "Gzipped FASTQ, read 2 (paired-end only)"
     },
     "sam": {
       "type": "string",
-      "description": "Path to SAM file"
+      "pattern": "^\\S+\\.sam$",
+      "description": "SAM file already aligned to the reference"
     }
-  }
+  },
+  "oneOf": [
+    { "required": ["fastq_1"], "not": { "required": ["sam"] } },
+    { "required": ["sam"], "not": { "anyOf": [ { "required": ["fastq_1"] }, { "required": ["fastq_2"] } ] } }
+  ]
 }
