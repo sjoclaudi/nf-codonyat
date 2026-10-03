@@ -21,14 +21,14 @@ Wraps the [`codonyat`](https://github.com/mnoguera/codonyat) Python package into
 curl -s https://get.nextflow.io | bash
 
 # 2. Run with Docker
-nextflow run mnoguera/nf-codonyat \
+nextflow run sjoclaudi/nf-codonyat \
     -profile docker \
     --samplesheet samples.csv \
     --reference reference.fasta \
     --amplicons amplicons.tsv
 
 # 3. Or with Conda
-nextflow run mnoguera/nf-codonyat \
+nextflow run sjoclaudi/nf-codonyat \
     -profile conda \
     --samplesheet samples.csv \
     --reference reference.fasta \
@@ -43,8 +43,9 @@ nextflow run mnoguera/nf-codonyat \
 ```csv
 sample,sam
 sample1,/path/to/sample1.sam
-sample2,/path/to/sample2.sam
+sample2,sample2.sam
 ```
+Relative SAM paths are resolved against the samplesheet's folder.
 
 ### Reference FASTA
 Header must contain protein annotations in the format:
@@ -57,7 +58,7 @@ Header must contain protein annotations in the format:
 Tab-separated, 7 columns:
 ```
 label   protein  reference  5p_seq  3p_seq  start  end
-Amp_1   RT       ref        ATG     GCA     2550   2600
+Amp_1   RT       K03455|HIVHXB2CG  CCCATTAGCCCTATTGAGAC  AAGTTCTCTGAAATCTACTA  2550  2789
 ```
 
 ---
@@ -103,30 +104,45 @@ Full documentation is available in the `docs/` directory:
 
 ---
 
+## Software
+
+`codonyat` 1.0.1 (from PyPI) and Biopython 1.85 are provided in one of two ways:
+
+- **Container:** `ghcr.io/sjoclaudi/nf-codonyat:0.1.0`, built from the `Dockerfile` in this repo and published by CI on every push to `main`.
+- **Conda:** `modules/codonyat/run/environment.yml` (conda-forge Python + Biopython, `codonyat` via pip).
+
+Nothing is installed at run time.
+
 ## Requirements
 
-- Nextflow ≥ 22.x
-- Java 11+
-- Docker, Singularity, or Conda/Mamba
+- Nextflow ≥ 25.04 (tested with 26.04)
+- Java 17 or 21
+- Docker, Singularity/Apptainer, or Conda/Mamba
 
 ---
 
 ## Development
 
 ```bash
-# Clone the pipeline
-git clone https://github.com/mnoguera/nf-codonyat.git
+git clone https://github.com/sjoclaudi/nf-codonyat.git
 cd nf-codonyat
 
-# Lint
+# Lint (must be clean; CI enforces it)
 nextflow lint .
 
-# Run locally with test data
-nextflow run . -profile test -profile docker
+# Test run on the bundled data
+nextflow run . -profile test,docker      # or test,conda
 
-# Run locally without any container
-nextflow run . -profile test -profile conda
+# nf-test (pipeline-level tests + output snapshot)
+nf-test test --profile docker            # or --profile conda
+
+# Build the task image locally (CI does this for the docker tests)
+docker build -t ghcr.io/sjoclaudi/nf-codonyat:0.1.0 .
 ```
+
+The test data in `assets/testdata/` is synthetic: HXB2 (K03455) RT amplicons with
+known mutations spiked in (M41L, K65R, M184V and a T69 deletion). Regenerate it with
+`python3 make_testdata.py` inside that folder.
 
 ---
 

@@ -3,114 +3,76 @@
  *  subworkflows/validate_input.nf
  *
  *  Checks:
- *    • samplesheet exists, has header sample,sam, SAMs are real
- *    • reference FASTA is non-empty and has protein annotations
- *    • amplicons TSV has exactly 7 columns
+ *    • samplesheet exists, has columns sample,sam and every SAM exists
+ *      (relative SAM paths are resolved against the samplesheet's folder)
+ *    • reference FASTA header carries protein annotations, including the
+ *      requested --protein
+ *    • amplicons TSV has 7 tab-separated columns
  *
- *  Input (plain values, not channels):
- *    val samplesheet_path  — path string
- *    val reference_path    — path string
- *    val amplicons_path    — path string
+ *  Any failed check stops the run with a clear error message.
  *
  *  Emits:
- *    out.samplesheet      — path (raw CSV)
- *    out.samples          — [val(sample_id), path(sam_file)] channel
- *    out.reference         — path (validated FASTA)
- *    out.amplicons        — path (validated TSV)
+ *    samples   — queue channel of [ val(sample_id), path(sam) ]
+ *    reference — value channel: path to the reference FASTA
+ *    amplicons — value channel: path to the amplicons TSV
  * =========================================================
  */
 
 workflow VALIDATE_INPUT {
     take:
-    samplesheet_val  // String — file path
-    reference_val    // String — file path
-    amplicons_val    // String — file path
+    samplesheet_path  // String
+    reference_path    // String
+    amplicons_path    // String
 
     main:
 
     // ── 1. Samplesheet ────────────────────────────────────
-    Channel
-        .fromPath(samplesheet_val, checkIfExists: true)
-        .ifEmpty {
-            log.error "Samplesheet not found: ${samplesheet_val}"
-            exit 1
-        }
-        .set { ss_path_ch }
+    def ss_file = file(samplesheet_path, checkIfExists: true)
 
-    // Parse samplesheet, validate header, emit [sample_id, sam_path]
-    ss_valid_ch = ss_path_ch
+    samples_ch = channel
+        .fromPath(ss_file)
         .splitCsv(header: true, sep: ',')
         .map { row ->
-            if (!row.containsKey('sample') || !row.containsKey('sam')) {
-                log.error "Samplesheet must have columns: sample,sam"
-                exit 1
+            if (!row.sample || !row.sam) {
+                error "Samplesheet ${ss_file} must have non-empty columns 'sample,sam' (offending row: ${row})"
             }
-            def samFile = file(row.sam)
-            if (!samFile.exists()) {
-                log.error "SAM file not found: ${row.sam}"
-                exit 1
+            def sam = row.sam.contains('://') || row.sam.startsWith('/')
+                ? file(row.sam)
+                : ss_file.parent.resolve(row.sam)
+            if (!sam.exists()) {
+                error "SAM file for sample '${row.sample}' not found: ${sam}"
             }
-            [ row.sample, samFile ]
-        }
-        .ifEmpty {
-            log.error 'Samplesheet is empty or has no valid rows'
-            exit 1
+            tuple(row.sample, sam)
         }
 
-    // ── 2. Reference FASTA ─────────────────────────────────
-    Channel
-        .fromPath(reference_val, checkIfExists: true)
-        .ifEmpty {
-            log.error "Reference not found: ${reference_val}"
-            exit 1
-        }
-        .set { ref_path_ch }
+    // ── 2. Reference FASTA ────────────────────────────────
+    // Value channel so it is reused for every sample
+    def ref_file = file(reference_path, checkIfExists: true)
+    def header = ref_file.withReader { reader -> reader.readLine() } ?: ''
+    if (!header.startsWith('>')) {
+        error "Reference ${ref_file} does not look like a FASTA file"
+    }
+    def proteins = (header =~ /(\w+)\([^)]*\):\d+-\d+/).collect { m -> m[1] }
+    if (!proteins) {
+        log.warn "Reference header lacks protein annotations. Expected format: '>ID PR(Protease):2253-2549;RT(Reverse Transcriptase):2550-3869'"
+    }
+    else if (!(params.protein in proteins)) {
+        error "Reference header has no annotation for --protein ${params.protein} (found: ${proteins.join(', ')})"
+    }
+    reference_ch = channel.value(ref_file)
 
-    // Validate: FASTA header must contain protein annotation parentheses
-    ref_path_ch
-        .splitFasta(record: [id: true])
-        .first()
-        .map { rec ->
-            if (!rec.id.contains('(') || !rec.id.contains(')')) {
-                log.warn "Reference header may lack protein annotation. " +
-                         "Expected format: '>ID PR(Desc):start-end;RT(...);...'"
-            }
-        }
-        .subscribe { /* just the side-effect */ }
+    // ── 3. Amplicons TSV ──────────────────────────────────
+    def amp_file = file(amplicons_path, checkIfExists: true)
+    def ampHeader = amp_file.withReader { reader -> reader.readLine() } ?: ''
+    def nCols = ampHeader.split('\t').size()
+    if (nCols != 7) {
+        error "Amplicons file ${amp_file} must have 7 tab-separated columns " +
+              "(label,protein,reference,5p_seq,3p_seq,start,end); found ${nCols}"
+    }
+    amplicons_ch = channel.value(amp_file)
 
-    // Emit the reference path (validated)
-    ref_valid_ch = ref_path_ch
-
-    // ── 3. Amplicons TSV ───────────────────────────────────
-    Channel
-        .fromPath(amplicons_val, checkIfExists: true)
-        .ifEmpty {
-            log.error "Amplicons file not found: ${amplicons_val}"
-            exit 1
-        }
-        .set { amp_path_ch }
-
-    // Validate: must have exactly 7 tab-separated columns
-    amp_path_ch
-        .splitCsv(sep: '\t')
-        .first()
-        .map { fields ->
-            if (fields.size() != 7) {
-                log.error "Amplicons file must have 7 columns " +
-                          "(label,protein,reference,5p_seq,3p_seq,start,end). " +
-                          "Found: ${fields.size()}"
-                exit 1
-            }
-        }
-        .subscribe { /* just the side-effect */ }
-
-    // Emit the amplicons path (validated)
-    amp_valid_ch = amp_path_ch
-
-    // ── Emit ──────────────────────────────────────────────
     emit:
-    samplesheet = ss_path_ch      // path
-    samples     = ss_valid_ch     // [val(sample_id), path(sam)]
-    reference   = ref_valid_ch    // path
-    amplicons   = amp_valid_ch    // path
+    samples   = samples_ch
+    reference = reference_ch
+    amplicons = amplicons_ch
 }

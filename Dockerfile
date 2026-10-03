@@ -1,26 +1,17 @@
-FROM python:3.11-slim
+# Task image for nf-codonyat processes (CODONYAT_RUN, CODONYAT_SUMMARY).
+# Nextflow itself runs on the host; this image only carries the tools.
+# Keep versions in sync with modules/codonyat/run/environment.yml.
+FROM python:3.12-slim
 
-LABEL maintainer="Marc Noguera Julian <sjoclaudi@gmail.com>"
-LABEL description="nf-codonyat: codon-aware amino acid variant typing"
+LABEL org.opencontainers.image.source="https://github.com/sjoclaudi/nf-codonyat"
+LABEL org.opencontainers.image.description="codonyat 1.0.1 runtime for the nf-codonyat Nextflow pipeline"
+LABEL org.opencontainers.image.licenses="MIT"
 
-# Install Nextflow, Java, and pip
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    default-jre-headless curl git \
+# procps provides `ps`, which Nextflow uses to collect task metrics
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends procps \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Nextflow
-RUN curl -s https://get.nextflow.io | bash \
-    && mv nextflow /usr/local/bin/
+RUN pip install --no-cache-dir "biopython==1.85" "codonyat==1.0.1"
 
-# Install biopython (runtime dep of codonyat)
-RUN pip install --no-cache-dir biopython>=1.79
-
-# Install codonyat from PyPI
-RUN pip install --no-cache-dir codonyat
-
-WORKDIR /workspace
-
-# Copy pipeline files
-COPY . /workspace/
-
-ENV NXF_ANSI_LOG=false
+CMD ["codonyat-runner", "--help"]

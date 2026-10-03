@@ -6,69 +6,59 @@
  * =========================================================
  *
  *  Usage:
- *    nextflow run mnoguera/nf-codonyat \
+ *    nextflow run sjoclaudi/nf-codonyat -profile docker \
  *        --samplesheet samples.csv \
  *        --reference ref.fasta \
  *        --amplicons amplicons.tsv \
  *        --outdir results
  *
- *    nextflow run . -profile docker \
- *        --samplesheet samples.csv \
- *        --reference ref.fasta \
- *        --amplicons amplicons.tsv
+ *    nextflow run sjoclaudi/nf-codonyat -profile test,docker
  */
 
-nextflow.enable.dsl = 2
+include { VALIDATE_INPUT } from './subworkflows/validate_input'
+include { CODONYAT       } from './workflows/codonyat'
 
-// ─── Print version & header ─────────────────────────────────
-
-def printVersion() {
-    log.info"""
-    ╔══════════════════════════════════════════════════════╗
-    ║  nf-codonyat  v${manifest.version}                               ║
-    ║  Codon-aware amino acid variant typing               ║
-    ║  https://github.com/mnoguera/nf-codonyat             ║
-    ╚══════════════════════════════════════════════════════╝
+def printHeader() {
+    log.info """
+    nf-codonyat v${workflow.manifest.version}
+    Codon-aware amino acid variant typing
+    ${workflow.manifest.homePage}
+    -------------------------------------------------------
+    samplesheet : ${params.samplesheet}
+    reference   : ${params.reference}
+    amplicons   : ${params.amplicons}
+    protein     : ${params.protein}
+    outdir      : ${params.outdir}
+    -------------------------------------------------------
     """.stripIndent()
 }
 
-// ─── Validate required params before any expensive work ─────
-
-if (!params.samplesheet) {
-    log.error 'ERROR: --samplesheet is required. See --help.'
-    exit 1
-}
-if (!params.reference) {
-    log.error 'ERROR: --reference is required.'
-    exit 1
-}
-if (!params.amplicons) {
-    log.error 'ERROR: --amplicons is required.'
-    exit 1
-}
-
-// ─── Load subworkflows & workflows ─────────────────────────
-
-include { VALIDATE_INPUT } from './subworkflows/validate_input'
-include { CODONYAT }       from './workflows/codonyat'
-
-// ─── Main workflow ─────────────────────────────────────────
-
 workflow {
-    printVersion()
+    main:
+    // Fail fast on missing required parameters, before any work is scheduled
+    def missing = ['samplesheet', 'reference', 'amplicons'].findAll { name -> !params[name] }
+    if (missing) {
+        error "Missing required parameter(s): ${missing.collect { name -> '--' + name }.join(', ')}"
+    }
 
-    // Validate samplesheet, reference, and amplicons
-    // Pass plain values (not channels) — subworkflow wraps them internally
+    // The execution reports are placed using params.outdir as it was when
+    // nextflow.config was read (see the note there). A -c config that changes
+    // params.outdir afterwards cannot move them, so tell the user where they are.
+    if (params.pipeline_info_outdir && file(params.pipeline_info_outdir.toString()) != file(params.outdir.toString())) {
+        log.warn "params.outdir was set in a config file passed with -c ('${params.outdir}'). " +
+                 "Results go there, but the execution reports (timeline, report, trace, DAG) are written to " +
+                 "'${file(params.pipeline_info_outdir.toString())}/pipeline_info' because Nextflow places them before -c files are read. " +
+                 "Use --outdir or -params-file to keep results and reports together."
+    }
+
+    printHeader()
+
     VALIDATE_INPUT(
         params.samplesheet,
         params.reference,
         params.amplicons
     )
 
-    // Run the codonyat pipeline
-    // VALIDATE_INPUT.out.samples  → [val(sample_id), path(sam_file)]
-    // VALIDATE_INPUT.out.reference → path
-    // VALIDATE_INPUT.out.amplicons → path
     CODONYAT(
         VALIDATE_INPUT.out.samples,
         VALIDATE_INPUT.out.reference,

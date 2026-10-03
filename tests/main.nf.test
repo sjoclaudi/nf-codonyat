@@ -1,131 +1,130 @@
-/*
- * nf-codonyat — main pipeline test
- *
- * Requires:  nf-test  (https://code.askimed.com/nf-test/)
- * Run with:  nf-test test/main.nf.test
- */
-
 nextflow_pipeline {
 
     name "nf-codonyat – full pipeline"
-    script "main.nf"
+    script "../main.nf"
+    tag "pipeline"
 
-    test("Full pipeline: single sample produces TSV + XML + summary") {
-
-        set {
-            params.samplesheet = "${projectDir}/assets/testdata/samplesheet.csv"
-            params.reference   = "${projectDir}/assets/testdata/reference.fasta"
-            params.amplicons   = "${projectDir}/assets/testdata/amplicons.tsv"
-            params.outdir      = "${outputDir}"
-        }
+    test("test data: two samples give per-sample TSV/XML and a merged summary") {
 
         when {
-            process {
-                """
-                main()
-                """
+            params {
+                samplesheet = "${projectDir}/assets/testdata/samplesheet.csv"
+                reference   = "${projectDir}/assets/testdata/reference.fasta"
+                amplicons   = "${projectDir}/assets/testdata/amplicons.tsv"
+                outdir      = "${outputDir}"
             }
         }
 
         then {
-            // Per-sample outputs
-            def sampleDir = path("${outputDir}/samples/sample1")
-            assert sampleDir.exists()                              : "Per-sample directory missing"
-            assert sampleDir.resolve("sample1.tsv").exists()       : "sample1.tsv missing"
-            assert sampleDir.resolve("sample1.xml").exists()       : "sample1.xml missing"
-
-            // TSV header checks
-            def tsv = path("${outputDir}/samples/sample1/sample1.tsv")
-            def lines = tsv.readLines()
-            assert lines.size() >= 2          : "TSV must have header + >=1 data row, got ${lines.size()}"
-            assert lines[0].contains("FILE")  : "TSV header missing FILE column"
-            assert lines[0].contains("PROTEIN") : "TSV header missing PROTEIN column"
-            assert lines[0].contains("FREQ")  : "TSV header missing FREQ column"
-            assert lines[0].contains("RATIO") : "TSV header missing RATIO column"
-
-            // All data rows belong to RT protein (single-protein run)
-            lines.drop(1).each { line ->
-                assert line.contains("RT") : "Non-RT row in RT-only run: ${line}"
+            def summary = path("${outputDir}/codonyat_summary.tsv").readLines()*.split('\t')
+            def header  = summary[0] as List
+            def rows    = summary.drop(1).collect { r -> [header, r as List].transpose().collectEntries() }
+            def freq    = { String s, String pos, String codon ->
+                rows.find { r -> r.SAMPLE == s && r.POSITION == pos && r.VARIANT == codon }?.FREQ
             }
 
-            // XML structure checks
-            def xml = path("${outputDir}/samples/sample1/sample1.xml")
-            def xmlText = xml.text
-            assert xmlText.contains("<SamContainer>") : "XML missing <SamContainer> root"
-            assert xmlText.contains("<Position")      : "XML missing <Position> elements"
+            assertAll(
+                { assert workflow.success },
+                { assert workflow.trace.succeeded().size() == 3 },
 
-            // Combined summary TSV
-            def summaryTsv = path("${outputDir}/codonyat_summary.tsv")
-            assert summaryTsv.exists() : "codonyat_summary.tsv missing"
-            def summaryLines = summaryTsv.readLines()
-            assert summaryLines.size() >= 2           : "Summary must have header + >=1 row"
-            assert summaryLines[0].contains("SAMPLE") : "Summary header missing SAMPLE column"
-            assert summaryLines.drop(1).any { it.contains("sample1") } :
-                "Summary missing sample1 entry"
+                // per-sample outputs
+                { assert path("${outputDir}/samples/sample1/sample1.tsv").exists() },
+                { assert path("${outputDir}/samples/sample1/sample1.xml").text.contains('<SamContainer') },
+                { assert path("${outputDir}/samples/sample2/sample2.tsv").exists() },
+                { assert path("${outputDir}/samples/sample2/sample2.xml").text.contains('<Position') },
 
-            // Pipeline info directory
-            assert path("${outputDir}/pipeline_info").exists() :
-                "pipeline_info directory missing"
+                // execution reports follow the outdir (nf-test redirects the trace to its own meta/ folder)
+                { assert path("${outputDir}/pipeline_info/execution_report.html").exists() },
+                { assert path("${outputDir}/pipeline_info/execution_timeline.html").exists() },
+                { assert path("${outputDir}/pipeline_info/pipeline_dag.html").exists() },
+
+                // merged summary: real rows from both samples
+                { assert header == ['SAMPLE', 'FILE', 'REFERENCE', 'PROTEIN', 'VARIANT', 'POSITION',
+                                    'FREQ', 'FWCOV', 'RVCOV', 'TOTALCOV', 'RATIO'] },
+                { assert rows.size() > 200 },
+                { assert rows*.SAMPLE.unique().sort() == ['sample1', 'sample2'] },
+                { assert rows.every { r -> r.PROTEIN == 'RT' && r.VARIANT && r.FREQ } },
+
+                // spiked-in mutations (see assets/testdata/make_testdata.py)
+                { assert freq('sample1', '2670', 'CTG') == '24.528' },   // M41L
+                { assert freq('sample1', '2742', 'AGA') == '9.434'  },   // K65R
+                { assert freq('sample1', '3099', 'GTG') == '50.0'   },   // M184V
+                { assert freq('sample2', '2754', '---') == '8.163'  },   // T69 deletion
+                { assert freq('sample2', '3099', 'GTG') == null     },   // sample2 is wild type at 184
+
+                { assert snapshot(
+                    path("${outputDir}/codonyat_summary.tsv"),
+                    path("${outputDir}/samples/sample1/sample1.tsv"),
+                    path("${outputDir}/samples/sample2/sample2.tsv"),
+                    path("${outputDir}/samples/sample1/sample1.xml"),
+                    path("${outputDir}/samples/sample2/sample2.xml")
+                ).match() }
+            )
         }
     }
 
-    test("Pipeline fails when --samplesheet is missing") {
-        set {
-            params.reference = "${projectDir}/assets/testdata/reference.fasta"
-            params.amplicons = "${projectDir}/assets/testdata/amplicons.tsv"
-        }
+    test("fails with a clear message when --samplesheet is missing") {
 
         when {
-            process {
-                """
-                main()
-                """
+            params {
+                reference = "${projectDir}/assets/testdata/reference.fasta"
+                amplicons = "${projectDir}/assets/testdata/amplicons.tsv"
+                outdir    = "${outputDir}"
             }
         }
 
         then {
             assert workflow.failed
-            assert workflow.exitStatus == 1
+            assert workflow.stdout.any { line -> line.contains('Missing required parameter(s): --samplesheet') }
         }
     }
 
-    test("Pipeline fails when --reference is missing") {
-        set {
-            params.samplesheet = "${projectDir}/assets/testdata/samplesheet.csv"
-            params.amplicons   = "${projectDir}/assets/testdata/amplicons.tsv"
-        }
+    test("fails when --protein is not annotated in the reference") {
 
         when {
-            process {
-                """
-                main()
-                """
+            params {
+                samplesheet = "${projectDir}/assets/testdata/samplesheet.csv"
+                reference   = "${projectDir}/assets/testdata/reference.fasta"
+                amplicons   = "${projectDir}/assets/testdata/amplicons.tsv"
+                protein     = "NEF"
+                outdir      = "${outputDir}"
             }
         }
 
         then {
             assert workflow.failed
-            assert workflow.exitStatus == 1
+            assert workflow.stdout.any { line -> line.contains('no annotation for --protein NEF') }
         }
     }
 
-    test("Pipeline fails when --amplicons is missing") {
-        set {
-            params.samplesheet = "${projectDir}/assets/testdata/samplesheet.csv"
-            params.reference   = "${projectDir}/assets/testdata/reference.fasta"
-        }
+    test("warns but succeeds when --outdir is changed by a -c config file") {
+
+        config "./outdir_from_c.config"
 
         when {
-            process {
-                """
-                main()
-                """
+            params {
+                samplesheet = "${projectDir}/assets/testdata/samplesheet.csv"
+                reference   = "${projectDir}/assets/testdata/reference.fasta"
+                amplicons   = "${projectDir}/assets/testdata/amplicons.tsv"
             }
         }
 
         then {
-            assert workflow.failed
-            assert workflow.exitStatus == 1
+            def outdir = "${launchDir}/outdir-from-c"
+            // log.warn goes to the Nextflow log (nf-test's stdout capture only holds errors here)
+            def log = path("${launchDir}/meta/nextflow.log").text
+            assertAll(
+                { assert workflow.success },
+                { assert log.contains('WARN') && log.contains('params.outdir was set in a config file passed with -c') },
+                { assert log.contains("${launchDir}/results/pipeline_info") },
+                { assert log.contains('Use --outdir or -params-file') },
+                // results follow the -c outdir ...
+                { assert path("${outdir}/codonyat_summary.tsv").readLines().size() > 200 },
+                { assert path("${outdir}/samples/sample1/sample1.tsv").exists() },
+                // ... while the reports stay in the default pipeline_info folder
+                { assert !path("${outdir}/pipeline_info").exists() },
+                { assert path("${launchDir}/results/pipeline_info/execution_report.html").exists() }
+            )
         }
     }
 }
