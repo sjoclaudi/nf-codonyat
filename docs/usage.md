@@ -32,7 +32,9 @@ nextflow run sjoclaudi/nf-codonyat [options]
 
 Set `--outdir` on the command line or in a `-params-file`, not in a config file passed with `-c`.
 Nextflow reads `-c` files after the pipeline config has already placed the execution reports
-(`<outdir>/pipeline_info/`), so the pipeline stops with an error if `-c` changes `outdir`.
+(`<outdir>/pipeline_info/`). If a `-c` file changes `outdir`, the run continues and results go to the
+new folder, but the reports stay in the earlier `pipeline_info` folder (the profile's or the default
+`results/pipeline_info`); the pipeline prints a warning saying where they went.
 
 ## Profiles
 

@@ -43,11 +43,12 @@ workflow {
 
     // The execution reports are placed using params.outdir as it was when
     // nextflow.config was read (see the note there). A -c config that changes
-    // params.outdir afterwards would split results and reports, so stop now.
+    // params.outdir afterwards cannot move them, so tell the user where they are.
     if (params.pipeline_info_outdir && file(params.pipeline_info_outdir.toString()) != file(params.outdir.toString())) {
-        error "params.outdir was changed by a config file passed with -c (now '${params.outdir}'), " +
-              "after the execution reports were already set to '${params.pipeline_info_outdir}/pipeline_info'. " +
-              "Set the output folder with --outdir or -params-file instead, so results and reports stay together."
+        log.warn "params.outdir was set in a config file passed with -c ('${params.outdir}'). " +
+                 "Results go there, but the execution reports (timeline, report, trace, DAG) are written to " +
+                 "'${file(params.pipeline_info_outdir.toString())}/pipeline_info' because Nextflow places them before -c files are read. " +
+                 "Use --outdir or -params-file to keep results and reports together."
     }
 
     printHeader()

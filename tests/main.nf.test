@@ -97,7 +97,7 @@ nextflow_pipeline {
         }
     }
 
-    test("stops early when --outdir is changed by a -c config file") {
+    test("warns but succeeds when --outdir is changed by a -c config file") {
 
         config "./outdir_from_c.config"
 
@@ -110,9 +110,21 @@ nextflow_pipeline {
         }
 
         then {
-            assert workflow.failed
-            assert workflow.trace.tasks().size() == 0
-            assert workflow.stdout.any { line -> line.contains('params.outdir was changed by a config file passed with -c') }
+            def outdir = "${launchDir}/outdir-from-c"
+            // log.warn goes to the Nextflow log (nf-test's stdout capture only holds errors here)
+            def log = path("${launchDir}/meta/nextflow.log").text
+            assertAll(
+                { assert workflow.success },
+                { assert log.contains('WARN') && log.contains('params.outdir was set in a config file passed with -c') },
+                { assert log.contains("${launchDir}/results/pipeline_info") },
+                { assert log.contains('Use --outdir or -params-file') },
+                // results follow the -c outdir ...
+                { assert path("${outdir}/codonyat_summary.tsv").readLines().size() > 200 },
+                { assert path("${outdir}/samples/sample1/sample1.tsv").exists() },
+                // ... while the reports stay in the default pipeline_info folder
+                { assert !path("${outdir}/pipeline_info").exists() },
+                { assert path("${launchDir}/results/pipeline_info/execution_report.html").exists() }
+            )
         }
     }
 }
