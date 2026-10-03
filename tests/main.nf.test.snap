@@ -1,0 +1,16 @@
+{
+    "test data: two samples give per-sample TSV/XML and a merged summary": {
+        "content": [
+            "codonyat_summary.tsv:md5,b9b396ca0f9ae855d5963615c89355e3",
+            "sample1.tsv:md5,7b53cdae533aaa882f14066b50e34cad",
+            "sample2.tsv:md5,0b674f66d6646fba70910038ceb04930",
+            "sample1.xml:md5,96380ca322570d0fd9478b2f54d82a18",
+            "sample2.xml:md5,985e11ce9d80c3bcc4129e72767d88f9"
+        ],
+        "timestamp": "2026-10-03T17:30:39.920494712",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    }
+}
