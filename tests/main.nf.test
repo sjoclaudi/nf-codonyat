@@ -4,7 +4,7 @@ nextflow_pipeline {
     script "../main.nf"
     tag "pipeline"
 
-    test("test data: two samples give per-sample TSV/XML and a merged summary") {
+    test("test data: two SAM samples and one FASTQ pair give per-sample TSV/XML, a merged summary and MultiQC") {
 
         when {
             params {
@@ -25,7 +25,8 @@ nextflow_pipeline {
 
             assertAll(
                 { assert workflow.success },
-                { assert workflow.trace.succeeded().size() == 3 },
+                // FASTQ: fastqc, fastp, bowtie2 build + align; all 3: flagstat x2, view, codonyat; summary, multiqc
+                { assert workflow.trace.succeeded().size() == 18 },
 
                 // per-sample outputs
                 { assert path("${outputDir}/samples/sample1/sample1.tsv").exists() },
@@ -33,16 +34,33 @@ nextflow_pipeline {
                 { assert path("${outputDir}/samples/sample2/sample2.tsv").exists() },
                 { assert path("${outputDir}/samples/sample2/sample2.xml").text.contains('<Position') },
 
+                { assert path("${outputDir}/samples/HVG286PL/HVG286PL.tsv").exists() },
+
+                // FASTQ path: QC, trimming, alignment and flagstat outputs
+                { assert path("${outputDir}/fastqc/HVG286PL_1_fastqc.html").exists() },
+                { assert path("${outputDir}/fastqc/HVG286PL_2_fastqc.zip").exists() },
+                { assert path("${outputDir}/fastp/HVG286PL.fastp.json").text.contains('"filtering_result"') },
+                { assert path("${outputDir}/alignment/HVG286PL.bam").exists() },
+                { assert path("${outputDir}/alignment/HVG286PL.bowtie2.log").text.contains('overall alignment rate') },
+                { assert path("${outputDir}/alignment/flagstat/HVG286PL.aligned.flagstat").exists() },
+                { assert path("${outputDir}/alignment/flagstat/HVG286PL.filtered.flagstat").exists() },
+                { assert path("${outputDir}/alignment/flagstat/sample1.filtered.flagstat").exists() },
+                { assert path("${outputDir}/multiqc/multiqc_report.html").exists() },
+                { assert path("${outputDir}/multiqc/multiqc_report_data/multiqc_fastp.txt").exists() },
+                { assert path("${outputDir}/multiqc/multiqc_report_data/multiqc_bowtie2.txt").exists() },
+                { assert path("${outputDir}/multiqc/multiqc_report_data/multiqc_samtools_flagstat.txt").exists() },
+
                 // execution reports follow the outdir (nf-test redirects the trace to its own meta/ folder)
                 { assert path("${outputDir}/pipeline_info/execution_report.html").exists() },
                 { assert path("${outputDir}/pipeline_info/execution_timeline.html").exists() },
                 { assert path("${outputDir}/pipeline_info/pipeline_dag.html").exists() },
 
-                // merged summary: real rows from both samples
+                // merged summary: real rows from all three samples
                 { assert header == ['SAMPLE', 'FILE', 'REFERENCE', 'PROTEIN', 'VARIANT', 'POSITION',
                                     'FREQ', 'FWCOV', 'RVCOV', 'TOTALCOV', 'RATIO'] },
                 { assert rows.size() > 200 },
-                { assert rows*.SAMPLE.unique().sort() == ['sample1', 'sample2'] },
+                { assert rows*.SAMPLE.unique().sort() == ['HVG286PL', 'sample1', 'sample2'] },
+                { assert rows.count { r -> r.SAMPLE == 'HVG286PL' } > 1000 },
                 { assert rows.every { r -> r.PROTEIN == 'RT' && r.VARIANT && r.FREQ } },
 
                 // spiked-in mutations (see assets/testdata/make_testdata.py)
@@ -52,14 +70,55 @@ nextflow_pipeline {
                 { assert freq('sample2', '2754', '---') == '8.163'  },   // T69 deletion
                 { assert freq('sample2', '3099', 'GTG') == null     },   // sample2 is wild type at 184
 
+                // real data (HVG286PL, 2000 read pairs): the sample consensus codon at 2550 dominates
+                { assert (freq('HVG286PL', '2550', 'CCC') as double) > 90 },
+
                 { assert snapshot(
                     path("${outputDir}/codonyat_summary.tsv"),
                     path("${outputDir}/samples/sample1/sample1.tsv"),
                     path("${outputDir}/samples/sample2/sample2.tsv"),
+                    path("${outputDir}/samples/HVG286PL/HVG286PL.tsv"),
                     path("${outputDir}/samples/sample1/sample1.xml"),
                     path("${outputDir}/samples/sample2/sample2.xml")
                 ).match() }
             )
+        }
+    }
+
+    test("an old-style sample,sam samplesheet still works") {
+
+        when {
+            params {
+                samplesheet = "${projectDir}/tests/samplesheet_sam_only.csv"
+                reference   = "${projectDir}/assets/testdata/reference.fasta"
+                amplicons   = "${projectDir}/assets/testdata/amplicons.tsv"
+                outdir      = "${outputDir}"
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success },
+                { assert path("${outputDir}/samples/sample1/sample1.tsv").md5 == '7b53cdae533aaa882f14066b50e34cad' },
+                { assert path("${outputDir}/codonyat_summary.tsv").readLines().size() > 100 }
+            )
+        }
+    }
+
+    test("fails when a samplesheet row has both FASTQ and SAM") {
+
+        when {
+            params {
+                samplesheet = "${projectDir}/tests/samplesheet_fastq_and_sam.csv"
+                reference   = "${projectDir}/assets/testdata/reference.fasta"
+                amplicons   = "${projectDir}/assets/testdata/amplicons.tsv"
+                outdir      = "${outputDir}"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert workflow.stdout.any { line -> line.contains("sample 'bad' must have either fastq_1 or sam") }
         }
     }
 

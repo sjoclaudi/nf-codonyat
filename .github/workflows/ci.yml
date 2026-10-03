@@ -75,12 +75,19 @@ jobs:
       - name: Run test profile
         run: nextflow run . -profile test,${{ matrix.profile }} --outdir results-test
 
-      - name: Check summary has rows for both samples
+      - name: Check summary has rows for the SAM and FASTQ samples
         run: |
           head -3 results-test/codonyat_summary.tsv
           n=$(tail -n +2 results-test/codonyat_summary.tsv | cut -f1 | sort -u | tr '\n' ' ')
           echo "samples in summary: $n"
-          [ "$n" = "sample1 sample2 " ]
+          [ "$n" = "HVG286PL sample1 sample2 " ]
+
+      - name: Check FASTQ-path outputs and MultiQC report
+        run: |
+          ls -l results-test/fastqc/HVG286PL_1_fastqc.html results-test/fastp/HVG286PL.fastp.json \
+                results-test/alignment/HVG286PL.bam results-test/alignment/HVG286PL.bowtie2.log \
+                results-test/multiqc/multiqc_report.html
+          grep 'overall alignment rate' results-test/alignment/HVG286PL.bowtie2.log
 
       - name: Check execution reports are in the outdir
         run: ls -l results-test/pipeline_info/{execution_report.html,execution_timeline.html,execution_trace.txt,pipeline_dag.html}

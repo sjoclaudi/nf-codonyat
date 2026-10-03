@@ -1,3 +1,4 @@
-sample,sam
-sample1,sample1.sam
-sample2,sample2.sam
+sample,fastq_1,fastq_2,sam
+sample1,,,sample1.sam
+sample2,,,sample2.sam
+HVG286PL,HVG286PL_R1.fastq.gz,HVG286PL_R2.fastq.gz,
