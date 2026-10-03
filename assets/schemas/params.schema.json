@@ -10,7 +10,7 @@
   "properties": {
     "samplesheet": {
       "type": "string",
-      "description": "CSV with columns: sample,sam"
+      "description": "CSV with columns sample,fastq_1,fastq_2,sam (FASTQ or SAM per row; sample,sam also accepted)"
     },
     "reference": {
       "type": "string",
@@ -39,6 +39,27 @@
       "type": "number",
       "default": 0.0,
       "description": "Minimum Shannon entropy per position"
+    },
+    "fastp_args": {
+      "type": "string",
+      "default": "--qualified_quality_phred 20 --unqualified_percent_limit 40 --length_required 50 --cut_tail --cut_tail_mean_quality 20",
+      "description": "fastp arguments for FASTQ samples (--detect_adapter_for_pe is added for paired-end reads; pairs are never merged)"
+    },
+    "bowtie2_args": {
+      "type": "string",
+      "default": "--very-sensitive-local",
+      "description": "bowtie2 arguments for FASTQ samples"
+    },
+    "min_mapq": {
+      "type": "integer",
+      "default": 20,
+      "minimum": 0,
+      "description": "Minimum mapping quality (samtools view -q), FASTQ and SAM samples"
+    },
+    "exclude_flags": {
+      "type": "string",
+      "default": "0x904",
+      "description": "SAM flags to drop (samtools view -F); 0x904 = unmapped, secondary, supplementary"
     },
     "outdir": {
       "type": "string",
