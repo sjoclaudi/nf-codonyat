@@ -1,0 +1,23 @@
+{
+    "test data: two SAM samples and one FASTQ pair give codon, amino-acid, contamination, subtype, consensus and strand outputs": {
+        "content": [
+            "codonyat_summary.tsv:md5,63aa1aaf1c09c3c12dd7cb6cca1bd8ad",
+            "sample1.tsv:md5,7b53cdae533aaa882f14066b50e34cad",
+            "sample2.tsv:md5,0b674f66d6646fba70910038ceb04930",
+            "HVG286PL.tsv:md5,3646f4c547a31e6634e5a0a9d9b89470",
+            "sample1.xml:md5,3ad8d1cea99b27788ac82d03f5e5277f",
+            "sample2.xml:md5,2d3f6b556ac7cdac23e1c8ed547a94e7",
+            "aa_variants_summary.tsv:md5,75cf2373bc98015b1e22af21eb7e3682",
+            "HVG286PL.strand_metrics_unmerged.tsv:md5,98f5ebe243dbfa2131a26e14698f6ceb",
+            "consensus_all.fa:md5,5b3e32a6ddd90c6276eeffd0777c2eca",
+            "HVG286PL.consensus_indels.tsv:md5,374b7c35141efb98b37a2fd10d18dee5",
+            "subtype_summary.tsv:md5,40a727ac8a0ac02ff0628f9383600b1e",
+            "contamination_summary.tsv:md5,7a447f826231d4fb64b7c1f96aab98de"
+        ],
+        "timestamp": "2026-10-04T23:14:36.010946549",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    }
+}
