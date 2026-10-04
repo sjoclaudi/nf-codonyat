@@ -1,0 +1,2 @@
+sample,fastq_1,fastq_2,sam
+HVG286PL,../assets/testdata/HVG286PL_R1.fastq.gz,../assets/testdata/HVG286PL_R2.fastq.gz,
