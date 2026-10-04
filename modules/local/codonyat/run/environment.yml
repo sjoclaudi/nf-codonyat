@@ -1,5 +1,7 @@
-# Software environment for CODONYAT_RUN and CODONYAT_SUMMARY.
+# Software environment for the local Python modules (codonyat and helper scripts).
 # Keep in sync with the Dockerfile (same versions).
+# codonyat 1.1.0 is not on PyPI yet: it is installed from the reviewed source
+# (sjoclaudi/codonyat-1, branch memory-fix-streaming, pinned commit) until released.
 name: codonyat
 channels:
   - conda-forge
@@ -9,4 +11,4 @@ dependencies:
   - conda-forge::biopython=1.85
   - conda-forge::pip
   - pip:
-      - codonyat==1.0.1
+      - "codonyat @ https://github.com/sjoclaudi/codonyat-1/archive/602b16c916bd5b4e5eeb930d9acbddd8c9d9bcd1.tar.gz"
