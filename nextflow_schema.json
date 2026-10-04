@@ -1,0 +1,249 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://raw.githubusercontent.com/sjoclaudi/nf-codonyat/main/nextflow_schema.json",
+    "title": "sjoclaudi/nf-codonyat pipeline parameters",
+    "description": "Codon-aware amino acid variant typing of HIV-1 amplicon NGS data (FASTQ or SAM); research use only",
+    "type": "object",
+    "$defs": {
+        "input_output_options": {
+            "title": "Input/output options",
+            "type": "object",
+            "description": "Samplesheet, reference, amplicons and output folder.",
+            "properties": {
+                "samplesheet": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "description": "CSV with columns sample,fastq_1,fastq_2,sam (one row per sample: FASTQ or SAM). Relative paths are resolved against the CSV's folder."
+                },
+                "reference": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "description": "Annotated reference FASTA; the header lists proteins, e.g. 'PR(Protease):2253-2549;RT(Reverse Transcriptase):2550-3869'."
+                },
+                "amplicons": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "description": "Amplicons TSV: label,protein,reference,5p_seq,3p_seq,start,end."
+                },
+                "outdir": {
+                    "type": "string",
+                    "default": "results",
+                    "description": "Output folder.",
+                    "format": "directory-path"
+                },
+                "publish_dir_mode": {
+                    "type": "string",
+                    "default": "copy",
+                    "description": "How results are published (Nextflow publishDir mode).",
+                    "enum": [
+                        "symlink",
+                        "rellink",
+                        "link",
+                        "copy",
+                        "copyNoFollow",
+                        "move"
+                    ]
+                },
+                "save_intermediates": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Also publish trimmed FASTQ, per-part BAMs, the strand-branch BAM/codon table, raw iVar output and Kraken2 per-read assignments."
+                }
+            },
+            "required": [
+                "samplesheet",
+                "reference",
+                "amplicons",
+                "outdir"
+            ]
+        },
+        "codon_options": {
+            "title": "Codon / amino-acid options",
+            "type": "object",
+            "description": "codonyat settings.",
+            "properties": {
+                "protein": {
+                    "type": "string",
+                    "default": "all",
+                    "description": "Protein(s) to analyse: one name, a comma-separated list (e.g. PR,RT,INT) or 'all' annotated proteins (one codonyat pass)."
+                },
+                "ratio_upper": {
+                    "type": "number",
+                    "default": 3.16227766,
+                    "description": "Strand ratio upper threshold (10^0.5)."
+                },
+                "ratio_lower": {
+                    "type": "number",
+                    "default": 0.316227766,
+                    "description": "Strand ratio lower threshold (10^-0.5)."
+                },
+                "entropy_threshold": {
+                    "type": "number",
+                    "default": 0.0,
+                    "description": "Minimum Shannon entropy per position."
+                }
+            }
+        },
+        "read_processing_options": {
+            "title": "Read processing (FASTQ samples)",
+            "type": "object",
+            "description": "Trimming, merging and alignment.",
+            "properties": {
+                "fastp_args": {
+                    "type": "string",
+                    "default": "--qualified_quality_phred 20 --unqualified_percent_limit 40 --length_required 50 --cut_tail --cut_tail_mean_quality 20",
+                    "description": "fastp arguments (paired-end runs add --detect_adapter_for_pe)."
+                },
+                "merge_pairs": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Merge overlapping read pairs with BBMerge before alignment (paired-end only)."
+                },
+                "bbmerge_args": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Extra BBMerge arguments (BBMerge defaults otherwise; ordered=t is always set)."
+                },
+                "strand_metrics_unmerged": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Also align all trimmed pairs before merging and report FWCOV/RVCOV/RATIO from that alignment (*_UNMERGED columns). Paired-end with --merge_pairs only."
+                },
+                "bowtie2_args": {
+                    "type": "string",
+                    "default": "--very-sensitive-local",
+                    "description": "Bowtie2 arguments (--reorder is always added)."
+                },
+                "min_mapq": {
+                    "type": "integer",
+                    "default": 20,
+                    "description": "samtools view -q: minimum MAPQ (FASTQ and SAM samples)."
+                },
+                "exclude_flags": {
+                    "type": "string",
+                    "default": "0x904",
+                    "description": "samtools view -F: alignments with these flags are removed (unmapped, secondary, supplementary)."
+                }
+            }
+        },
+        "contamination_options": {
+            "title": "Contamination report (Kraken2)",
+            "type": "object",
+            "description": "Report only; no reads are removed.",
+            "properties": {
+                "kraken2_db": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "description": "Kraken2 database folder (e.g. Standard-8). Required for FASTQ samples unless --skip_contamination."
+                },
+                "skip_contamination": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip the Kraken2 contamination report."
+                },
+                "kraken2_confidence": {
+                    "type": "number",
+                    "default": 0.0,
+                    "description": "Kraken2 --confidence."
+                },
+                "kraken2_memory_mapping": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Kraken2 --memory-mapping (database not loaded into RAM)."
+                },
+                "contamination_warn_hiv_pct": {
+                    "type": "number",
+                    "default": 50,
+                    "description": "Warn when HIV-1 is below this % of classified fragments."
+                },
+                "contamination_warn_human_pct": {
+                    "type": "number",
+                    "default": 50,
+                    "description": "Warn when human reads exceed this % of all fragments."
+                }
+            }
+        },
+        "subtype_options": {
+            "title": "Subtype estimate (BBSplit)",
+            "type": "object",
+            "description": "Read-mapping based estimate; research use only.",
+            "properties": {
+                "subtype_panel": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "description": "Panel folder with <bin>.fa per bin and panel.tsv (default: assets/presets/hiv1_subtype_panel_v1, bins A, B, M)."
+                },
+                "skip_subtype": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip the subtype estimate."
+                },
+                "subtype_min_reads": {
+                    "type": "integer",
+                    "default": 100,
+                    "description": "Fewer reads assigned to the panel gives 'undetermined'."
+                },
+                "subtype_min_margin": {
+                    "type": "number",
+                    "default": 10,
+                    "description": "Minimum difference (percentage points) between the top two bins; below it the call is flagged."
+                }
+            }
+        },
+        "consensus_options": {
+            "title": "Consensus (iVar)",
+            "type": "object",
+            "description": "Consensus sequence per sample.",
+            "properties": {
+                "skip_consensus": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip the consensus sequence."
+                },
+                "consensus_threshold": {
+                    "type": "number",
+                    "default": 0.5,
+                    "description": "iVar -t: bases making up at least this fraction of the depth; IUPAC code when more than one base is needed."
+                },
+                "consensus_min_depth": {
+                    "type": "integer",
+                    "default": 100,
+                    "description": "iVar -m: positions below this depth are N."
+                },
+                "consensus_insertion_threshold": {
+                    "type": "number",
+                    "default": 0.5,
+                    "description": "iVar -c: insertion frequency threshold (majority deletions are applied)."
+                },
+                "consensus_min_bq": {
+                    "type": "integer",
+                    "default": 20,
+                    "description": "iVar -q: minimum base quality."
+                }
+            }
+        }
+    },
+    "allOf": [
+        {
+            "$ref": "#/$defs/input_output_options"
+        },
+        {
+            "$ref": "#/$defs/codon_options"
+        },
+        {
+            "$ref": "#/$defs/read_processing_options"
+        },
+        {
+            "$ref": "#/$defs/contamination_options"
+        },
+        {
+            "$ref": "#/$defs/subtype_options"
+        },
+        {
+            "$ref": "#/$defs/consensus_options"
+        }
+    ]
+}

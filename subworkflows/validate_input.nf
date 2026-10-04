@@ -6,8 +6,11 @@
  *    • samplesheet exists; each row has a sample and either FASTQ
  *      (fastq_1, optional fastq_2) or a SAM; every file exists
  *      (relative paths are resolved against the samplesheet's folder)
- *    • reference FASTA header carries protein annotations, including the
- *      requested --protein
+ *    • FASTQ samples need --kraken2_db unless --skip_contamination; a
+ *      warning is printed when the first read header does not look like
+ *      Illumina (the pipeline supports Illumina PE/SE only)
+ *    • reference FASTA header carries protein annotations, including every
+ *      protein requested with --protein (one name, a list or 'all')
  *    • amplicons TSV has 7 tab-separated columns
  *
  *  Any failed check stops the run with a clear error message.
@@ -50,6 +53,12 @@ workflow VALIDATE_INPUT {
             if (fq2 && !fq1) {
                 error "Samplesheet ${ss_file}: sample '${sample}' has fastq_2 but no fastq_1"
             }
+            if (fq1 && !params.skip_contamination && !params.kraken2_db) {
+                error "Sample '${sample}' has FASTQ input: set --kraken2_db (Kraken2 database folder, e.g. Standard-8) or use --skip_contamination"
+            }
+            if (fq1) {
+                checkIlluminaHeader(sample, resolveSheetPath(ss_file, sample, fq1))
+            }
             sam
                 ? tuple([id: sample], 'sam', [resolveSheetPath(ss_file, sample, sam)])
                 : tuple([id: sample, single_end: !fq2], 'fastq', fq2 ? [resolveSheetPath(ss_file, sample, fq1), resolveSheetPath(ss_file, sample, fq2)] : [resolveSheetPath(ss_file, sample, fq1)])
@@ -74,8 +83,18 @@ workflow VALIDATE_INPUT {
     if (!proteins) {
         log.warn "Reference header lacks protein annotations. Expected format: '>ID PR(Protease):2253-2549;RT(Reverse Transcriptase):2550-3869'"
     }
-    else if (!(params.protein in proteins)) {
-        error "Reference header has no annotation for --protein ${params.protein} (found: ${proteins.join(', ')})"
+    else {
+        def requested = params.protein.toString().split(',').collect { p -> p.trim() }.findAll { p -> p }
+        if (!requested) {
+            error "--protein is empty: give a protein name, a comma-separated list or 'all'"
+        }
+        if (requested.size() > 1 && requested.any { p -> p.toLowerCase() == 'all' }) {
+            error "--protein 'all' cannot be combined with other names (got: ${params.protein})"
+        }
+        def missingProteins = requested.findAll { p -> p.toLowerCase() != 'all' && !(p in proteins) }
+        if (missingProteins) {
+            error "Reference header has no annotation for --protein ${missingProteins.join(', ')} (found: ${proteins.join(', ')})"
+        }
     }
     reference_ch = channel.value(ref_file)
 
@@ -94,6 +113,22 @@ workflow VALIDATE_INPUT {
     sam       = sam_ch         // [ meta, sam ]
     reference = reference_ch
     amplicons = amplicons_ch
+}
+
+// Illumina only (PE or SE): warn when the first header looks like another
+// platform (Oxford Nanopore 'runid=' tags, Ion Torrent '@XXXXX:00000:00000'
+// names). Archive-renamed reads (e.g. '@SRR123.1') cannot be checked.
+def checkIlluminaHeader(String sample, fq) {
+    def header = fq.withInputStream { stream ->
+        def input = fq.name.endsWith('.gz') ? new java.util.zip.GZIPInputStream(stream) : stream
+        new BufferedReader(new InputStreamReader(input)).readLine() ?: ''
+    }
+    def looksOnt = header.contains('runid=') || header =~ /^@[0-9a-f]{8}-[0-9a-f]{4}-/
+    def looksIon = header =~ /^@[A-Z0-9]{5}:\d{5}:\d{5}(\s|$)/
+    if (looksOnt || looksIon) {
+        log.warn "Sample '${sample}': the first read header (${header.take(60)}) does not look like Illumina. " +
+                 "nf-codonyat supports Illumina paired-end and single-end data only."
+    }
 }
 
 // Relative paths in the samplesheet are resolved against its folder
