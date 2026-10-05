@@ -13,10 +13,11 @@ Based on nf-core lint checks and nf-core/tools best practices.
 ## ✅ Implemented (Completed)
 
 ### Visual Documentation
-- ✅ **Metro map diagram** - SVG and PNG showing complete pipeline workflow
-  - All processing steps accurately represented
-  - Color-coded paths for different workflow branches
-  - Embedded in README for visibility
+- ✅ **Metro map diagram** - hand-laid SVG + PNG (2x) regenerated from the real workflow
+  - Sections: input, pre-processing/QC, contamination (Kraken2), subtyping (BBSplit),
+    merge+alignment, strand branch, consensus (iVar), codon/AA tables, reporting
+  - Horizontal / vertical / 45° segments only; labels beside stations; legend; research-use footer
+  - Generator: `docs/images/make_metro_map.py`; copy also at `/workspace/nf-codonyat-metro-map.png`
 
 ### Configuration Files  
 - ✅ **conf/base.config** - Resource labels with retry/error strategy
@@ -29,11 +30,11 @@ Based on nf-core lint checks and nf-core/tools best practices.
 - ✅ **conf/test_full.config** - Full test profile
 
 ### Nextflow Configuration
-- ✅ **nf-schema plugin** (v2.2.0) for parameter validation
+- ✅ **nf-schema plugin** (v2.8.0) for parameter validation and `--help`
 - ✅ **process.resourceLimits** for resource enforcement (Nextflow >=24.04)
 - ✅ **CI resource caps** in test.config (4 CPUs, 15 GB memory, 6h time)
 - ✅ **input parameter** (with samplesheet alias for backwards compatibility)
-- ✅ **help, show_hidden, validate_params** parameters  
+- ✅ **help, helpFull, showHidden, validate_params** parameters  
 - ✅ **podman profile** added
 - ✅ **Proper includeConfig** structure (conf/base.config, conf/test.config)
 - ✅ **Manifest updates**: author, doi field placeholder
@@ -79,77 +80,22 @@ Based on nf-core lint checks and nf-core/tools best practices.
   - Includes: input parameter, all process parameters, help, validate_params
   - Enables --help output and full validation
 
-## 🚫 Intentionally Skipped
+## ✅ nf-prov (added)
 
-### Not Applicable to Research-Only Pipeline
-- 🚫 **nf-core namespace** (`manifest.name` = 'sjoclaudi/nf-codonyat')
-  - Reason: Independent pipeline, not part of nf-core organization
-  - nf-core namespace reserved for official nf-core pipelines
+- Official Nextflow plugin `nf-prov@1.7.0` (BCO / WRROC / DAG)
+- Disabled by default; enable with `--prov_enabled true`
+- Reports written under `<outdir>/pipeline_info/` (`bco.json`, `ro-crate-metadata.json`, `prov_dag.html`)
+- Existing local `PROVENANCE` process (methods.md, software_versions.yml, provenance.json) kept
+- Deleted the incorrect `docs/NF-PROV-EVALUATION.md` (it wrongly claimed nf-prov is not a Nextflow plugin)
 
-- 🚫 **nf-core custom configs**
-  - `params.custom_config_version`, `params.custom_config_base`
-  - Reason: Not using nf-core institutional configs system
-  - Alternative: Users can use `-c` flag for custom configs
+## 🚫 Intentionally skipped
 
-- 🚫 **Email templates** (assets/email_template.txt, assets/sendmail_template.txt)
-  - Reason: Research pipeline doesn't include email notifications
-  - Impact: None - feature not needed for target use case
+- **nf-core namespace** — independent research pipeline; still follows nf-core practices
+- **nf-core custom configs** — not needed
+- **Email templates** — not required for this research pipeline
 
-- 🚫 **nf-core logo files**  
-  - assets/nf-core-nf-codonyat_logo_*.png in assets/ and docs/images/
-  - Reason: Independent pipeline with own identity
-  - Alternative: Can add sjoclaudi/nf-codonyat logos if desired
+## 🔬 Research use only
 
-### Documentation Files (Lower Priority)
-- 🚫 **docs/README.md** - Redundant with root README.md
-- 🚫 **tests/default.nf.test** - Have tests/main.nf.test instead
-
-### Advanced Features (Not Required)
-- 🚫 **tower.yml** - Seqera Platform integration
-  - Reason: Can be added by users who need it
-  - Not required for core functionality
-
-- 🚫 **RO-Crate / nf-prov** - Research Object packaging
-  - Reason: Not a Nextflow 26 plugin, requires external workflow
-  - Existing PROVENANCE process captures sufficient metadata for research use
-  - See docs/NF-PROV-EVALUATION.md for full evaluation
-
-- 🚫 **Pre-commit config** - Git hooks for code quality
-  - Reason: Small team, can be added later
-  - Standard .editorconfig and .prettierrc.yml provided
-
-## 📊 Impact Assessment
-
-### High Priority (Completed)
-- ✅ Metro map visualization
-- ✅ Resource configuration with retry strategy
-- ✅ nf-schema validation
-- ✅ Standard documentation files
-- ✅ Test configurations
-
-### Medium Priority (Partial / Future)
-- ⚠️ Container configuration files (blocked by Nextflow config parsing)
-- ⚠️ Updated nextflow_schema.json
-- 🚫 Email notifications (explicitly not needed)
-
-### Low Priority (Optional / Not Needed)
-- 🚫 nf-core branding
-- 🚫 Institutional configs
-- 🚫 Advanced platform integrations
-
-## Research Use Only Compliance
-
-All changes maintain the research-use-only scope:
-- No clinical interpretation
-- No drug-resistance analysis  
-- Clear disclaimers in documentation and MultiQC
-- Descriptive outputs only (QC, contamination, subtype estimates, frequency tables)
-
-## Next Steps (If Desired)
-
-1. Fix check_max() function format to allow container config generation
-2. Regenerate nextflow_schema.json with nf-core schema tool
-3. Add testsDir to nf-test.config
-4. Update tests/nextflow.config with testdata base paths
-5. Consider adding pipeline logo
-6. Consider Seqera Platform configuration (tower.yml) for Cloud deployment users
+- No clinical / diagnostic interpretation; no drug-resistance analysis
+- Short disclaimers in docs, MultiQC, provenance, and the metro-map footer
+- No speculation about future clinical use

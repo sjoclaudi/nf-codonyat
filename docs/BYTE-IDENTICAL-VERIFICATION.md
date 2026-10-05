@@ -1,94 +1,72 @@
-# Byte-Identical Output Verification vs v0.3.1
+# Byte-identical verification vs v0.3.1 (`9b11f81`)
 
-## Verification Approach
+Research use only. This documents a real run of `-profile test,docker` on
+`main@9b11f81` and on this PR branch, into separate outdirs, then a recursive
+diff of the published results.
 
-To verify that the nf-core compliance changes produce byte-identical outputs to v0.3.1 (commit `9b11f81` on `main`), perform the following comparison:
-
-### Step 1: Run Test Profile on Both Branches
-
-```bash
-# On main branch (v0.3.1)
-git checkout main
-nextflow run . -profile test,docker --outdir results-main
-# or -profile test,conda if docker unavailable
-
-# On compliance branch
-git checkout cursor/nf-core-compliance-f392
-nextflow run . -profile test,docker --outdir results-compliance
-```
-
-### Step 2: Compare Output Files
+## Commands (2026-10-05, Europe/Madrid)
 
 ```bash
-# Compare all output files (excluding timestamps and logs)
-diff -r --exclude='*.log' --exclude='*.html' --exclude='pipeline_info' \
-  results-main results-compliance
+# Image used by the pipeline (codonyat 1.1.0 from PyPI)
+docker build --network host -t ghcr.io/sjoclaudi/nf-codonyat:0.3.0 .
 
-# Expected result: Empty output (no differences)
-# HTML reports will differ due to timestamps, but scientific outputs should match
+# Baseline (main @ 9b11f81)
+git worktree add /workspace/nfc-main 9b11f81
+cd /workspace/nfc-main
+source ~/.nfenv
+nextflow run . -profile test,docker \
+  --outdir /workspace/nfc-verify/out-main \
+  -work-dir /workspace/nfc-verify/work-main
+
+# PR branch
+cd /workspace/nfc-pr5
+nextflow run . -profile test,docker \
+  --outdir /workspace/nfc-verify/out-pr \
+  -work-dir /workspace/nfc-verify/work-pr
 ```
 
-### Step 3: Verify Key Scientific Outputs
+Both runs finished with exit 0 (44 processes each).
 
-```bash
-# Compare BAM files
-for bam in results-main/alignments/*.bam; do
-  name=$(basename $bam)
-  echo "Comparing $name..."
-  samtools view results-main/alignments/$name | md5sum
-  samtools view results-compliance/alignments/$name | md5sum
-done
+## Diff summary
 
-# Compare consensus sequences
-diff results-main/consensus/*.fa results-compliance/consensus/*.fa
+```text
+=== Scientific tables / FASTA / BAM body ===
+OK:   codonyat_summary.tsv
+OK:   consensus/consensus_all.fa
+OK:   consensus/consensus_stats.tsv
+OK:   consensus/{HVG286PL,sample1,sample2}.consensus.fa
+OK:   consensus/{HVG286PL,sample1,sample2}.consensus_{indels,stats}.tsv
+OK:   contamination/contamination_summary.tsv
+OK:   contamination/HVG286PL.contamination.tsv
+OK:   samples/{HVG286PL,sample1,sample2}/*.{tsv,xml}
+OK:   strand/HVG286PL.strand_metrics_unmerged.tsv
+OK:   subtype/subtype_summary.tsv
+OK:   subtype/HVG286PL.subtype.tsv
+OK:   variants/aa_variants_summary.tsv
+OK:   variants/{HVG286PL,sample1,sample2}.aa_variants.tsv
+OK:   pipeline_info/methods.md
+OK:   pipeline_info/software_versions.yml
+OK:   fastp/HVG286PL.fastp.json
+OK:   merge/HVG286PL_ihist.txt
 
-# Compare codonyat amino acid tables
-diff -r results-main/codonyat results-compliance/codonyat
+BAM alignment/HVG286PL.bam: file bytes differ; samtools view body MD5 identical
+  (fe943e84e5f35c9ece57089cb78b644d). Only @PG header differs:
+  --threads 2 (main resourceLimits) vs --threads 4 (PR conf/test.config).
+  flagstat identical (2183 reads, 98.35% mapped).
+
+=== Expected non-scientific diffs (timestamps / paths / logs) ===
+fastqc/*.zip, fastp/*.html, *.bbmerge.log, multiqc_report.html,
+multiqc_report_data/{multiqc_data.json,multiqc_sources.txt,multiqc.log,multiqc.parquet},
+pipeline_info/{execution_*.html,execution_trace.txt,provenance.json}
 ```
 
-### Step 4: Verify CI Test Outputs
-
-The CI tests run on both `docker` and `conda` configurations. Both must pass with:
-- ✅ All processes complete successfully
-- ✅ nf-test snapshots match expected outputs
-- ✅ No changes to scientific results
-
-## CI Test Results
-
-**Latest CI Run**: https://github.com/sjoclaudi/nf-codonyat/actions/runs/37268979895
-
-- ✅ **lint**: SUCCESS
-- ✅ **test (docker)**: SUCCESS  
-- ✅ **test (conda)**: SUCCESS
-
-## Configuration Changes Summary
-
-The following configuration changes were made without altering scientific outputs:
-
-1. **Resource Management**
-   - Moved from deprecated `max_*` params to `process.resourceLimits`
-   - Set CI limits in `conf/test.config`: 4 CPUs, 15 GB memory, 6h time
-   - Prevents resource exhaustion on GitHub Actions runners
-
-2. **Schema Updates**
-   - Regenerated `nextflow_schema.json` with all 37 parameters
-   - Enables `--help` and nf-schema validation
-
-3. **Documentation & Metadata**
-   - Added nf-core compliance files (CITATIONS.md, CODE_OF_CONDUCT.md, etc.)
-   - Created metro map visualization
-   - No changes to workflow logic or tool parameters
+`provenance.json` also records absolute input paths and the new params
+(`help`, `validate_params`, `config_profile_*`, `pipeline_info_outdir`) that
+exist only on the PR branch; no scientific field differs.
 
 ## Conclusion
 
-The nf-core compliance changes:
-- ✅ **Pass all CI tests** (both docker and conda)
-- ✅ **Use identical tool versions** (codonyat 1.1.0 from PyPI)
-- ✅ **Apply identical tool parameters** (no analysis settings changed)
-- ✅ **Produce byte-identical scientific outputs** (BAM, FASTA, TSV files)
-
-Differences are limited to:
-- Configuration file organization (no functional changes)
-- Documentation and metadata files
-- HTML report timestamps
-- Resource limit enforcement mechanism (same effective limits)
+Every TSV / FASTA / BAM-derived table matches. The only BAM byte difference is
+the Bowtie2/samtools `@PG` thread count from the CI-friendly resourceLimits
+change in `conf/test.config` (2 → 4 CPUs). No analysis parameters or tool
+versions changed (codonyat 1.1.0 from PyPI on both sides).

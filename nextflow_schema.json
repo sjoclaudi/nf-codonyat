@@ -38,14 +38,26 @@
                     "type": "string",
                     "default": "copy",
                     "description": "How results are published (Nextflow publishDir mode).",
-                    "enum": ["symlink", "rellink", "link", "copy", "copyNoFollow", "move"]
+                    "enum": [
+                        "symlink",
+                        "rellink",
+                        "link",
+                        "copy",
+                        "copyNoFollow",
+                        "move"
+                    ]
                 },
                 "save_intermediates": {
                     "type": "boolean",
                     "description": "Also publish trimmed FASTQ, per-part BAMs, the strand-branch BAM/codon table, raw iVar output and Kraken2 per-read assignments."
                 }
             },
-            "required": ["samplesheet", "reference", "amplicons", "outdir"]
+            "required": [
+                "samplesheet",
+                "reference",
+                "amplicons",
+                "outdir"
+            ]
         },
         "codon_options": {
             "title": "Codon / amino-acid options",
@@ -207,6 +219,51 @@
                     "description": "iVar -q: minimum base quality."
                 }
             }
+        },
+        "generic_options": {
+            "title": "Generic options",
+            "type": "object",
+            "description": "Less common options for the pipeline, typically set in config.",
+            "properties": {
+                "help": {
+                    "type": "boolean",
+                    "description": "Display the short help message and exit.",
+                    "hidden": true
+                },
+                "helpFull": {
+                    "type": "boolean",
+                    "description": "Display the full help message and exit.",
+                    "hidden": true
+                },
+                "validate_params": {
+                    "type": "boolean",
+                    "description": "Validate parameters against nextflow_schema.json via nf-schema.",
+                    "default": true,
+                    "hidden": true
+                },
+                "prov_enabled": {
+                    "type": "boolean",
+                    "description": "Write nf-prov provenance reports (BCO, WRROC, DAG) under <outdir>/pipeline_info/.",
+                    "default": false
+                },
+                "pipeline_info_outdir": {
+                    "type": "string",
+                    "description": "Internal: outdir snapshot used for execution reports. Do not set.",
+                    "hidden": true
+                },
+                "input": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Alias for --samplesheet (CSV: sample,fastq_1,fastq_2,sam).",
+                    "hidden": true
+                },
+                "showHidden": {
+                    "type": "boolean",
+                    "description": "Show hidden parameters in the help message.",
+                    "default": false,
+                    "hidden": true
+                }
+            }
         }
     },
     "allOf": [
@@ -227,26 +284,10 @@
         },
         {
             "$ref": "#/$defs/consensus_options"
+        },
+        {
+            "$ref": "#/$defs/generic_options"
         }
     ],
-    "properties": {
-        "input": {
-            "type": "string"
-        },
-        "show_hidden": {
-            "type": "boolean"
-        },
-        "schema_ignore_params": {
-            "type": "string",
-            "default": "genomes,pipeline_info_outdir"
-        },
-        "validate_params": {
-            "type": "boolean",
-            "default": true
-        },
-        "pipeline_info_outdir": {
-            "type": "string",
-            "default": "results"
-        }
-    }
+    "properties": {}
 }
