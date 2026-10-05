@@ -1,0 +1,11 @@
+## Seqera Platform configuration file
+## https://docs.seqera.io/platform/latest/compute-envs/overview
+
+launch:
+  paramsText: |
+    input: null
+    reference: null
+    amplicons: null
+  labelsText: |
+    nf-codonyat
+    research
