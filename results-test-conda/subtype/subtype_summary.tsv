@@ -1,5 +1,0 @@
-# Estimated HIV-1 subtype (read-mapping based; research use only). Not a genotyping result.
-SAMPLE	BIN	LABEL	READS	PCT_OF_ASSIGNED	AMBIGUOUS_READS	CALL	RUNNER_UP	MARGIN_PCT_POINTS	ASSIGNED_READS	AMBIGUOUS_FRACTION	FLAG
-HVG286PL	A	subtype A	0	0.0	10	B	M	99.193	3468	0.0275	none
-HVG286PL	B	subtype B	3454	99.596	98	B	M	99.193	3468	0.0275	none
-HVG286PL	M	group M, not assigned to A or B	14	0.404	90	B	M	99.193	3468	0.0275	none

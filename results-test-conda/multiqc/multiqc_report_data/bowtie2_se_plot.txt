@@ -1,2 +1,0 @@
-Sample	SE mapped uniquely	SE multimapped	SE not aligned
-HVG286PL	1636.0	13.0	34.0

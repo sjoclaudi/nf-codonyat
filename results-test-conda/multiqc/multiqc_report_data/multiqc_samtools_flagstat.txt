@@ -1,7 +1,0 @@
-Sample	total_passed	total_failed	secondary_passed	secondary_failed	supplementary_passed	supplementary_failed	duplicates_passed	duplicates_failed	mapped_passed	mapped_failed	mapped_passed_pct	mapped_failed_pct	paired in sequencing_passed	paired in sequencing_failed	read1_passed	read1_failed	read2_passed	read2_failed	properly paired_passed	properly paired_failed	properly paired_passed_pct	properly paired_failed_pct	with itself and mate mapped_passed	with itself and mate mapped_failed	singletons_passed	singletons_failed	singletons_passed_pct	singletons_failed_pct	with mate mapped to a different chr_passed	with mate mapped to a different chr_failed	with mate mapped to a different chr (mapQ >= 5)_passed	with mate mapped to a different chr (mapQ >= 5)_failed	flagstat_total
-HVG286PL	2183	0	0	0	0	0	0	0	2147	0	98.35	nan	500	0	250	0	250	0	150	0	30.0	nan	496	0	2	0	0.4	nan	0	0	0	0	2183
-HVG286PL.filtered	2132	0	0	0	0	0	0	0	2132	0	100.0	nan	492	0	247	0	245	0	144	0	29.27	nan	490	0	2	0	0.41	nan	0	0	0	0	2132
-sample1	10	0	0	0	0	0	0	0	10	0	100.0	nan	0	0	0	0	0	0	0	0	nan	nan	0	0	0	0	nan	nan	0	0	0	0	10
-sample1.filtered	10	0	0	0	0	0	0	0	10	0	100.0	nan	0	0	0	0	0	0	0	0	nan	nan	0	0	0	0	nan	nan	0	0	0	0	10
-sample2	7	0	0	0	0	0	0	0	7	0	100.0	nan	0	0	0	0	0	0	0	0	nan	nan	0	0	0	0	nan	nan	0	0	0	0	7
-sample2.filtered	7	0	0	0	0	0	0	0	7	0	100.0	nan	0	0	0	0	0	0	0	0	nan	nan	0	0	0	0	nan	nan	0	0	0	0	7

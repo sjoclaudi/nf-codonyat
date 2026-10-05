@@ -4,3 +4,12 @@ results/
 results-test/
 .nf-test/
 .nf-test.log
+
+# Test outputs and build artifacts
+results*/
+work/
+.nextflow*/
+.nf-test*/
+nextflow
+nf-test
+*.log

@@ -1,4 +1,0 @@
-#name	%unambiguousReads	unambiguousMB	%ambiguousReads	ambiguousMB	unambiguousReads	ambiguousReads	assignedReads	assignedBases
-B	89.34299	0.905334	2.53492	0.021566	3454	98	3552	926900
-M	0.36213	0.002299	2.32799	0.020002	14	90	14	2299
-primary	0.00000	0.000000	0.25867	0.001761	0	10	0	0

@@ -1,2 +1,0 @@
-Sample	PE mapped uniquely	PE mapped discordantly uniquely	PE one mate mapped uniquely	PE multimapped	PE neither mate aligned
-HVG286PL.unmerged	72.0	173.0	1.0	3.0	1.0

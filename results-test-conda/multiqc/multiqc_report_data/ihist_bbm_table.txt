@@ -1,2 +1,0 @@
-Sample	Mean	Median	STDev	PercentOfPairs
-HVG286PL_ihist	306.679	305.0	117.958	87.067

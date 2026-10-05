@@ -1,3 +1,0 @@
-Sample	Top overrepresented sequence	Sum of remaining overrepresented sequences
-HVG286PL_1	0.65	30.35
-HVG286PL_2	0.7000000000000001	27.0

@@ -1,2 +1,0 @@
-Sample	Human immunodeficiency virus 1	Homo sapiens	Unclassified
-HVG286PL	1878.0	8.0	47.0

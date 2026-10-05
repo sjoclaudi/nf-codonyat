@@ -1,6 +1,0 @@
-  2.43	47	47	U	0	unclassified
- 97.57	1886	0	R	1	root
- 97.15	1878	0	D	10239	  Viruses
- 97.15	1878	1878	S	11676	    Human immunodeficiency virus 1
-  0.41	8	0	D	2759	  Eukaryota
-  0.41	8	8	S	9606	    Homo sapiens
