@@ -46,14 +46,15 @@ workflow {
     if (help_requested) {
         return
     }
-    if (params.validate_params) {
-        validateParameters()
-    }
 
-    // Fail fast on missing required parameters, before any work is scheduled
+    // Fail fast on missing required parameters (clear --prefixed message for users and nf-test)
     def missing = ['samplesheet', 'reference', 'amplicons'].findAll { name -> !params[name] }
     if (missing) {
         error "Missing required parameter(s): ${missing.collect { name -> '--' + name }.join(', ')}"
+    }
+
+    if (params.validate_params) {
+        validateParameters()
     }
 
     // The execution reports are placed using params.outdir as it was when

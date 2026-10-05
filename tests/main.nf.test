@@ -327,7 +327,11 @@ nextflow_pipeline {
 
         then {
             assert workflow.failed
-            assert workflow.stdout.any { line -> line.contains('Missing required parameter(s): --samplesheet') }
+            // nf-schema validateParameters() reports required params; keep the local --samplesheet wording too
+            assert workflow.stdout.any { line ->
+                line.contains('Missing required parameter(s): --samplesheet') ||
+                line.contains('Missing required parameter(s): samplesheet')
+            }
         }
     }
 
