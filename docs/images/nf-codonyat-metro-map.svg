@@ -1,215 +1,171 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1400 900" width="1400" height="900">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800">
   <defs>
     <style>
       .station { fill: #2c3e50; stroke: #ecf0f1; stroke-width: 3; }
-      .station-text { fill: #ecf0f1; font-family: 'Arial', sans-serif; font-size: 14px; font-weight: bold; text-anchor: middle; }
-      .station-detail { fill: #95a5a6; font-family: 'Arial', sans-serif; font-size: 11px; text-anchor: middle; }
-      .line { stroke-width: 8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-      .line-fastq { stroke: #3498db; }
-      .line-sam { stroke: #e74c3c; }
-      .line-main { stroke: #2ecc71; }
-      .line-strand { stroke: #f39c12; }
+      .label { fill: #2c3e50; font-family: Arial, sans-serif; font-size: 13px; font-weight: bold; }
+      .section-label { fill: #7f8c8d; font-family: Arial, sans-serif; font-size: 11px; font-style: italic; }
+      .line { stroke-width: 6; fill: none; stroke-linecap: round; }
+      .line-main { stroke: #3498db; }
+      .line-branch { stroke: #e67e22; }
       .line-report { stroke: #9b59b6; }
-      .terminus { fill: #ecf0f1; stroke: #2c3e50; stroke-width: 3; }
-      .terminus-text { fill: #2c3e50; font-family: 'Arial', sans-serif; font-size: 16px; font-weight: bold; text-anchor: middle; }
-      .legend-text { fill: #2c3e50; font-family: 'Arial', sans-serif; font-size: 12px; }
-      .title-text { fill: #2c3e50; font-family: 'Arial', sans-serif; font-size: 28px; font-weight: bold; text-anchor: middle; }
-      .subtitle-text { fill: #7f8c8d; font-family: 'Arial', sans-serif; font-size: 14px; text-anchor: middle; }
+      .terminus { fill: #ecf0f1; stroke: #2c3e50; stroke-width: 4; }
+      .terminus-label { fill: #2c3e50; font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; text-anchor: middle; }
+      .title { fill: #2c3e50; font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; text-anchor: middle; }
+      .subtitle { fill: #7f8c8d; font-family: Arial, sans-serif; font-size: 12px; text-anchor: middle; }
     </style>
   </defs>
   
   <!-- Background -->
-  <rect width="1400" height="900" fill="#ecf0f1"/>
+  <rect width="1200" height="800" fill="#ecf0f1"/>
   
   <!-- Title -->
-  <text x="700" y="40" class="title-text">nf-codonyat Pipeline</text>
-  <text x="700" y="65" class="subtitle-text">Codon-aware HIV-1 amplicon analysis (Research use only)</text>
+  <text x="600" y="35" class="title">nf-codonyat Pipeline</text>
+  <text x="600" y="55" class="subtitle">HIV-1 Amplicon Analysis (Research Use Only)</text>
   
-  <!-- Input Terminus -->
-  <circle cx="100" cy="150" r="30" class="terminus"/>
-  <text x="100" y="155" class="terminus-text">INPUT</text>
-  <text x="100" y="200" class="station-detail">FASTQ or SAM</text>
+  <!-- Section: Input -->
+  <text x="70" y="95" class="section-label">INPUT</text>
+  <circle cx="100" cy="120" r="20" class="terminus"/>
+  <text x="100" y="125" class="terminus-label">IN</text>
   
-  <!-- FASTQ Path -->
+  <!-- Section: Pre-processing -->
+  <text x="170" y="95" class="section-label">PRE-PROCESSING</text>
+  
   <!-- FastQC -->
-  <line x1="130" y1="150" x2="250" y2="150" class="line line-fastq"/>
-  <circle cx="280" cy="150" r="25" class="station"/>
-  <text x="280" y="155" class="station-text">FastQC</text>
+  <line x1="120" y1="120" x2="180" y2="120" class="line line-main"/>
+  <circle cx="200" cy="120" r="18" class="station"/>
+  <text x="215" y="115" class="label">FastQC</text>
   
   <!-- fastp -->
-  <line x1="305" y1="150" x2="350" y2="150" class="line line-fastq"/>
-  <circle cx="380" cy="150" r="25" class="station"/>
-  <text x="380" y="155" class="station-text">fastp</text>
-  <text x="380" y="185" class="station-detail">trim &amp; QC</text>
+  <line x1="218" y1="120" x2="280" y2="120" class="line line-main"/>
+  <circle cx="300" cy="120" r="18" class="station"/>
+  <text x="315" y="115" class="label">fastp</text>
+  <text x="315" y="130" class="section-label">(trim)</text>
   
-  <!-- Kraken2 contamination branch -->
-  <line x1="405" y1="150" x2="450" y2="100" class="line line-report"/>
-  <circle cx="480" cy="100" r="25" class="station"/>
-  <text x="480" y="105" class="station-text">Kraken2</text>
-  <text x="480" y="130" class="station-detail">contamination</text>
+  <!-- Section: QC / Contamination -->
+  <text x="370" y="95" class="section-label">QC / SUBTYPING</text>
   
-  <!-- BBSplit subtype branch -->
-  <line x1="405" y1="150" x2="450" y2="200" class="line line-report"/>
-  <circle cx="480" cy="200" r="25" class="station"/>
-  <text x="480" y="205" class="station-text">BBSplit</text>
-  <text x="480" y="230" class="station-detail">subtype est.</text>
+  <!-- Kraken2 branch -->
+  <line x1="318" y1="120" x2="380" y2="120" class="line line-main"/>
+  <line x1="400" y1="120" x2="400" y2="170" class="line line-report"/>
+  <circle cx="400" cy="190" r="18" class="station"/>
+  <text x="415" y="195" class="label">Kraken2</text>
   
-  <!-- Strand metrics branch (pre-merge PE) -->
-  <line x1="405" y1="150" x2="450" y2="300" class="line line-strand"/>
-  <circle cx="480" cy="300" r="25" class="station"/>
-  <text x="480" y="290" class="station-text">Bowtie2</text>
-  <text x="480" y="305" class="station-text">PE</text>
-  <text x="480" y="330" class="station-detail">strand branch</text>
+  <!-- BBSplit branch -->
+  <line x1="400" y1="120" x2="400" y2="220" class="line line-report"/>
+  <circle cx="400" cy="240" r="18" class="station"/>
+  <text x="415" y="245" class="label">BBSplit</text>
   
-  <line x1="505" y1="300" x2="580" y2="300" class="line line-strand"/>
-  <circle cx="610" cy="300" r="25" class="station"/>
-  <text x="610" y="290" class="station-text">Filter</text>
-  <text x="610" y="305" class="station-text">STRAND</text>
+  <!-- BBMerge (PE only) -->
+  <line x1="400" y1="120" x2="480" y2="120" class="line line-main"/>
+  <circle cx="500" cy="120" r="18" class="station"/>
+  <text x="515" y="115" class="label">BBMerge</text>
+  <text x="515" y="130" class="section-label">(PE)</text>
   
-  <line x1="635" y1="300" x2="680" y2="300" class="line line-strand"/>
-  <circle cx="710" cy="300" r="25" class="station"/>
-  <text x="710" y="290" class="station-text">codonyat</text>
-  <text x="710" y="305" class="station-text">STRAND</text>
-  
-  <line x1="735" y1="300" x2="780" y2="300" class="line line-strand"/>
-  <circle cx="810" cy="300" r="25" class="station"/>
-  <text x="810" y="290" class="station-text">Strand</text>
-  <text x="810" y="305" class="station-text">Metrics</text>
-  
-  <!-- BBMerge -->
-  <line x1="405" y1="150" x2="520" y2="150" class="line line-fastq"/>
-  <circle cx="550" cy="150" r="25" class="station"/>
-  <text x="550" y="155" class="station-text">BBMerge</text>
-  <text x="550" y="180" class="station-detail">PE only</text>
+  <!-- Section: Alignment -->
+  <text x="590" y="95" class="section-label">ALIGNMENT</text>
   
   <!-- Bowtie2 Build -->
-  <line x1="575" y1="150" x2="630" y2="150" class="line line-main"/>
-  <circle cx="660" cy="150" r="25" class="station"/>
-  <text x="660" y="145" class="station-text">Bowtie2</text>
-  <text x="660" y="160" class="station-text">Build</text>
+  <line x1="518" y1="120" x2="600" y2="120" class="line line-main"/>
+  <circle cx="620" cy="120" r="18" class="station"/>
+  <text x="635" y="115" class="label">Bowtie2</text>
+  <text x="635" y="130" class="section-label">Build</text>
   
   <!-- Bowtie2 Align -->
-  <line x1="685" y1="150" x2="730" y2="150" class="line line-main"/>
-  <circle cx="760" cy="150" r="25" class="station"/>
-  <text x="760" y="145" class="station-text">Bowtie2</text>
-  <text x="760" y="160" class="station-text">Align</text>
+  <line x1="638" y1="120" x2="700" y2="120" class="line line-main"/>
+  <circle cx="720" cy="120" r="18" class="station"/>
+  <text x="735" y="115" class="label">Bowtie2</text>
+  <text x="735" y="130" class="section-label">Align</text>
   
-  <!-- SAM Path junction -->
-  <line x1="130" y1="150" x2="200" y2="400" class="line line-sam"/>
-  <text x="150" y="280" class="subtitle-text">SAM skip</text>
-  <text x="150" y="295" class="subtitle-text">FASTQ steps</text>
-  
-  <!-- Merge/Filter junction -->
-  <line x1="785" y1="150" x2="850" y2="150" class="line line-main"/>
-  <line x1="200" y1="400" x2="850" y2="400" class="line line-sam"/>
-  <line x1="850" y1="150" x2="850" y2="400" class="line line-main"/>
+  <!-- Strand branch (PE unmerged) -->
+  <line x1="720" y1="138" x2="720" y2="280" class="line line-branch"/>
+  <circle cx="720" cy="300" r="18" class="station"/>
+  <text x="650" y="305" class="label">Strand (PE)</text>
   
   <!-- samtools merge -->
-  <circle cx="880" cy="275" r="25" class="station"/>
-  <text x="880" y="265" class="station-text">samtools</text>
-  <text x="880" y="280" class="station-text">merge</text>
-  <line x1="850" y1="175" x2="880" y2="250" class="line line-main"/>
-  <line x1="850" y1="375" x2="880" y2="300" class="line line-sam"/>
+  <line x1="738" y1="120" x2="800" y2="120" class="line line-main"/>
+  <circle cx="820" cy="120" r="18" class="station"/>
+  <text x="835" y="125" class="label">Merge</text>
   
-  <!-- Flagstat before filter -->
-  <line x1="905" y1="275" x2="960" y2="275" class="line line-main"/>
-  <circle cx="990" cy="275" r="25" class="station"/>
-  <text x="990" y="270" class="station-text">flagstat</text>
-  <text x="990" y="285" class="station-text">(pre)</text>
+  <!-- SAM input joins here -->
+  <line x1="100" y1="140" x2="100" y2="400" class="line line-main" stroke-dasharray="5,5"/>
+  <line x1="100" y1="400" x2="820" y2="400" class="line line-main" stroke-dasharray="5,5"/>
+  <line x1="820" y1="138" x2="820" y2="400" class="line line-main"/>
+  <text x="200" y="420" class="section-label">SAM direct (skip FASTQ steps)</text>
   
-  <!-- Filter -->
-  <line x1="1015" y1="275" x2="1060" y2="275" class="line line-main"/>
-  <circle cx="1090" cy="275" r="25" class="station"/>
-  <text x="1090" y="265" class="station-text">samtools</text>
-  <text x="1090" y="280" class="station-text">view</text>
-  <text x="1090" y="305" class="station-detail">MAPQe20</text>
+  <!-- Section: Filtering -->
+  <text x="900" y="95" class="section-label">FILTERING</text>
   
-  <!-- Flagstat after filter -->
-  <line x1="1115" y1="275" x2="1160" y2="275" class="line line-main"/>
-  <circle cx="1190" cy="275" r="25" class="station"/>
-  <text x="1190" y="270" class="station-text">flagstat</text>
-  <text x="1190" y="285" class="station-text">(post)</text>
+  <!-- Flagstat pre -->
+  <line x1="838" y1="120" x2="900" y2="120" class="line line-main"/>
+  <circle cx="920" cy="120" r="18" class="station"/>
+  <text x="870" y="115" class="label">flagstat</text>
+  
+  <!-- Filter (samtools view) -->
+  <line x1="938" y1="120" x2="1000" y2="120" class="line line-main"/>
+  <circle cx="1020" cy="120" r="18" class="station"/>
+  <text x="1035" y="115" class="label">Filter</text>
+  <text x="1035" y="130" class="section-label">MAPQ≥20</text>
+  
+  <!-- Flagstat post -->
+  <line x1="1038" y1="120" x2="1080" y2="120" class="line line-main"/>
+  <circle cx="1100" cy="120" r="18" class="station"/>
+  <text x="1050" y="145" class="label">flagstat</text>
   
   <!-- Sort -->
-  <line x1="1215" y1="275" x2="1250" y2="450" class="line line-main"/>
-  <circle cx="1250" cy="480" r="25" class="station"/>
-  <text x="1250" y="475" class="station-text">samtools</text>
-  <text x="1250" y="490" class="station-text">sort</text>
+  <line x1="1100" y1="138" x2="1100" y2="200" class="line line-main"/>
+  <circle cx="1100" cy="220" r="18" class="station"/>
+  <text x="1050" y="225" class="label">Sort</text>
   
-  <!-- Split to parallel processes -->
-  <line x1="1250" y1="505" x2="1250" y2="540" class="line line-main"/>
+  <!-- Section: Analysis -->
+  <text x="600" y="455" class="section-label">ANALYSIS</text>
   
-  <!-- iVar consensus branch -->
-  <line x1="1250" y1="540" x2="1150" y2="620" class="line line-main"/>
-  <circle cx="1150" cy="650" r="25" class="station"/>
-  <text x="1150" y="645" class="station-text">iVar</text>
-  <text x="1150" y="660" class="station-text">consensus</text>
-  
-  <line x1="1150" y1="675" x2="1150" y2="720" class="line line-main"/>
-  <circle cx="1150" cy="750" r="25" class="station"/>
-  <text x="1150" y="745" class="station-text">Consensus</text>
-  <text x="1150" y="760" class="station-text">Report</text>
+  <!-- Split to codonyat and iVar -->
+  <line x1="1100" y1="238" x2="1100" y2="480" class="line line-main"/>
   
   <!-- codonyat branch -->
-  <line x1="1250" y1="540" x2="1350" y2="620" class="line line-main"/>
-  <circle cx="1350" cy="650" r="30" class="station"/>
-  <text x="1350" y="645" class="station-text">CODONYAT</text>
-  <text x="1350" y="660" class="station-text">RUN</text>
-  <text x="1350" y="685" class="station-detail">all proteins</text>
+  <line x1="1100" y1="480" x2="950" y2="480" class="line line-main"/>
+  <circle cx="930" cy="480" r="18" class="station"/>
+  <text x="840" y="485" class="label">codonyat</text>
   
-  <!-- Amino acid table -->
-  <line x1="1350" y1="680" x2="1350" y2="720" class="line line-main"/>
-  <circle cx="1350" cy="750" r="25" class="station"/>
-  <text x="1350" y="745" class="station-text">Amino Acid</text>
-  <text x="1350" y="760" class="station-text">Table</text>
+  <!-- AA table -->
+  <line x1="930" y1="498" x2="930" y2="560" class="line line-main"/>
+  <circle cx="930" cy="580" r="18" class="station"/>
+  <text x="825" y="585" class="label">AA Tables</text>
   
-  <!-- Join strand metrics -->
-  <line x1="835" y1="300" x2="1350" y2="775" class="line line-strand" stroke-dasharray="5,5"/>
+  <!-- iVar consensus branch -->
+  <line x1="1100" y1="480" x2="1100" y2="540" class="line line-main"/>
+  <circle cx="1100" cy="560" r="18" class="station"/>
+  <text x="1020" y="565" class="label">iVar</text>
   
-  <!-- Summary processes -->
-  <line x1="1150" y1="775" x2="1250" y2="800" class="line line-main"/>
-  <line x1="1350" y1="775" x2="1250" y2="800" class="line line-main"/>
-  <circle cx="1250" cy="820" r="25" class="station"/>
-  <text x="1250" y="815" class="station-text">Summary</text>
-  <text x="1250" y="830" class="station-text">Tables</text>
+  <!-- Consensus report -->
+  <line x1="1100" y1="578" x2="1100" y2="620" class="line line-main"/>
+  <circle cx="1100" cy="640" r="18" class="station"/>
+  <text x="995" y="645" class="label">Consensus</text>
   
-  <!-- Report branches join -->
-  <line x1="505" y1="100" x2="1100" y2="820" class="line line-report" stroke-dasharray="5,5"/>
-  <line x1="505" y1="200" x2="1100" y2="820" class="line line-report" stroke-dasharray="5,5"/>
+  <!-- Section: Reporting -->
+  <text x="600" y="695" class="section-label">REPORTING</text>
   
-  <!-- MultiQC -->
-  <line x1="1225" y1="820" x2="1150" y2="850" class="line line-main"/>
-  <circle cx="1120" cy="860" r="30" class="station"/>
-  <text x="1120" y="865" class="station-text">MultiQC</text>
+  <!-- Join to reporting -->
+  <line x1="930" y1="598" x2="930" y2="720" class="line line-main"/>
+  <line x1="1100" y1="658" x2="1100" y2="720" class="line line-main"/>
+  <line x1="930" y1="720" x2="1015" y2="720" class="line line-main"/>
   
-  <!-- Provenance -->
-  <line x1="1275" y1="820" x2="1350" y2="850" class="line line-main"/>
-  <circle cx="1380" cy="860" r="30" class="station"/>
-  <text x="1380" y="855" class="station-text">Provenance</text>
-  <text x="1380" y="870" class="station-text">&amp; Versions</text>
+  <!-- Join report branches -->
+  <line x1="400" y1="208" x2="630" y2="720" class="line line-report"/>
+  <line x1="400" y1="258" x2="650" y2="720" class="line line-report"/>
+  <line x1="720" y1="318" x2="670" y2="720" class="line line-branch"/>
   
-  <!-- Output Terminus -->
-  <line x1="1120" y1="890" x2="1250" y2="890" class="line line-main"/>
-  <line x1="1380" y1="890" x2="1250" y2="890" class="line line-main"/>
-  <circle cx="1250" cy="890" r="30" class="terminus"/>
-  <text x="1250" y="895" class="terminus-text">OUTPUT</text>
+  <!-- MultiQC / Provenance / Summaries -->
+  <circle cx="1015" cy="720" r="18" class="station"/>
+  <text x="925" y="715" class="label">Summary</text>
+  <text x="915" y="730" class="section-label">MultiQC + Provenance</text>
   
-  <!-- Legend -->
-  <g transform="translate(50, 700)">
-    <text x="0" y="0" class="legend-text" font-weight="bold">Legend:</text>
-    <line x1="0" y1="15" x2="40" y2="15" class="line line-fastq"/>
-    <text x="50" y="20" class="legend-text">FASTQ processing</text>
-    <line x1="0" y1="35" x2="40" y2="35" class="line line-sam"/>
-    <text x="50" y="40" class="legend-text">SAM direct path</text>
-    <line x1="0" y1="55" x2="40" y2="55" class="line line-main"/>
-    <text x="50" y="60" class="legend-text">Main analysis</text>
-    <line x1="0" y1="75" x2="40" y2="75" class="line line-strand"/>
-    <text x="50" y="80" class="legend-text">Strand metrics (PE)</text>
-    <line x1="0" y1="95" x2="40" y2="95" class="line line-report" stroke-dasharray="5,5"/>
-    <text x="50" y="100" class="legend-text">Report branches</text>
-  </g>
+  <!-- Output -->
+  <line x1="1015" y1="738" x2="1015" y2="760" class="line line-main"/>
+  <circle cx="1015" cy="780" r="20" class="terminus"/>
+  <text x="1015" y="670" class="terminus-label">OUT</text>
   
   <!-- Footer -->
-  <text x="700" y="870" class="subtitle-text">nf-codonyat v0.3.0 " https://github.com/sjoclaudi/nf-codonyat " Research use only</text>
+  <text x="600" y="770" class="subtitle">sjoclaudi/nf-codonyat • Research use only • No clinical interpretation</text>
 </svg>
