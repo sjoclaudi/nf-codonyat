@@ -10,6 +10,10 @@ Wraps the [`codonyat`](https://github.com/mnoguera/codonyat) Python package in a
 
 ---
 
+## Pipeline Overview
+
+![nf-codonyat metro map](docs/images/nf-codonyat-metro-map.png)
+
 ## Overview
 
 `nf-codonyat` takes Illumina FASTQ reads (paired-end or single-end) or already aligned SAM files, an annotated
