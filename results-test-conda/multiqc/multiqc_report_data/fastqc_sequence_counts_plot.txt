@@ -1,0 +1,3 @@
+Sample	Unique Reads	Duplicate Reads
+HVG286PL_1	1345.0	655.0
+HVG286PL_2	1400.0	600.0

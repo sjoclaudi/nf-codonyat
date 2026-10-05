@@ -1,0 +1,53 @@
+BBMAP_BBMERGE:
+    bbmap: "39.18"
+BBMAP_BBSPLIT:
+    bbmap: "39.18"
+BOWTIE2_ALIGN:
+    bowtie2: "2.5.4"
+    pigz: "2.8"
+    samtools: "1.21"
+BOWTIE2_ALIGN_STRAND:
+    bowtie2: "2.5.4"
+    pigz: "2.8"
+    samtools: "1.21"
+BOWTIE2_BUILD:
+    bowtie2: "2.5.4"
+CODONYAT_RUN:
+    codonyat: "1.1.0"
+CODONYAT_STRAND:
+    codonyat: "1.1.0"
+CODON_TO_AA:
+    python: "3.12.14"
+CONSENSUS_REPORT:
+    python: "3.12.14"
+CONTAMINATION_SUMMARY:
+    python: "3.12.14"
+FASTP:
+    fastp: "1.3.6"
+FASTQC:
+    fastqc: "0.12.1"
+FILTER_ALIGNMENTS:
+    samtools: "1.24"
+FILTER_STRAND:
+    samtools: "1.24"
+FLAGSTAT_ALIGNED:
+    samtools: "1.24"
+FLAGSTAT_FILTERED:
+    samtools: "1.24"
+IVAR_CONSENSUS:
+    ivar: "1.4.4"
+KRAKEN2_KRAKEN2:
+    kraken2: "2.1.6"
+    pigz: "2.8"
+MERGE_ALIGNMENTS:
+    samtools: "1.24"
+MULTIQC:
+    multiqc: "1.35"
+SORT_FILTERED:
+    samtools: "1.24"
+STRAND_METRICS:
+    python: "3.12.14"
+SUBTYPE_ESTIMATE:
+    python: "3.12.14"
+Workflow:
+    nf-codonyat: "0.3.1"

@@ -1,0 +1,24 @@
+java -ea -Xmx4g -Xms4g -Djava.library.path=/workspace/work/conda/env-3660ab9abf1810c31ba18748c4d5b830/opt/bbmap-39.18-0/jni/ -cp /workspace/work/conda/env-3660ab9abf1810c31ba18748c4d5b830/opt/bbmap-39.18-0/current/ jgi.BBMerge -Xmx4g in1=HVG286PL_R1.fastp.fastq.gz in2=HVG286PL_R2.fastp.fastq.gz out=HVG286PL_merged.fastq.gz outu1=HVG286PL_1_unmerged.fastq.gz outu2=HVG286PL_2_unmerged.fastq.gz ihist=HVG286PL_ihist.txt ordered=t
+Executing jgi.BBMerge [-Xmx4g, in1=HVG286PL_R1.fastp.fastq.gz, in2=HVG286PL_R2.fastp.fastq.gz, out=HVG286PL_merged.fastq.gz, outu1=HVG286PL_1_unmerged.fastq.gz, outu2=HVG286PL_2_unmerged.fastq.gz, ihist=HVG286PL_ihist.txt, ordered=t]
+Version 39.18
+
+Writing mergable reads merged.
+Started output threads.
+Total time: 0.588 seconds.
+
+Pairs:               	1933
+Joined:              	1683       	87.067%
+Ambiguous:           	0       	0.000%
+No Solution:         	250       	12.933%
+Too Short:           	0       	0.000%
+
+Avg Insert:          	306.7
+Standard Deviation:  	118.0
+Mode:                	431
+
+Insert range:        	51 - 579
+90th percentile:     	463
+75th percentile:     	392
+50th percentile:     	305
+25th percentile:     	221
+10th percentile:     	146

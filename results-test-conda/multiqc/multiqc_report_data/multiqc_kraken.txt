@@ -1,0 +1,2 @@
+Sample	U	R	D	S
+HVG286PL	{'unclassified': 47}	{'root': 1886}	{'Viruses': 1878, 'Eukaryota': 8}	{'Human immunodeficiency virus 1': 1878, 'Homo sapiens': 8}
