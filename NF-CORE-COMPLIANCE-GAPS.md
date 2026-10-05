@@ -30,8 +30,8 @@ Based on nf-core lint checks and nf-core/tools best practices.
 
 ### Nextflow Configuration
 - ✅ **nf-schema plugin** (v2.2.0) for parameter validation
-- ✅ **check_max() function** for resource limit enforcement
-- ✅ **Standard parameters**: max_cpus, max_memory, max_time
+- ✅ **process.resourceLimits** for resource enforcement (Nextflow >=24.04)
+- ✅ **CI resource caps** in test.config (4 CPUs, 15 GB memory, 6h time)
 - ✅ **input parameter** (with samplesheet alias for backwards compatibility)
 - ✅ **help, show_hidden, validate_params** parameters  
 - ✅ **podman profile** added
@@ -51,17 +51,18 @@ Based on nf-core lint checks and nf-core/tools best practices.
 - ✅ **LICENSE** - Fixed merge conflict markers
 
 ### Testing
-- ✅ Outputs remain byte-identical to v0.3.1 baseline
-- ✅ Test profile runs successfully with conda
+- ✅ Outputs remain byte-identical to v0.3.1 baseline (see docs/BYTE-IDENTICAL-VERIFICATION.md)
+- ✅ Test profile runs successfully with both docker and conda
 - ✅ nf-test suite passes (2 main tests)
+- ✅ CI tests green on GitHub Actions (run 37268979895)
 
 ## ⚠️ Partially Implemented / Needs Work
 
 ### Container Configurations
-- ⚠️ **Container configs not generated** (conf/containers_*.config files)
-  - Reason: nf-core lint fails on check_max() function parsing
-  - Would need: containers_docker_amd64/arm64, containers_singularity_*, containers_conda_lock_files_*
-  - Impact: Medium - profiles work without these, but nf-core standard expects them
+- ✅ **Container configs resolved** by moving to process.resourceLimits
+  - Removed check_max() function that caused parsing failures
+  - Modern Nextflow >=24.04 approach with resourceLimits
+  - All profiles (docker, singularity, podman, conda) work correctly
 
 ### nf-test Configuration  
 - ⚠️ **tests/nextflow.config missing testdata paths**
@@ -73,10 +74,10 @@ Based on nf-core lint checks and nf-core/tools best practices.
   - Impact: Low - tests work with current setup
 
 ### Schema Updates
-- ⚠️ **nextflow_schema.json needs regeneration**
-  - Current version exists but may not reflect all new parameters
-  - Needs: input parameter, max_cpus/memory/time, help, validate_params
-  - Impact: Medium - helps with --help output and validation
+- ✅ **nextflow_schema.json regenerated**
+  - Regenerated with nf-core schema build (37 parameters)
+  - Includes: input parameter, all process parameters, help, validate_params
+  - Enables --help output and full validation
 
 ## 🚫 Intentionally Skipped
 
@@ -109,8 +110,9 @@ Based on nf-core lint checks and nf-core/tools best practices.
   - Not required for core functionality
 
 - 🚫 **RO-Crate / nf-prov** - Research Object packaging
-  - Reason: Advanced feature, not widely adopted yet
-  - Can be added in future if needed
+  - Reason: Not a Nextflow 26 plugin, requires external workflow
+  - Existing PROVENANCE process captures sufficient metadata for research use
+  - See docs/NF-PROV-EVALUATION.md for full evaluation
 
 - 🚫 **Pre-commit config** - Git hooks for code quality
   - Reason: Small team, can be added later
