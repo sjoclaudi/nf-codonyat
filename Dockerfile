@@ -13,9 +13,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends procps \
     && rm -rf /var/lib/apt/lists/*
 
-# codonyat 1.1.0 (streaming, multi-protein) is not on PyPI yet; install the
-# reviewed source at a pinned commit until it is released.
-ARG CODONYAT_SRC=https://github.com/sjoclaudi/codonyat-1/archive/602b16c916bd5b4e5eeb930d9acbddd8c9d9bcd1.tar.gz
-RUN pip install --no-cache-dir "biopython==1.85" "codonyat @ ${CODONYAT_SRC}"
+# codonyat 1.1.0 is now available on PyPI
+RUN pip install --no-cache-dir "biopython==1.85" "codonyat==1.1.0"
 
 CMD ["codonyat-runner", "--help"]

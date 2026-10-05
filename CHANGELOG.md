@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.3.1] - unreleased
+
+### Changed
+- codonyat 1.1.0 is now installed from PyPI instead of from a git source.
+
 ## [0.3.0] - unreleased
 
 PASeq-style processing steps (design: decisions D1–D13). Research use only: all new outputs are
@@ -47,9 +52,7 @@ descriptive; there is no drug-resistance or clinical interpretation.
   and protein-list validation.
 
 ### Changed
-- codonyat 1.1.0 (streaming, flat memory, multi-protein). Not on PyPI yet: the container and the conda
-  environment install it from the reviewed source at a pinned commit (`sjoclaudi/codonyat-1@602b16c`,
-  mnoguera/codonyat PR #11) until it is released.
+- codonyat 1.1.0 (streaming, flat memory, multi-protein).
 - Task image `ghcr.io/sjoclaudi/nf-codonyat:0.3.0` (adds `procps` for task metrics).
 - Bowtie2 always runs with `--reorder`, so the order of rows in the codon tables no longer depends on
   thread scheduling (counts are unchanged).
