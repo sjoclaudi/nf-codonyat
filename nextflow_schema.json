@@ -38,27 +38,14 @@
                     "type": "string",
                     "default": "copy",
                     "description": "How results are published (Nextflow publishDir mode).",
-                    "enum": [
-                        "symlink",
-                        "rellink",
-                        "link",
-                        "copy",
-                        "copyNoFollow",
-                        "move"
-                    ]
+                    "enum": ["symlink", "rellink", "link", "copy", "copyNoFollow", "move"]
                 },
                 "save_intermediates": {
                     "type": "boolean",
-                    "default": false,
                     "description": "Also publish trimmed FASTQ, per-part BAMs, the strand-branch BAM/codon table, raw iVar output and Kraken2 per-read assignments."
                 }
             },
-            "required": [
-                "samplesheet",
-                "reference",
-                "amplicons",
-                "outdir"
-            ]
+            "required": ["samplesheet", "reference", "amplicons", "outdir"]
         },
         "codon_options": {
             "title": "Codon / amino-acid options",
@@ -104,7 +91,6 @@
                 },
                 "bbmerge_args": {
                     "type": "string",
-                    "default": "",
                     "description": "Extra BBMerge arguments (BBMerge defaults otherwise; ordered=t is always set)."
                 },
                 "strand_metrics_unmerged": {
@@ -141,7 +127,6 @@
                 },
                 "skip_contamination": {
                     "type": "boolean",
-                    "default": false,
                     "description": "Skip the Kraken2 contamination report."
                 },
                 "kraken2_confidence": {
@@ -151,17 +136,16 @@
                 },
                 "kraken2_memory_mapping": {
                     "type": "boolean",
-                    "default": false,
                     "description": "Kraken2 --memory-mapping (database not loaded into RAM)."
                 },
                 "contamination_warn_hiv_pct": {
                     "type": "number",
-                    "default": 50,
+                    "default": 50.0,
                     "description": "Warn when HIV-1 is below this % of classified fragments."
                 },
                 "contamination_warn_human_pct": {
                     "type": "number",
-                    "default": 50,
+                    "default": 50.0,
                     "description": "Warn when human reads exceed this % of all fragments."
                 }
             }
@@ -174,11 +158,11 @@
                 "subtype_panel": {
                     "type": "string",
                     "format": "directory-path",
-                    "description": "Panel folder with <bin>.fa per bin and panel.tsv (default: assets/presets/hiv1_subtype_panel_v1, bins A, B, M)."
+                    "description": "Panel folder with <bin>.fa per bin and panel.tsv (default: assets/presets/hiv1_subtype_panel_v1, bins A, B, M).",
+                    "default": "/workspace/assets/presets/hiv1_subtype_panel_v1"
                 },
                 "skip_subtype": {
                     "type": "boolean",
-                    "default": false,
                     "description": "Skip the subtype estimate."
                 },
                 "subtype_min_reads": {
@@ -188,7 +172,7 @@
                 },
                 "subtype_min_margin": {
                     "type": "number",
-                    "default": 10,
+                    "default": 10.0,
                     "description": "Minimum difference (percentage points) between the top two bins; below it the call is flagged."
                 }
             }
@@ -200,7 +184,6 @@
             "properties": {
                 "skip_consensus": {
                     "type": "boolean",
-                    "default": false,
                     "description": "Skip the consensus sequence."
                 },
                 "consensus_threshold": {
@@ -245,5 +228,25 @@
         {
             "$ref": "#/$defs/consensus_options"
         }
-    ]
+    ],
+    "properties": {
+        "input": {
+            "type": "string"
+        },
+        "show_hidden": {
+            "type": "boolean"
+        },
+        "schema_ignore_params": {
+            "type": "string",
+            "default": "genomes,pipeline_info_outdir"
+        },
+        "validate_params": {
+            "type": "boolean",
+            "default": true
+        },
+        "pipeline_info_outdir": {
+            "type": "string",
+            "default": "results"
+        }
+    }
 }
