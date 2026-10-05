@@ -193,9 +193,7 @@ See [docs/output.md](docs/output.md) for the columns of every table.
 - **Local steps** (codonyat and the helper scripts in `bin/`, Python standard library only):
   container `ghcr.io/sjoclaudi/nf-codonyat:0.3.0` built from the `Dockerfile`, or the conda environment
   `modules/local/codonyat/run/environment.yml`.
-  **codonyat 1.1.0 is not on PyPI yet.** Until it is released, both install it from the reviewed source at a
-  pinned commit (`sjoclaudi/codonyat-1@602b16c`, the branch of mnoguera/codonyat PR #11). They will switch to
-  `codonyat==1.1.0` from PyPI once it is published.
+  Both install `codonyat==1.1.0` from PyPI.
 - **Third-party steps** use [nf-core modules](https://nf-co.re/modules) (`modules/nf-core/`, pinned in
   `modules.json`), each with its own BioContainers image and conda environment: FastQC 0.12.1, fastp 1.3.6,
   Kraken2 2.1.6, BBMap 39.18 (BBSplit, BBMerge), Bowtie2 2.5.4, samtools 1.21/1.24, iVar 1.4.4 and MultiQC 1.35.
