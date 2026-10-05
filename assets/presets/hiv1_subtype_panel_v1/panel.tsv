@@ -1,0 +1,9 @@
+bin	sequence	accession	length	source
+A	Ref.A1.AU.03.PS1044_Day0.DQ676872	DQ676872	3012	LANL subtype reference 2026 (126RP8), pol
+A	Ref.A1.RW.92.92RW008.AB253421	AB253421	3012	LANL subtype reference 2026 (126RP8), pol
+A	Ref.A1.UG.92.92UG037_A40.AB253429	AB253429	3015	LANL subtype reference 2026 (126RP8), pol
+B	Ref.B.FR.83.HXB2_LAI_IIIB_BRU.K03455	K03455	3012	LANL subtype reference 2026 (126RP8), pol
+B	Ref.B.NL.00.671_00T36.AY423387	AY423387	3042	LANL subtype reference 2026 (126RP8), pol
+B	Ref.B.TH.90.BK132.AY173951	AY173951	3012	LANL subtype reference 2026 (126RP8), pol
+B	Ref.B.US.98.1058_11.AY331295	AY331295	3003	LANL subtype reference 2026 (126RP8), pol
+M	CON_OF_CONS.group_M_consensus	none (LANL consensus)	3009	LANL consensus/ancestral 2004 (104CP7), pol

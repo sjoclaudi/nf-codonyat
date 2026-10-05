@@ -15,7 +15,7 @@ env:
   NXF_VER: "26.04.6"
   NFT_VER: "0.9.5"
   NXF_ANSI_LOG: false
-  IMAGE: ghcr.io/sjoclaudi/nf-codonyat:0.1.0  # keep in sync with the modules' container directive
+  IMAGE: ghcr.io/sjoclaudi/nf-codonyat:0.3.0  # keep in sync with the modules' container directive
 
 jobs:
   lint:
@@ -85,9 +85,22 @@ jobs:
       - name: Check FASTQ-path outputs and MultiQC report
         run: |
           ls -l results-test/fastqc/HVG286PL_1_fastqc.html results-test/fastp/HVG286PL.fastp.json \
-                results-test/alignment/HVG286PL.bam results-test/alignment/HVG286PL.bowtie2.log \
-                results-test/multiqc/multiqc_report.html
-          grep 'overall alignment rate' results-test/alignment/HVG286PL.bowtie2.log
+                results-test/alignment/HVG286PL.bam results-test/alignment/HVG286PL.{merged,unmerged}.bowtie2.log \
+                results-test/merge/HVG286PL_ihist.txt results-test/multiqc/multiqc_report.html
+          grep 'overall alignment rate' results-test/alignment/HVG286PL.merged.bowtie2.log
+          grep 'Joined' results-test/merge/HVG286PL.bbmerge.log
+
+      - name: Check report, consensus, amino-acid and provenance outputs
+        run: |
+          cat results-test/contamination/contamination_summary.tsv
+          cat results-test/subtype/subtype_summary.tsv
+          cat results-test/consensus/consensus_stats.tsv
+          grep -c '^>' results-test/consensus/consensus_all.fa | grep -qx 3
+          awk -F'\t' 'NR>1 && $1=="HVG286PL" {print $7}' results-test/subtype/subtype_summary.tsv | sort -u | grep -qx B
+          head -3 results-test/variants/aa_variants_summary.tsv
+          head -3 results-test/strand/HVG286PL.strand_metrics_unmerged.tsv
+          grep -q 'Research use only' results-test/pipeline_info/methods.md
+          cat results-test/pipeline_info/software_versions.yml
 
       - name: Check execution reports are in the outdir
         run: ls -l results-test/pipeline_info/{execution_report.html,execution_timeline.html,execution_trace.txt,pipeline_dag.html}

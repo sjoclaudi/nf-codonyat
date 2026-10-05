@@ -16,7 +16,7 @@ process CODONYAT_SUMMARY {
 
     // Only needs Python 3; reuse the pipeline environment/image
     conda "${moduleDir}/../run/environment.yml"
-    container 'ghcr.io/sjoclaudi/nf-codonyat:0.1.0'
+    container 'ghcr.io/sjoclaudi/nf-codonyat:0.3.0'
 
     input:
     path tsvs, stageAs: 'inputs/*'

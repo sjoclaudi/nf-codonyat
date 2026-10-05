@@ -4,7 +4,7 @@ nextflow_pipeline {
     script "../main.nf"
     tag "pipeline"
 
-    test("test data: two SAM samples and one FASTQ pair give per-sample TSV/XML, a merged summary and MultiQC") {
+    test("test data: two SAM samples and one FASTQ pair give codon, amino-acid, contamination, subtype, consensus and strand outputs") {
 
         when {
             params {
@@ -16,6 +16,13 @@ nextflow_pipeline {
         }
 
         then {
+            // first data row of a TSV for one SAMPLE (skips '#' comment lines), as a map
+            def tsvRow = { String file, String sample ->
+                def lines  = path(file).readLines().findAll { l -> !l.startsWith('#') }
+                def header = lines[0].split('\t') as List
+                def row    = lines.drop(1).collect { l -> l.split('\t', -1) as List }.find { r -> r[0] == sample }
+                row ? [header, row].transpose().collectEntries() : [:]
+            }
             def summary = path("${outputDir}/codonyat_summary.tsv").readLines()*.split('\t')
             def header  = summary[0] as List
             def rows    = summary.drop(1).collect { r -> [header, r as List].transpose().collectEntries() }
@@ -25,8 +32,12 @@ nextflow_pipeline {
 
             assertAll(
                 { assert workflow.success },
-                // FASTQ: fastqc, fastp, bowtie2 build + align; all 3: flagstat x2, view, codonyat; summary, multiqc
-                { assert workflow.trace.succeeded().size() == 18 },
+                // FASTQ (PE): fastqc, fastp, kraken2 + summary + combine, bbsplit + estimate + combine,
+                //   bbmerge, bowtie2 build + align x2 (merged, not merged) + samtools merge,
+                //   strand branch (bowtie2, filter, codonyat, strand metrics);
+                // all 3 samples: flagstat x2, filter, codonyat, aa table, sort, ivar, consensus report;
+                // codonyat summary, provenance, multiqc
+                { assert workflow.trace.succeeded().size() == 44 },
 
                 // per-sample outputs
                 { assert path("${outputDir}/samples/sample1/sample1.tsv").exists() },
@@ -41,7 +52,9 @@ nextflow_pipeline {
                 { assert path("${outputDir}/fastqc/HVG286PL_2_fastqc.zip").exists() },
                 { assert path("${outputDir}/fastp/HVG286PL.fastp.json").text.contains('"filtering_result"') },
                 { assert path("${outputDir}/alignment/HVG286PL.bam").exists() },
-                { assert path("${outputDir}/alignment/HVG286PL.bowtie2.log").text.contains('overall alignment rate') },
+                { assert path("${outputDir}/alignment/HVG286PL.merged.bowtie2.log").text.contains('overall alignment rate') },
+                { assert path("${outputDir}/alignment/HVG286PL.unmerged.bowtie2.log").text.contains('overall alignment rate') },
+                { assert !path("${outputDir}/alignment/HVG286PL.merged.bam").exists() },   // per-part BAMs only with --save_intermediates
                 { assert path("${outputDir}/alignment/flagstat/HVG286PL.aligned.flagstat").exists() },
                 { assert path("${outputDir}/alignment/flagstat/HVG286PL.filtered.flagstat").exists() },
                 { assert path("${outputDir}/alignment/flagstat/sample1.filtered.flagstat").exists() },
@@ -61,7 +74,45 @@ nextflow_pipeline {
                 { assert rows.size() > 200 },
                 { assert rows*.SAMPLE.unique().sort() == ['HVG286PL', 'sample1', 'sample2'] },
                 { assert rows.count { r -> r.SAMPLE == 'HVG286PL' } > 1000 },
-                { assert rows.every { r -> r.PROTEIN == 'RT' && r.VARIANT && r.FREQ } },
+                { assert rows.every { r -> r.VARIANT && r.FREQ } },
+                // --protein all (default): one codonyat pass covers every annotated protein
+                { assert rows.findAll { r -> r.SAMPLE == 'HVG286PL' }*.PROTEIN.unique().sort() == ['INT', 'PR', 'RT'] },
+                { assert rows.findAll { r -> r.SAMPLE.startsWith('sample') }*.PROTEIN.unique() == ['RT'] },  // synthetic reads cover RT only
+
+                // step 2: contamination report (tiny Kraken2 DB)
+                { assert path("${outputDir}/contamination/HVG286PL.kraken2.report.txt").exists() },
+                { assert tsvRow("${outputDir}/contamination/contamination_summary.tsv", 'HVG286PL').WARNING == 'none' },
+                { assert (tsvRow("${outputDir}/contamination/contamination_summary.tsv", 'HVG286PL').HIV1_PCT as double) > 90 },
+
+                // step 3: subtype estimate (HVG286PL is subtype B)
+                { assert path("${outputDir}/subtype/bbsplit/HVG286PL.stats.txt").exists() },
+                { assert tsvRow("${outputDir}/subtype/subtype_summary.tsv", 'HVG286PL').CALL == 'B' },
+
+                // step 5: merging
+                { assert path("${outputDir}/merge/HVG286PL_ihist.txt").exists() },
+                { assert path("${outputDir}/merge/HVG286PL.bbmerge.log").text.contains('Joined') },
+
+                // step 6: consensus (all three samples; the synthetic SAMs are below 100x, so all N)
+                { assert path("${outputDir}/consensus/consensus_all.fa").readLines().count { l -> l.startsWith('>') } == 3 },
+                { assert path("${outputDir}/consensus/HVG286PL.consensus.fa").readLines()[0] == '>HVG286PL|K03455|HIVHXB2CG|t0.5_m100' },
+                { assert tsvRow("${outputDir}/consensus/consensus_stats.tsv", 'sample1').PCT_N == '100.0' },
+                { assert (tsvRow("${outputDir}/consensus/consensus_stats.tsv", 'HVG286PL').POSITIONS_AT_MIN_DEPTH as int) > 2000 },
+                // a majority deletion seen in the real data is applied
+                { assert path("${outputDir}/consensus/HVG286PL.consensus_indels.tsv").readLines().any { l -> l.split('\t')[8] == 'yes' } },
+
+                // amino-acid tables and D9 strand metrics (PE sample only)
+                { assert path("${outputDir}/variants/aa_variants_summary.tsv").readLines()*.split('\t')*.getAt(0).drop(1).unique().sort() == ['HVG286PL', 'sample1', 'sample2'] },
+                { assert path("${outputDir}/variants/HVG286PL.aa_variants.tsv").readLines()[0].contains('RATIO_UNMERGED') },
+                { assert !path("${outputDir}/variants/sample1.aa_variants.tsv").readLines()[0].contains('RATIO_UNMERGED') },
+                { assert path("${outputDir}/strand/HVG286PL.strand_metrics_unmerged.tsv").readLines().size() > 100 },
+                { assert !path("${outputDir}/strand/sample1.strand_metrics_unmerged.tsv").exists() },
+
+                // provenance
+                { assert path("${outputDir}/pipeline_info/software_versions.yml").text.contains('codonyat: "1.1.0"') },
+                { assert path("${outputDir}/pipeline_info/software_versions.yml").text.contains('multiqc') },
+                { assert path("${outputDir}/pipeline_info/methods.md").text.contains('Research use only') },
+                { assert path("${outputDir}/pipeline_info/provenance.json").json.checksums_sha256.keySet().any { k -> k.startsWith('kraken2_db/') } },
+                { assert path("${outputDir}/multiqc/multiqc_report_data/multiqc_kraken.txt").exists() },
 
                 // spiked-in mutations (see assets/testdata/make_testdata.py)
                 { assert freq('sample1', '2670', 'CTG') == '24.528' },   // M41L
@@ -79,19 +130,26 @@ nextflow_pipeline {
                     path("${outputDir}/samples/sample2/sample2.tsv"),
                     path("${outputDir}/samples/HVG286PL/HVG286PL.tsv"),
                     path("${outputDir}/samples/sample1/sample1.xml"),
-                    path("${outputDir}/samples/sample2/sample2.xml")
+                    path("${outputDir}/samples/sample2/sample2.xml"),
+                    path("${outputDir}/variants/aa_variants_summary.tsv"),
+                    path("${outputDir}/strand/HVG286PL.strand_metrics_unmerged.tsv"),
+                    path("${outputDir}/consensus/consensus_all.fa"),
+                    path("${outputDir}/consensus/HVG286PL.consensus_indels.tsv"),
+                    path("${outputDir}/subtype/subtype_summary.tsv"),
+                    path("${outputDir}/contamination/contamination_summary.tsv")
                 ).match() }
             )
         }
     }
 
-    test("an old-style sample,sam samplesheet still works") {
+    test("an old-style sample,sam samplesheet with --protein RT gives the same codon outputs as v0.2.0") {
 
         when {
             params {
                 samplesheet = "${projectDir}/tests/samplesheet_sam_only.csv"
                 reference   = "${projectDir}/assets/testdata/reference.fasta"
                 amplicons   = "${projectDir}/assets/testdata/amplicons.tsv"
+                protein     = "RT"
                 outdir      = "${outputDir}"
             }
         }
@@ -99,9 +157,144 @@ nextflow_pipeline {
         then {
             assertAll(
                 { assert workflow.success },
+                // byte-identical to v0.2.0 (codonyat 1.0.3): SAM rows skip every FASTQ-only step
                 { assert path("${outputDir}/samples/sample1/sample1.tsv").md5 == '7b53cdae533aaa882f14066b50e34cad' },
-                { assert path("${outputDir}/codonyat_summary.tsv").readLines().size() > 100 }
+                { assert path("${outputDir}/samples/sample1/sample1.xml").md5 == '96380ca322570d0fd9478b2f54d82a18' },
+                { assert path("${outputDir}/codonyat_summary.tsv").readLines().size() > 100 },
+                { assert !path("${outputDir}/contamination").exists() },
+                { assert !path("${outputDir}/subtype").exists() },
+                { assert !path("${outputDir}/merge").exists() },
+                { assert path("${outputDir}/variants/sample1.aa_variants.tsv").exists() }
             )
+        }
+    }
+
+    test("single-end FASTQ: no merging and no strand branch; other steps run") {
+
+        when {
+            params {
+                samplesheet = "${projectDir}/tests/samplesheet_se.csv"
+                reference   = "${projectDir}/assets/testdata/reference.fasta"
+                amplicons   = "${projectDir}/assets/testdata/amplicons.tsv"
+                protein     = "PR,RT"
+                outdir      = "${outputDir}"
+            }
+        }
+
+        then {
+            // first data row of a TSV for one SAMPLE (skips '#' comment lines), as a map
+            def tsvRow = { String file, String sample ->
+                def lines  = path(file).readLines().findAll { l -> !l.startsWith('#') }
+                def header = lines[0].split('\t') as List
+                def row    = lines.drop(1).collect { l -> l.split('\t', -1) as List }.find { r -> r[0] == sample }
+                row ? [header, row].transpose().collectEntries() : [:]
+            }
+            def summary = path("${outputDir}/codonyat_summary.tsv").readLines()*.split('\t')
+            assertAll(
+                { assert workflow.success },
+                // fastqc, fastp, kraken2 + 2, bbsplit + 2, bowtie2 build + align, flagstat x2, filter,
+                // codonyat, aa table, sort, ivar, consensus report, summary, provenance, multiqc
+                { assert workflow.trace.succeeded().size() == 21 },
+                { assert path("${outputDir}/alignment/HVG286PL_SE.bam").exists() },
+                { assert path("${outputDir}/alignment/HVG286PL_SE.bowtie2.log").exists() },
+                { assert !path("${outputDir}/merge").exists() },
+                { assert !path("${outputDir}/strand").exists() },
+                { assert tsvRow("${outputDir}/subtype/subtype_summary.tsv", 'HVG286PL_SE').CALL == 'B' },
+                { assert path("${outputDir}/contamination/HVG286PL_SE.contamination.tsv").exists() },
+                { assert path("${outputDir}/consensus/HVG286PL_SE.consensus.fa").exists() },
+                { assert summary.drop(1)*.getAt(3).unique().sort() == ['PR', 'RT'] },
+                { assert !path("${outputDir}/variants/HVG286PL_SE.aa_variants.tsv").readLines()[0].contains('UNMERGED') }
+            )
+        }
+    }
+
+    test("paired-end FASTQ with --merge_pairs false and the report steps skipped") {
+
+        when {
+            params {
+                samplesheet        = "${projectDir}/tests/samplesheet_pe_only.csv"
+                reference          = "${projectDir}/assets/testdata/reference.fasta"
+                amplicons          = "${projectDir}/assets/testdata/amplicons.tsv"
+                protein            = "RT"
+                merge_pairs        = false
+                skip_contamination = true
+                skip_subtype       = true
+                skip_consensus     = true
+                kraken2_db         = null
+                outdir             = "${outputDir}"
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success },
+                // fastqc, fastp, bowtie2 build + align (PE), flagstat x2, filter, codonyat, aa table,
+                // summary, provenance, multiqc
+                { assert workflow.trace.succeeded().size() == 12 },
+                { assert path("${outputDir}/alignment/HVG286PL.bowtie2.log").exists() },
+                { assert !path("${outputDir}/merge").exists() },
+                { assert !path("${outputDir}/strand").exists() },
+                { assert !path("${outputDir}/contamination").exists() },
+                { assert !path("${outputDir}/subtype").exists() },
+                { assert !path("${outputDir}/consensus").exists() },
+                { assert path("${outputDir}/pipeline_info/methods.md").text.contains('--merge_pairs false') },
+                // same codon counting as v0.2.0 for unmerged pairs
+                { assert path("${outputDir}/samples/HVG286PL/HVG286PL.tsv").md5 == '556b15052ab45c27cc296bb16d1a3219' }
+            )
+        }
+    }
+
+    test("consensus rules: IUPAC code for a mixture, majority deletion applied, N below 100x") {
+
+        when {
+            params {
+                samplesheet = "${projectDir}/tests/samplesheet_consensus.csv"
+                reference   = "${projectDir}/assets/testdata/reference.fasta"
+                amplicons   = "${projectDir}/assets/testdata/amplicons.tsv"
+                outdir      = "${outputDir}"
+            }
+        }
+
+        then {
+            // first data row of a TSV for one SAMPLE (skips '#' comment lines), as a map
+            def tsvRow = { String file, String sample ->
+                def lines  = path(file).readLines().findAll { l -> !l.startsWith('#') }
+                def header = lines[0].split('\t') as List
+                def row    = lines.drop(1).collect { l -> l.split('\t', -1) as List }.find { r -> r[0] == sample }
+                row ? [header, row].transpose().collectEntries() : [:]
+            }
+            def seq = path("${outputDir}/consensus/cons.consensus.fa").readLines().drop(1).join('')
+            def ref = path("${projectDir}/assets/testdata/reference.fasta").readLines().drop(1).join('').toUpperCase()
+            def del = tsvRow("${outputDir}/consensus/cons.consensus_indels.tsv", 'cons')
+            assertAll(
+                { assert workflow.success },
+                { assert seq.length() == ref.length() - 3 },                  // 3-bp deletion in 70% of reads applied
+                { assert seq[2599] == 'R' },                                  // 45% A + 45% G (+10% T) at 2600
+                { assert seq.substring(2550, 2599) == ref.substring(2550, 2599) },
+                { assert seq.substring(2649, 2700 - 3) == ref.substring(2652, 2700) },
+                { assert seq.substring(2797, 2947).every { c -> c == 'N' } }, // depth 50 < 100
+                { assert del.POSITION == '2650' && del.TYPE == 'deletion' && del.LENGTH == '3' },
+                { assert del.APPLIED == 'yes' && del.FRAMESHIFT == 'no' },
+                { assert tsvRow("${outputDir}/consensus/consensus_stats.tsv", 'cons').IUPAC_AMBIGUOUS == '1' }
+            )
+        }
+    }
+
+    test("fails when a FASTQ sample has no --kraken2_db and --skip_contamination is not set") {
+
+        when {
+            params {
+                samplesheet = "${projectDir}/tests/samplesheet_se.csv"
+                reference   = "${projectDir}/assets/testdata/reference.fasta"
+                amplicons   = "${projectDir}/assets/testdata/amplicons.tsv"
+                kraken2_db  = null
+                outdir      = "${outputDir}"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert workflow.stdout.any { line -> line.contains('set --kraken2_db') }
         }
     }
 
@@ -156,6 +349,24 @@ nextflow_pipeline {
         }
     }
 
+    test("fails when one protein of a --protein list is not annotated") {
+
+        when {
+            params {
+                samplesheet = "${projectDir}/tests/samplesheet_sam_only.csv"
+                reference   = "${projectDir}/assets/testdata/reference.fasta"
+                amplicons   = "${projectDir}/assets/testdata/amplicons.tsv"
+                protein     = "RT,GAG"
+                outdir      = "${outputDir}"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert workflow.stdout.any { line -> line.contains('no annotation for --protein GAG') }
+        }
+    }
+
     test("warns but succeeds when --outdir is changed by a -c config file") {
 
         config "./outdir_from_c.config"
@@ -180,8 +391,10 @@ nextflow_pipeline {
                 // results follow the -c outdir ...
                 { assert path("${outdir}/codonyat_summary.tsv").readLines().size() > 200 },
                 { assert path("${outdir}/samples/sample1/sample1.tsv").exists() },
-                // ... while the reports stay in the default pipeline_info folder
-                { assert !path("${outdir}/pipeline_info").exists() },
+                // ... while the execution reports stay in the default pipeline_info folder
+                // (provenance files are ordinary outputs and follow the -c outdir)
+                { assert !path("${outdir}/pipeline_info/execution_report.html").exists() },
+                { assert path("${outdir}/pipeline_info/provenance.json").exists() },
                 { assert path("${launchDir}/results/pipeline_info/execution_report.html").exists() }
             )
         }

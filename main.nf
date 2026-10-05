@@ -10,6 +10,7 @@
  *        --samplesheet samples.csv \
  *        --reference ref.fasta \
  *        --amplicons amplicons.tsv \
+ *        --kraken2_db /path/to/k2_standard_08 \
  *        --outdir results
  *
  *    nextflow run sjoclaudi/nf-codonyat -profile test,docker
@@ -21,13 +22,17 @@ include { CODONYAT       } from './workflows/codonyat'
 def printHeader() {
     log.info """
     nf-codonyat v${workflow.manifest.version}
-    Codon-aware amino acid variant typing
+    Codon-aware amino acid variant typing (research use only)
     ${workflow.manifest.homePage}
     -------------------------------------------------------
     samplesheet : ${params.samplesheet}
     reference   : ${params.reference}
     amplicons   : ${params.amplicons}
     protein     : ${params.protein}
+    kraken2_db  : ${params.skip_contamination ? 'skipped' : params.kraken2_db}
+    subtype     : ${params.skip_subtype ? 'skipped' : params.subtype_panel}
+    merge_pairs : ${params.merge_pairs}
+    consensus   : ${params.skip_consensus ? 'skipped' : "t=${params.consensus_threshold}, min depth ${params.consensus_min_depth}x"}
     outdir      : ${params.outdir}
     -------------------------------------------------------
     """.stripIndent()
