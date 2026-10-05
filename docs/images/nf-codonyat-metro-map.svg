@@ -1,171 +1,137 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800">
-  <defs>
-    <style>
-      .station { fill: #2c3e50; stroke: #ecf0f1; stroke-width: 3; }
-      .label { fill: #2c3e50; font-family: Arial, sans-serif; font-size: 13px; font-weight: bold; }
-      .section-label { fill: #7f8c8d; font-family: Arial, sans-serif; font-size: 11px; font-style: italic; }
-      .line { stroke-width: 6; fill: none; stroke-linecap: round; }
-      .line-main { stroke: #3498db; }
-      .line-branch { stroke: #e67e22; }
-      .line-report { stroke: #9b59b6; }
-      .terminus { fill: #ecf0f1; stroke: #2c3e50; stroke-width: 4; }
-      .terminus-label { fill: #2c3e50; font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; text-anchor: middle; }
-      .title { fill: #2c3e50; font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; text-anchor: middle; }
-      .subtitle { fill: #7f8c8d; font-family: Arial, sans-serif; font-size: 12px; text-anchor: middle; }
-    </style>
-  </defs>
-  
-  <!-- Background -->
-  <rect width="1200" height="800" fill="#ecf0f1"/>
-  
-  <!-- Title -->
-  <text x="600" y="35" class="title">nf-codonyat Pipeline</text>
-  <text x="600" y="55" class="subtitle">HIV-1 Amplicon Analysis (Research Use Only)</text>
-  
-  <!-- Section: Input -->
-  <text x="70" y="95" class="section-label">INPUT</text>
-  <circle cx="100" cy="120" r="20" class="terminus"/>
-  <text x="100" y="125" class="terminus-label">IN</text>
-  
-  <!-- Section: Pre-processing -->
-  <text x="170" y="95" class="section-label">PRE-PROCESSING</text>
-  
-  <!-- FastQC -->
-  <line x1="120" y1="120" x2="180" y2="120" class="line line-main"/>
-  <circle cx="200" cy="120" r="18" class="station"/>
-  <text x="215" y="115" class="label">FastQC</text>
-  
-  <!-- fastp -->
-  <line x1="218" y1="120" x2="280" y2="120" class="line line-main"/>
-  <circle cx="300" cy="120" r="18" class="station"/>
-  <text x="315" y="115" class="label">fastp</text>
-  <text x="315" y="130" class="section-label">(trim)</text>
-  
-  <!-- Section: QC / Contamination -->
-  <text x="370" y="95" class="section-label">QC / SUBTYPING</text>
-  
-  <!-- Kraken2 branch -->
-  <line x1="318" y1="120" x2="380" y2="120" class="line line-main"/>
-  <line x1="400" y1="120" x2="400" y2="170" class="line line-report"/>
-  <circle cx="400" cy="190" r="18" class="station"/>
-  <text x="415" y="195" class="label">Kraken2</text>
-  
-  <!-- BBSplit branch -->
-  <line x1="400" y1="120" x2="400" y2="220" class="line line-report"/>
-  <circle cx="400" cy="240" r="18" class="station"/>
-  <text x="415" y="245" class="label">BBSplit</text>
-  
-  <!-- BBMerge (PE only) -->
-  <line x1="400" y1="120" x2="480" y2="120" class="line line-main"/>
-  <circle cx="500" cy="120" r="18" class="station"/>
-  <text x="515" y="115" class="label">BBMerge</text>
-  <text x="515" y="130" class="section-label">(PE)</text>
-  
-  <!-- Section: Alignment -->
-  <text x="590" y="95" class="section-label">ALIGNMENT</text>
-  
-  <!-- Bowtie2 Build -->
-  <line x1="518" y1="120" x2="600" y2="120" class="line line-main"/>
-  <circle cx="620" cy="120" r="18" class="station"/>
-  <text x="635" y="115" class="label">Bowtie2</text>
-  <text x="635" y="130" class="section-label">Build</text>
-  
-  <!-- Bowtie2 Align -->
-  <line x1="638" y1="120" x2="700" y2="120" class="line line-main"/>
-  <circle cx="720" cy="120" r="18" class="station"/>
-  <text x="735" y="115" class="label">Bowtie2</text>
-  <text x="735" y="130" class="section-label">Align</text>
-  
-  <!-- Strand branch (PE unmerged) -->
-  <line x1="720" y1="138" x2="720" y2="280" class="line line-branch"/>
-  <circle cx="720" cy="300" r="18" class="station"/>
-  <text x="650" y="305" class="label">Strand (PE)</text>
-  
-  <!-- samtools merge -->
-  <line x1="738" y1="120" x2="800" y2="120" class="line line-main"/>
-  <circle cx="820" cy="120" r="18" class="station"/>
-  <text x="835" y="125" class="label">Merge</text>
-  
-  <!-- SAM input joins here -->
-  <line x1="100" y1="140" x2="100" y2="400" class="line line-main" stroke-dasharray="5,5"/>
-  <line x1="100" y1="400" x2="820" y2="400" class="line line-main" stroke-dasharray="5,5"/>
-  <line x1="820" y1="138" x2="820" y2="400" class="line line-main"/>
-  <text x="200" y="420" class="section-label">SAM direct (skip FASTQ steps)</text>
-  
-  <!-- Section: Filtering -->
-  <text x="900" y="95" class="section-label">FILTERING</text>
-  
-  <!-- Flagstat pre -->
-  <line x1="838" y1="120" x2="900" y2="120" class="line line-main"/>
-  <circle cx="920" cy="120" r="18" class="station"/>
-  <text x="870" y="115" class="label">flagstat</text>
-  
-  <!-- Filter (samtools view) -->
-  <line x1="938" y1="120" x2="1000" y2="120" class="line line-main"/>
-  <circle cx="1020" cy="120" r="18" class="station"/>
-  <text x="1035" y="115" class="label">Filter</text>
-  <text x="1035" y="130" class="section-label">MAPQ≥20</text>
-  
-  <!-- Flagstat post -->
-  <line x1="1038" y1="120" x2="1080" y2="120" class="line line-main"/>
-  <circle cx="1100" cy="120" r="18" class="station"/>
-  <text x="1050" y="145" class="label">flagstat</text>
-  
-  <!-- Sort -->
-  <line x1="1100" y1="138" x2="1100" y2="200" class="line line-main"/>
-  <circle cx="1100" cy="220" r="18" class="station"/>
-  <text x="1050" y="225" class="label">Sort</text>
-  
-  <!-- Section: Analysis -->
-  <text x="600" y="455" class="section-label">ANALYSIS</text>
-  
-  <!-- Split to codonyat and iVar -->
-  <line x1="1100" y1="238" x2="1100" y2="480" class="line line-main"/>
-  
-  <!-- codonyat branch -->
-  <line x1="1100" y1="480" x2="950" y2="480" class="line line-main"/>
-  <circle cx="930" cy="480" r="18" class="station"/>
-  <text x="840" y="485" class="label">codonyat</text>
-  
-  <!-- AA table -->
-  <line x1="930" y1="498" x2="930" y2="560" class="line line-main"/>
-  <circle cx="930" cy="580" r="18" class="station"/>
-  <text x="825" y="585" class="label">AA Tables</text>
-  
-  <!-- iVar consensus branch -->
-  <line x1="1100" y1="480" x2="1100" y2="540" class="line line-main"/>
-  <circle cx="1100" cy="560" r="18" class="station"/>
-  <text x="1020" y="565" class="label">iVar</text>
-  
-  <!-- Consensus report -->
-  <line x1="1100" y1="578" x2="1100" y2="620" class="line line-main"/>
-  <circle cx="1100" cy="640" r="18" class="station"/>
-  <text x="995" y="645" class="label">Consensus</text>
-  
-  <!-- Section: Reporting -->
-  <text x="600" y="695" class="section-label">REPORTING</text>
-  
-  <!-- Join to reporting -->
-  <line x1="930" y1="598" x2="930" y2="720" class="line line-main"/>
-  <line x1="1100" y1="658" x2="1100" y2="720" class="line line-main"/>
-  <line x1="930" y1="720" x2="1015" y2="720" class="line line-main"/>
-  
-  <!-- Join report branches -->
-  <line x1="400" y1="208" x2="630" y2="720" class="line line-report"/>
-  <line x1="400" y1="258" x2="650" y2="720" class="line line-report"/>
-  <line x1="720" y1="318" x2="670" y2="720" class="line line-branch"/>
-  
-  <!-- MultiQC / Provenance / Summaries -->
-  <circle cx="1015" cy="720" r="18" class="station"/>
-  <text x="925" y="715" class="label">Summary</text>
-  <text x="915" y="730" class="section-label">MultiQC + Provenance</text>
-  
-  <!-- Output -->
-  <line x1="1015" y1="738" x2="1015" y2="760" class="line line-main"/>
-  <circle cx="1015" cy="780" r="20" class="terminus"/>
-  <text x="1015" y="670" class="terminus-label">OUT</text>
-  
-  <!-- Footer -->
-  <text x="600" y="770" class="subtitle">sjoclaudi/nf-codonyat • Research use only • No clinical interpretation</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="2120" height="880" viewBox="0 0 2120 880" font-family="'Helvetica Neue', Helvetica, Arial, 'DejaVu Sans', sans-serif">
+<rect width="2120" height="880" fill="#ffffff"/>
+<text x="40" y="50" font-size="34" text-anchor="start" font-weight="bold" fill="#222" >nf-codonyat</text>
+<text x="40" y="80" font-size="17" text-anchor="start" font-weight="normal" fill="#555" >codon-aware amino acid variant typing of HIV-1 amplicon NGS data (FASTQ or SAM)</text>
+<rect x="40" y="455" width="118" height="295" rx="10" fill="#f3f5f8" stroke="#c9d1db" stroke-width="1.5"/>
+<text x="50" y="741" font-size="12.5" text-anchor="start" font-weight="bold" fill="#5a6675" letter-spacing="1.2">INPUT</text>
+<rect x="170" y="455" width="225" height="135" rx="10" fill="#f3f5f8" stroke="#c9d1db" stroke-width="1.5"/>
+<text x="180" y="581" font-size="12.5" text-anchor="start" font-weight="bold" fill="#5a6675" letter-spacing="1.2">PRE-PROCESSING / QC</text>
+<rect x="500" y="110" width="420" height="110" rx="10" fill="#f3f5f8" stroke="#c9d1db" stroke-width="1.5"/>
+<text x="510" y="128" font-size="12.5" text-anchor="start" font-weight="bold" fill="#5a6675" letter-spacing="1.2">CONTAMINATION</text>
+<text x="644.8" y="128" font-size="12" text-anchor="start" font-weight="normal" fill="#7a8592" font-style="italic">Kraken2 · report only</text>
+<rect x="500" y="225" width="420" height="110" rx="10" fill="#f3f5f8" stroke="#c9d1db" stroke-width="1.5"/>
+<text x="510" y="243" font-size="12.5" text-anchor="start" font-weight="bold" fill="#5a6675" letter-spacing="1.2">SUBTYPING</text>
+<text x="606.4" y="243" font-size="12" text-anchor="start" font-weight="normal" fill="#7a8592" font-style="italic">BBSplit read mapping · report only</text>
+<rect x="640" y="340" width="830" height="110" rx="10" fill="#f3f5f8" stroke="#c9d1db" stroke-width="1.5"/>
+<text x="650" y="358" font-size="12.5" text-anchor="start" font-weight="bold" fill="#5a6675" letter-spacing="1.2">STRAND BRANCH</text>
+<text x="784.8" y="358" font-size="12" text-anchor="start" font-weight="normal" fill="#7a8592" font-style="italic">PE pairs · --strand_metrics_unmerged</text>
+<rect x="500" y="455" width="825" height="135" rx="10" fill="#f3f5f8" stroke="#c9d1db" stroke-width="1.5"/>
+<text x="510" y="581" font-size="12.5" text-anchor="start" font-weight="bold" fill="#5a6675" letter-spacing="1.2">MERGE + ALIGNMENT</text>
+<text x="683.2" y="581" font-size="12" text-anchor="start" font-weight="normal" fill="#7a8592" font-style="italic">SAM samples join at flagstat</text>
+<rect x="1335" y="455" width="415" height="135" rx="10" fill="#f3f5f8" stroke="#c9d1db" stroke-width="1.5"/>
+<text x="1345" y="581" font-size="12.5" text-anchor="start" font-weight="bold" fill="#5a6675" letter-spacing="1.2">CODON / AA TABLES</text>
+<rect x="1140" y="610" width="470" height="130" rx="10" fill="#f3f5f8" stroke="#c9d1db" stroke-width="1.5"/>
+<text x="1150" y="628" font-size="12.5" text-anchor="start" font-weight="bold" fill="#5a6675" letter-spacing="1.2">CONSENSUS</text>
+<text x="1246.4" y="628" font-size="12" text-anchor="start" font-weight="normal" fill="#7a8592" font-style="italic">iVar · --skip_consensus</text>
+<rect x="1785" y="110" width="320" height="480" rx="10" fill="#f3f5f8" stroke="#c9d1db" stroke-width="1.5"/>
+<text x="1795" y="581" font-size="12.5" text-anchor="start" font-weight="bold" fill="#5a6675" letter-spacing="1.2">REPORTING</text>
+<path d="M95,483 L410,483 L410,195 L1855,195" fill="none" stroke="#d62728" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M95,492 L419,492 L419,310 L1855,310" fill="none" stroke="#2ca02c" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M95,501 L428,501 L428,425 L1455,425 L1540,510" fill="none" stroke="#ff7f0e" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M95,510 L2070,510" fill="none" stroke="#1f77b4" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M95,660 L980,660 L980,510" fill="none" stroke="#7b3fa0" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M1120,510 L1120,660 L1550,660" fill="none" stroke="#17a2a2" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+<rect x="86" y="470" width="18" height="53" rx="4" fill="#222"/>
+<text x="95" y="548" font-size="15" text-anchor="middle" font-weight="bold" fill="#222" >FASTQ</text>
+<text x="95" y="565" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#555" >Illumina PE / SE</text>
+<rect x="86" y="647" width="18" height="26" rx="4" fill="#222"/>
+<text x="95" y="698" font-size="15" text-anchor="middle" font-weight="bold" fill="#222" >SAM</text>
+<text x="95" y="715" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#555" >aligned reads</text>
+<rect x="214.0" y="472" width="22" height="49" rx="11.0" fill="#fff" stroke="#222" stroke-width="3"/>
+<text x="225" y="541" font-size="15" text-anchor="middle" font-weight="bold" fill="#222" >FastQC</text>
+<text x="225" y="559" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#555" >raw reads</text>
+<rect x="334.0" y="472" width="22" height="49" rx="11.0" fill="#fff" stroke="#222" stroke-width="3"/>
+<text x="345" y="541" font-size="15" text-anchor="middle" font-weight="bold" fill="#222" >fastp</text>
+<text x="345" y="559" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#555" >trimming</text>
+<circle cx="560" cy="195" r="11" fill="#fff" stroke="#222" stroke-width="3"/>
+<text x="560" y="158" font-size="15" text-anchor="middle" font-weight="bold" fill="#222" >Kraken2</text>
+<text x="560" y="175" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#555" >classification</text>
+<circle cx="700" cy="195" r="11" fill="#fff" stroke="#222" stroke-width="3"/>
+<text x="700" y="158" font-size="15" text-anchor="middle" font-weight="bold" fill="#222" >Summary</text>
+<text x="700" y="175" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#555" >per sample</text>
+<circle cx="840" cy="195" r="11" fill="#fff" stroke="#222" stroke-width="3"/>
+<text x="840" y="158" font-size="15" text-anchor="middle" font-weight="bold" fill="#222" >Combine</text>
+<text x="840" y="175" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#555" >all samples</text>
+<circle cx="560" cy="310" r="11" fill="#fff" stroke="#222" stroke-width="3"/>
+<text x="560" y="273" font-size="15" text-anchor="middle" font-weight="bold" fill="#222" >BBSplit</text>
+<text x="560" y="290" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#555" >vs subtype panel</text>
+<circle cx="700" cy="310" r="11" fill="#fff" stroke="#222" stroke-width="3"/>
+<text x="700" y="273" font-size="15" text-anchor="middle" font-weight="bold" fill="#222" >Estimate</text>
+<text x="700" y="290" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#555" >estimate_subtype.py</text>
+<circle cx="840" cy="310" r="11" fill="#fff" stroke="#222" stroke-width="3"/>
+<text x="840" y="273" font-size="15" text-anchor="middle" font-weight="bold" fill="#222" >Combine</text>
+<text x="840" y="290" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#555" >all samples</text>
+<circle cx="700" cy="425" r="11" fill="#fff" stroke="#222" stroke-width="3"/>
+<text x="700" y="388" font-size="15" text-anchor="middle" font-weight="bold" fill="#222" >Bowtie2</text>
+<text x="700" y="405" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#555" >PE, before merging</text>
+<circle cx="1120" cy="425" r="11" fill="#fff" stroke="#222" stroke-width="3"/>
+<text x="1120" y="388" font-size="15" text-anchor="middle" font-weight="bold" fill="#222" >samtools view</text>
+<text x="1120" y="405" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#555" >filter</text>
+<circle cx="1260" cy="425" r="11" fill="#fff" stroke="#222" stroke-width="3"/>
+<text x="1260" y="388" font-size="15" text-anchor="middle" font-weight="bold" fill="#222" >codonyat</text>
+<text x="1260" y="405" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#555" >pre-merge pairs</text>
+<circle cx="1400" cy="425" r="11" fill="#fff" stroke="#222" stroke-width="3"/>
+<text x="1400" y="388" font-size="15" text-anchor="middle" font-weight="bold" fill="#222" >Strand metrics</text>
+<text x="1400" y="405" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#555" >strand_metrics.py</text>
+<circle cx="560" cy="510" r="11" fill="#fff" stroke="#222" stroke-width="3"/>
+<text x="560" y="541" font-size="15" text-anchor="middle" font-weight="bold" fill="#222" >BBMerge</text>
+<text x="560" y="559" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#555" >PE only</text>
+<circle cx="700" cy="510" r="11" fill="#fff" stroke="#222" stroke-width="3"/>
+<text x="700" y="541" font-size="15" text-anchor="middle" font-weight="bold" fill="#222" >Bowtie2</text>
+<text x="700" y="559" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#555" >merged + unmerged</text>
+<circle cx="840" cy="510" r="11" fill="#fff" stroke="#222" stroke-width="3"/>
+<text x="840" y="541" font-size="15" text-anchor="middle" font-weight="bold" fill="#222" >samtools merge</text>
+<text x="840" y="559" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#555" >PE parts</text>
+<circle cx="980" cy="510" r="11" fill="#fff" stroke="#222" stroke-width="3"/>
+<text x="994" y="541" font-size="15" text-anchor="start" font-weight="bold" fill="#222" >flagstat</text>
+<text x="994" y="559" font-size="12.5" text-anchor="start" font-weight="normal" fill="#555" >aligned</text>
+<circle cx="1120" cy="510" r="11" fill="#fff" stroke="#222" stroke-width="3"/>
+<text x="1134" y="541" font-size="15" text-anchor="start" font-weight="bold" fill="#222" >Filter</text>
+<text x="1134" y="559" font-size="12.5" text-anchor="start" font-weight="normal" fill="#555" >samtools view</text>
+<circle cx="1260" cy="510" r="11" fill="#fff" stroke="#222" stroke-width="3"/>
+<text x="1260" y="541" font-size="15" text-anchor="middle" font-weight="bold" fill="#222" >flagstat</text>
+<text x="1260" y="559" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#555" >filtered</text>
+<circle cx="1400" cy="510" r="11" fill="#fff" stroke="#222" stroke-width="3"/>
+<text x="1400" y="541" font-size="15" text-anchor="middle" font-weight="bold" fill="#222" >codonyat</text>
+<text x="1400" y="559" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#555" >codon table</text>
+<circle cx="1540" cy="510" r="11" fill="#fff" stroke="#222" stroke-width="3"/>
+<text x="1540" y="541" font-size="15" text-anchor="middle" font-weight="bold" fill="#222" >Codon → AA</text>
+<text x="1540" y="559" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#555" >codon_to_aa.py</text>
+<circle cx="1680" cy="510" r="11" fill="#fff" stroke="#222" stroke-width="3"/>
+<text x="1680" y="541" font-size="15" text-anchor="middle" font-weight="bold" fill="#222" >Summaries</text>
+<text x="1680" y="559" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#555" >codonyat + AA</text>
+<rect x="1842.0" y="184" width="26" height="337" rx="13.0" fill="#fff" stroke="#222" stroke-width="3"/>
+<text x="1879" y="440" font-size="15" text-anchor="start" font-weight="bold" fill="#222" >MultiQC</text>
+<text x="1879" y="457" font-size="12.5" text-anchor="start" font-weight="normal" fill="#555" >QC report</text>
+<circle cx="1990" cy="510" r="11" fill="#fff" stroke="#222" stroke-width="3"/>
+<text x="1990" y="541" font-size="15" text-anchor="middle" font-weight="bold" fill="#222" >Provenance</text>
+<text x="1990" y="559" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#555" >versions · params · methods</text>
+<circle cx="2070" cy="510" r="7" fill="#222"/>
+<circle cx="1260" cy="660" r="11" fill="#fff" stroke="#222" stroke-width="3"/>
+<text x="1260" y="691" font-size="15" text-anchor="middle" font-weight="bold" fill="#222" >samtools sort</text>
+<circle cx="1400" cy="660" r="11" fill="#fff" stroke="#222" stroke-width="3"/>
+<text x="1400" y="691" font-size="15" text-anchor="middle" font-weight="bold" fill="#222" >iVar consensus</text>
+<text x="1400" y="709" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#555" >IUPAC mixtures</text>
+<circle cx="1540" cy="660" r="11" fill="#fff" stroke="#222" stroke-width="3"/>
+<text x="1540" y="691" font-size="15" text-anchor="middle" font-weight="bold" fill="#222" >Consensus report</text>
+<text x="1540" y="709" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#555" >FASTA + stats</text>
+<text x="40" y="776" font-size="12.5" text-anchor="start" font-weight="bold" fill="#5a6675" letter-spacing="1.2">LEGEND</text>
+<line x1="40" y1="796" x2="84" y2="796" stroke="#1f77b4" stroke-width="7" stroke-linecap="round"/>
+<text x="94" y="801" font-size="14" text-anchor="start" font-weight="normal" fill="#222" >FASTQ reads</text>
+<line x1="230" y1="796" x2="274" y2="796" stroke="#7b3fa0" stroke-width="7" stroke-linecap="round"/>
+<text x="284" y="801" font-size="14" text-anchor="start" font-weight="normal" fill="#222" >SAM input</text>
+<line x1="420" y1="796" x2="464" y2="796" stroke="#d62728" stroke-width="7" stroke-linecap="round"/>
+<text x="474" y="801" font-size="14" text-anchor="start" font-weight="normal" fill="#222" >Contamination</text>
+<line x1="610" y1="796" x2="654" y2="796" stroke="#2ca02c" stroke-width="7" stroke-linecap="round"/>
+<text x="664" y="801" font-size="14" text-anchor="start" font-weight="normal" fill="#222" >Subtype estimate</text>
+<line x1="800" y1="796" x2="844" y2="796" stroke="#ff7f0e" stroke-width="7" stroke-linecap="round"/>
+<text x="854" y="801" font-size="14" text-anchor="start" font-weight="normal" fill="#222" >Strand branch</text>
+<line x1="990" y1="796" x2="1034" y2="796" stroke="#17a2a2" stroke-width="7" stroke-linecap="round"/>
+<text x="1044" y="801" font-size="14" text-anchor="start" font-weight="normal" fill="#222" >Consensus</text>
+<circle cx="1200" cy="796" r="11" fill="#fff" stroke="#222" stroke-width="3"/>
+<text x="1220" y="801" font-size="14" text-anchor="start" font-weight="normal" fill="#222" >process</text>
+<rect x="1300" y="783" width="16" height="26" rx="4" fill="#222"/>
+<text x="1326" y="801" font-size="14" text-anchor="start" font-weight="normal" fill="#222" >input</text>
+<text x="40" y="832" font-size="13" text-anchor="start" font-weight="normal" fill="#444" >SE reads, or --merge_pairs false: BBMerge and samtools merge are skipped and reads go straight to Bowtie2. SAM samples skip every FASTQ-only step.</text>
+<text x="2100" y="862" font-size="12.5" text-anchor="end" font-weight="normal" fill="#777" >nf-codonyat · research use only; no clinical or drug-resistance interpretation · github.com/sjoclaudi/nf-codonyat</text>
 </svg>
