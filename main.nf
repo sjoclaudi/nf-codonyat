@@ -18,6 +18,7 @@
 
 include { VALIDATE_INPUT } from './subworkflows/validate_input'
 include { CODONYAT       } from './workflows/codonyat'
+include { validateParameters } from 'plugin/nf-schema'
 
 def printHeader() {
     log.info """
@@ -40,10 +41,20 @@ def printHeader() {
 
 workflow {
     main:
-    // Fail fast on missing required parameters, before any work is scheduled
+    // nf-schema: HelpObserver prints --help/--helpFull; do not schedule work when help was requested
+    def help_requested = params.help || params.helpFull
+    if (help_requested) {
+        return
+    }
+
+    // Fail fast on missing required parameters (clear --prefixed message for users and nf-test)
     def missing = ['samplesheet', 'reference', 'amplicons'].findAll { name -> !params[name] }
     if (missing) {
         error "Missing required parameter(s): ${missing.collect { name -> '--' + name }.join(', ')}"
+    }
+
+    if (params.validate_params) {
+        validateParameters()
     }
 
     // The execution reports are placed using params.outdir as it was when

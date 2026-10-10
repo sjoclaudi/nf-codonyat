@@ -49,7 +49,6 @@
                 },
                 "save_intermediates": {
                     "type": "boolean",
-                    "default": false,
                     "description": "Also publish trimmed FASTQ, per-part BAMs, the strand-branch BAM/codon table, raw iVar output and Kraken2 per-read assignments."
                 }
             },
@@ -104,7 +103,6 @@
                 },
                 "bbmerge_args": {
                     "type": "string",
-                    "default": "",
                     "description": "Extra BBMerge arguments (BBMerge defaults otherwise; ordered=t is always set)."
                 },
                 "strand_metrics_unmerged": {
@@ -141,7 +139,6 @@
                 },
                 "skip_contamination": {
                     "type": "boolean",
-                    "default": false,
                     "description": "Skip the Kraken2 contamination report."
                 },
                 "kraken2_confidence": {
@@ -151,17 +148,16 @@
                 },
                 "kraken2_memory_mapping": {
                     "type": "boolean",
-                    "default": false,
                     "description": "Kraken2 --memory-mapping (database not loaded into RAM)."
                 },
                 "contamination_warn_hiv_pct": {
                     "type": "number",
-                    "default": 50,
+                    "default": 50.0,
                     "description": "Warn when HIV-1 is below this % of classified fragments."
                 },
                 "contamination_warn_human_pct": {
                     "type": "number",
-                    "default": 50,
+                    "default": 50.0,
                     "description": "Warn when human reads exceed this % of all fragments."
                 }
             }
@@ -174,11 +170,11 @@
                 "subtype_panel": {
                     "type": "string",
                     "format": "directory-path",
-                    "description": "Panel folder with <bin>.fa per bin and panel.tsv (default: assets/presets/hiv1_subtype_panel_v1, bins A, B, M)."
+                    "description": "Panel folder with <bin>.fa per bin and panel.tsv (default: assets/presets/hiv1_subtype_panel_v1, bins A, B, M).",
+                    "default": "/workspace/assets/presets/hiv1_subtype_panel_v1"
                 },
                 "skip_subtype": {
                     "type": "boolean",
-                    "default": false,
                     "description": "Skip the subtype estimate."
                 },
                 "subtype_min_reads": {
@@ -188,7 +184,7 @@
                 },
                 "subtype_min_margin": {
                     "type": "number",
-                    "default": 10,
+                    "default": 10.0,
                     "description": "Minimum difference (percentage points) between the top two bins; below it the call is flagged."
                 }
             }
@@ -200,7 +196,6 @@
             "properties": {
                 "skip_consensus": {
                     "type": "boolean",
-                    "default": false,
                     "description": "Skip the consensus sequence."
                 },
                 "consensus_threshold": {
@@ -224,6 +219,51 @@
                     "description": "iVar -q: minimum base quality."
                 }
             }
+        },
+        "generic_options": {
+            "title": "Generic options",
+            "type": "object",
+            "description": "Less common options for the pipeline, typically set in config.",
+            "properties": {
+                "help": {
+                    "type": "boolean",
+                    "description": "Display the short help message and exit.",
+                    "hidden": true
+                },
+                "helpFull": {
+                    "type": "boolean",
+                    "description": "Display the full help message and exit.",
+                    "hidden": true
+                },
+                "validate_params": {
+                    "type": "boolean",
+                    "description": "Validate parameters against nextflow_schema.json via nf-schema.",
+                    "default": true,
+                    "hidden": true
+                },
+                "prov_enabled": {
+                    "type": "boolean",
+                    "description": "Write nf-prov provenance reports (BCO, WRROC, DAG) under <outdir>/pipeline_info/.",
+                    "default": false
+                },
+                "pipeline_info_outdir": {
+                    "type": "string",
+                    "description": "Internal: outdir snapshot used for execution reports. Do not set.",
+                    "hidden": true
+                },
+                "input": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Alias for --samplesheet (CSV: sample,fastq_1,fastq_2,sam).",
+                    "hidden": true
+                },
+                "showHidden": {
+                    "type": "boolean",
+                    "description": "Show hidden parameters in the help message.",
+                    "default": false,
+                    "hidden": true
+                }
+            }
         }
     },
     "allOf": [
@@ -244,6 +284,10 @@
         },
         {
             "$ref": "#/$defs/consensus_options"
+        },
+        {
+            "$ref": "#/$defs/generic_options"
         }
-    ]
+    ],
+    "properties": {}
 }

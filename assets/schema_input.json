@@ -1,0 +1,37 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://raw.githubusercontent.com/sjoclaudi/nf-codonyat/main/assets/schema_input.json",
+    "title": "nf-codonyat samplesheet schema",
+    "description": "Schema for the samplesheet CSV file used by nf-codonyat",
+    "type": "array",
+    "items": {
+        "type": "object",
+        "required": ["sample"],
+        "properties": {
+            "sample": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_-]+$",
+                "errorMessage": "Sample name must be provided and cannot contain spaces or special characters except - and _",
+                "meta": ["id"]
+            },
+            "fastq_1": {
+                "type": "string",
+                "format": "file-path",
+                "pattern": "^\\S+\\.f(ast)?q\\.gz$",
+                "errorMessage": "FastQ file for reads 1 must be provided, cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'"
+            },
+            "fastq_2": {
+                "type": "string",
+                "format": "file-path",
+                "pattern": "^\\S+\\.f(ast)?q\\.gz$",
+                "errorMessage": "FastQ file for reads 2 cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'"
+            },
+            "sam": {
+                "type": "string",
+                "format": "file-path",
+                "pattern": "^\\S+\\.sam$",
+                "errorMessage": "SAM file must be provided, cannot contain spaces and must have extension '.sam'"
+            }
+        }
+    }
+}
