@@ -1,11 +1,23 @@
 # Changelog
 
-## [0.3.1] - unreleased
+## [0.4.0] - 2026-10-10
+
+### Added
+- nf-core-style metro map of the pipeline (docs/images), embedded in the README.
+- nextflow_schema.json covering every parameter, with nf-schema validation and `--help`; samplesheet schema.
+- Optional nf-prov provenance (`--prov_enabled`): BCO, provenance DAG and RO-Crate metadata.
+- conf/base.config resource labels with retry strategy, `process.resourceLimits`, conf/modules.config, test and test_full profiles, podman profile.
+- tower.yml for Seqera Platform, pre-commit config, .editorconfig, .prettierrc, CITATIONS.md, CODE_OF_CONDUCT.md, CONTRIBUTING.md.
+
+### Notes
+- Analysis outputs are byte-identical to 0.3.1 on the test profile (see docs/BYTE-IDENTICAL-VERIFICATION.md).
+
+## [0.3.1] - 2026-10-05
 
 ### Changed
 - codonyat 1.1.0 is now installed from PyPI instead of from a git source.
 
-## [0.3.0] - unreleased
+## [0.3.0] - 2026-10-04
 
 PASeq-style processing steps (design: decisions D1–D13). Research use only: all new outputs are
 descriptive; there is no drug-resistance or clinical interpretation.
