@@ -20,14 +20,19 @@ results/
 │   ├── <s>.consensus_stats.tsv   # Length, N count, IUPAC count, positions at min depth
 │   ├── consensus_all.fa          # All consensus sequences
 │   └── consensus_stats.tsv       # All samples
-├── contamination/                # FASTQ samples (unless --skip_contamination)
+├── contamination/                # FASTQ samples (unless --skip_contamination or auto-skipped)
 │   ├── <s>.kraken2.report.txt    # Kraken2 report
-│   ├── <s>.contamination.tsv     # % per group + warning flag
+│   ├── <s>.contamination.tsv     # % per group + warning flag + TARGET_* columns
 │   └── contamination_summary.tsv
-├── subtype/                      # FASTQ samples (unless --skip_subtype)
+├── subtype/                      # FASTQ samples (unless --skip_subtype or no panel)
 │   ├── <s>.subtype.tsv           # % reads per panel bin + call/flag
 │   ├── subtype_summary.tsv
 │   └── bbsplit/<s>.stats.txt     # BBSplit refstats
+├── reference/                    # Input validation and provenance
+│   ├── validation.json           # Validation results (--validate_only)
+│   ├── annotation_used.tsv       # Protein annotation with record and intervals
+│   ├── amplicons_used.tsv        # Derived 7-column amplicon table
+│   └── reference_used.fasta      # Annotated reference passed to codonyat
 ├── merge/                        # Paired-end samples with --merge_pairs
 │   ├── <s>.bbmerge.log           # BBMerge log (pairs, joined %)
 │   └── <s>_ihist.txt             # Insert-size histogram
@@ -50,6 +55,7 @@ results/
 └── pipeline_info/
     ├── software_versions.yml     # Tool versions per process
     ├── provenance.json           # Versions, all parameters, SHA-256 of reference, amplicons, panel and Kraken2 DB files
+    ├── run_mode.json             # Pipeline configuration (preset, target, reference accessions, checksums)
     ├── methods.md                # Auto-written methods paragraph (with the research-use-only statement)
     ├── execution_timeline.html
     ├── execution_report.html
@@ -148,6 +154,15 @@ alignment and the same four values with the `_UNMERGED` suffix from the pre-merg
 
 Percentages of all read fragments given to Kraken2 (a pair counts once): `TOTAL_FRAGMENTS`,
 `UNCLASSIFIED_PCT`, `CLASSIFIED_PCT`, `HIV1_PCT`, `HIV1_PCT_OF_CLASSIFIED`, `HUMAN_PCT`, `PHIX_PCT`,
+`BACTERIA_PCT`, `OTHER_VIRAL_PCT`, `OTHER_PCT`, `WARNING`, `TARGET_TAXID`, `TARGET_READS`, `TARGET_PCT`.
+
+**New in v0.5.0:** `TARGET_TAXID`, `TARGET_READS`, `TARGET_PCT` columns are appended. For HIV-1 preset, 
+`TARGET_TAXID=11676` and matches `HIV1_*` columns. For custom mode without a target taxid, these columns 
+are empty. The `HIV1_*` columns are preserved for backward compatibility.
+
+The warning lists issues (e.g. `no_reads`, `<target_label><threshold%_of_classified`, `human>50%`), 
+separated by `;` (`none` if no warnings). Percentages are informative only: no reads are removed and the 
+pipeline never stops a sample for contamination.
 `BACTERIA_PCT`, `OTHER_VIRAL_PCT`, `OTHER_PCT` and `WARNING` (`none`, or which threshold was crossed).
 Report only: no reads are removed.
 
