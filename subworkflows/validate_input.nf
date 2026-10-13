@@ -27,7 +27,7 @@ workflow VALIDATE_INPUT {
     take:
     samplesheet_path  // String
     reference_path    // String
-    amplicons_path    // String
+    amplicons_input   // value channel: path
 
     main:
 

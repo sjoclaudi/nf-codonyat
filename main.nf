@@ -28,6 +28,7 @@
 
 include { VALIDATE_INPUT } from './subworkflows/validate_input'
 include { CODONYAT       } from './workflows/codonyat'
+include { BED_TO_AMPLICONS } from './modules/local/bed/to_amplicons/main'
 include { validateParameters } from 'plugin/nf-schema'
 
 def loadPreset(String preset) {
@@ -145,16 +146,22 @@ workflow {
 
     printHeader()
 
-    // TODO: If primer_bed provided, need to convert to amplicons TSV
-    // For now, preset must provide amplicons directly or user must provide --amplicons
+    // Convert primer BED to amplicons if needed
+    def amplicons_ch
     if (primer_bed && !amplicons) {
-        error "primer_bed support not yet fully implemented. Please use --amplicons TSV format or a preset with amplicons."
+        BED_TO_AMPLICONS(
+            file(reference, checkIfExists: true),
+            file(primer_bed, checkIfExists: true)
+        )
+        amplicons_ch = BED_TO_AMPLICONS.out.amplicons
+    } else {
+        amplicons_ch = channel.value(file(amplicons, checkIfExists: true))
     }
     
     VALIDATE_INPUT(
         samplesheet,
         reference,
-        amplicons
+        amplicons_ch
     )
 
     CODONYAT(
