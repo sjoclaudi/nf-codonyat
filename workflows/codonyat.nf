@@ -54,11 +54,14 @@ workflow CODONYAT {
     sam_ch          // queue: [ meta, sam ]
     reference_ch    // value: path
     amplicons_ch    // value: path
+    target_taxid    // value: int or null
+    target_label    // value: string
+    subtype_panel   // value: path or null
 
     main:
 
     def run_contamination = !params.skip_contamination && params.kraken2_db
-    def run_subtype       = !params.skip_subtype
+    def run_subtype       = !params.skip_subtype && subtype_panel
     def run_consensus     = !params.skip_consensus
 
     // ── FASTQ path: QC and trimming ───────────────────────
@@ -83,7 +86,7 @@ workflow CODONYAT {
             params.save_intermediates  // save_reads_assignment
         )
         kraken2_reports = KRAKEN2_KRAKEN2.out.report
-        CONTAMINATION_SUMMARY(kraken2_reports)
+        CONTAMINATION_SUMMARY(kraken2_reports, target_taxid, target_label)
         CONTAMINATION_COMBINE(CONTAMINATION_SUMMARY.out.tsv.map { _meta, f -> f }.collect())
         contamination_mqc = CONTAMINATION_COMBINE.out.mqc
     }
@@ -93,7 +96,7 @@ workflow CODONYAT {
     // BBSplit names the first bin "primary"; SUBTYPE_ESTIMATE maps it back.
     subtype_mqc = channel.empty()
     if (run_subtype) {
-        def panel_dir = file(params.subtype_panel, checkIfExists: true)
+        def panel_dir = file(subtype_panel, checkIfExists: true)
         def bins = panel_dir.resolve('panel.tsv').readLines().drop(1)
             .findAll { line -> line.trim() }
             .collect { line -> line.split('\t')[0] }
@@ -271,7 +274,7 @@ workflow CODONYAT {
         params_tsv,
         reference_ch,
         amplicons_ch,
-        run_subtype ? file(params.subtype_panel) : [],
+        run_subtype ? file(subtype_panel) : [],
         run_contamination ? file(params.kraken2_db) : []
     )
 

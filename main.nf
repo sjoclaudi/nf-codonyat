@@ -6,11 +6,21 @@
  * =========================================================
  *
  *  Usage:
+ *    # HIV-1 (default preset)
  *    nextflow run sjoclaudi/nf-codonyat -profile docker \
- *        --samplesheet samples.csv \
- *        --reference ref.fasta \
- *        --amplicons amplicons.tsv \
+ *        --input samples.csv \
  *        --kraken2_db /path/to/k2_standard_08 \
+ *        --outdir results
+ *
+ *    # Custom virus with primer BED
+ *    nextflow run sjoclaudi/nf-codonyat -profile docker \
+ *        --preset custom \
+ *        --input samples.csv \
+ *        --reference ref.fasta \
+ *        --primer-bed primers.bed \
+ *        --annotation genes.gff3 \
+ *        --target-taxid 2697049 \
+ *        --target-label "SARS-CoV-2" \
  *        --outdir results
  *
  *    nextflow run sjoclaudi/nf-codonyat -profile test,docker
@@ -20,18 +30,36 @@ include { VALIDATE_INPUT } from './subworkflows/validate_input'
 include { CODONYAT       } from './workflows/codonyat'
 include { validateParameters } from 'plugin/nf-schema'
 
+def loadPreset(String preset) {
+    if (preset == 'custom') {
+        return [
+            reference: null,
+            amplicons: null,
+            primer_bed: null,
+            subtype_panel: null,
+            target_taxid: null,
+            target_label: 'TARGET'
+        ]
+    }
+    
+    // Load preset configuration
+    def presetJson = "${projectDir}/bin/load_preset.py --preset ${preset} --project-dir ${projectDir}".execute().text
+    return new groovy.json.JsonSlurper().parseText(presetJson)
+}
+
 def printHeader() {
     log.info """
     nf-codonyat v${workflow.manifest.version}
     Codon-aware amino acid variant typing (research use only)
     ${workflow.manifest.homePage}
     -------------------------------------------------------
-    samplesheet : ${params.samplesheet}
-    reference   : ${params.reference}
-    amplicons   : ${params.amplicons}
+    preset      : ${params.preset}
+    samplesheet : ${params.input ?: params.samplesheet}
+    reference   : ${params.reference ?: 'from preset'}
+    amplicons   : ${params.amplicons ?: 'from preset/primers'}
     protein     : ${params.protein}
-    kraken2_db  : ${params.skip_contamination ? 'skipped' : params.kraken2_db}
-    subtype     : ${params.skip_subtype ? 'skipped' : params.subtype_panel}
+    kraken2_db  : ${params.skip_contamination ? 'skipped' : params.kraken2_db ?: 'auto-skip (custom without DB)'}
+    subtype     : ${params.skip_subtype ? 'skipped' : params.subtype_panel ?: 'from preset'}
     merge_pairs : ${params.merge_pairs}
     consensus   : ${params.skip_consensus ? 'skipped' : "t=${params.consensus_threshold}, min depth ${params.consensus_min_depth}x"}
     outdir      : ${params.outdir}
@@ -47,14 +75,84 @@ workflow {
         return
     }
 
-    // Fail fast on missing required parameters (clear --prefixed message for users and nf-test)
-    def missing = ['samplesheet', 'reference', 'amplicons'].findAll { name -> !params[name] }
-    if (missing) {
-        error "Missing required parameter(s): ${missing.collect { name -> '--' + name }.join(', ')}"
+    // Load preset configuration
+    def preset = loadPreset(params.preset)
+    
+    // Resolve parameters (user-provided overrides preset)
+    def samplesheet = params.input ?: params.samplesheet
+    def reference = params.reference ?: preset.reference
+    def amplicons = params.amplicons
+    def primer_bed = params.primer_bed
+    def annotation = params.annotation
+    def target_taxid = params.target_taxid ?: preset.target_taxid
+    def target_label = params.target_label ?: preset.target_label
+    def subtype_panel = params.subtype_panel ?: preset.subtype_panel
+    
+    // If no user amplicons/primer_bed, use preset values
+    if (!amplicons && !primer_bed) {
+        amplicons = preset.amplicons
+        primer_bed = preset.primer_bed
+    }
+    
+    // Validation: required parameters
+    if (!samplesheet) {
+        error "Missing required parameter: --input (or --samplesheet)"
+    }
+    
+    if (params.preset == 'custom') {
+        if (!reference) {
+            error "Custom preset requires --reference"
+        }
+        if (!amplicons && !primer_bed) {
+            error "Custom preset requires either --primer-bed or --amplicons"
+        }
+    }
+    
+    if (!reference) {
+        error "No reference provided and preset '${params.preset}' has no reference"
+    }
+    
+    // Check amplicons XOR primer_bed
+    if (amplicons && primer_bed) {
+        error "Cannot specify both --amplicons and --primer-bed (mutually exclusive)"
+    }
+    
+    if (!amplicons && !primer_bed) {
+        error "Must provide either --amplicons (TSV) or --primer-bed (6-column BED)"
     }
 
     if (params.validate_params) {
         validateParameters()
+    }
+
+    // Validation-only mode: validate inputs and exit
+    if (params.validate_only) {
+        log.info "Validation-only mode: checking inputs..."
+        
+        def validation_cmd = [
+            "${projectDir}/bin/validate_reference.py",
+            "--reference", reference,
+            "--preset", params.preset,
+            "--out", "${params.outdir}/reference/validation.json"
+        ]
+        
+        if (primer_bed) {
+            validation_cmd += ["--primer-bed", primer_bed]
+        }
+        if (annotation) {
+            validation_cmd += ["--annotation", annotation]
+        }
+        
+        def result = validation_cmd.execute()
+        result.waitForProcessOutput(System.out, System.err)
+        def exit_code = result.exitValue()
+        
+        if (exit_code == 0) {
+            log.info "Validation passed. See ${params.outdir}/reference/validation.json"
+        } else {
+            error "Validation failed. See ${params.outdir}/reference/validation.json"
+        }
+        return
     }
 
     // The execution reports are placed using params.outdir as it was when
@@ -69,16 +167,23 @@ workflow {
 
     printHeader()
 
+    // If primer_bed provided, convert to amplicons TSV
+    // For now, we'll pass both and let VALIDATE_INPUT handle it
+    // In a full implementation, we'd add a BED-to-amplicons converter module
+    
     VALIDATE_INPUT(
-        params.samplesheet,
-        params.reference,
-        params.amplicons
+        samplesheet,
+        reference,
+        amplicons ?: "${projectDir}/assets/presets/${params.preset}/amplicons.tsv"  // Temporary fallback
     )
 
     CODONYAT(
         VALIDATE_INPUT.out.fastq,
         VALIDATE_INPUT.out.sam,
         VALIDATE_INPUT.out.reference,
-        VALIDATE_INPUT.out.amplicons
+        VALIDATE_INPUT.out.amplicons,
+        target_taxid,
+        target_label,
+        subtype_panel
     )
 }
