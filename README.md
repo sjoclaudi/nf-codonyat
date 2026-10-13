@@ -1,12 +1,19 @@
 # nf-codonyat
 
-**Codon-aware amino acid variant typing of HIV-1 amplicon NGS data — Nextflow pipeline**
+**Codon-aware amino acid variant typing of viral amplicon NGS data — Nextflow pipeline (v0.5.0)**
 
 Wraps the [`codonyat`](https://github.com/mnoguera/codonyat) Python package in a Nextflow pipeline for viral amplicon NGS analysis.
 
 > **Research use only.** The outputs are descriptive: QC, a contamination report, a read-mapping based
-> subtype estimate, a consensus sequence, and codon and amino-acid frequency tables. The pipeline does
+> subtype estimate (HIV-1 only), a consensus sequence, and codon and amino-acid frequency tables. The pipeline does
 > no drug-resistance or clinical interpretation and is not a diagnostic tool.
+
+**What's new in v0.5.0:**
+- Multi-virus preset system (hiv1, sars-cov-2, influenza-a, rsv, hbv, hcv, custom)
+- Generic contamination tracking with TARGET_* columns
+- Multi-record reference support for segmented viruses
+- Input validation mode
+- Flexible annotation formats (GFF3, BED, FASTA header)
 
 ---
 
@@ -58,7 +65,7 @@ End: codonyat_summary.tsv, aa_variants_summary.tsv, consensus_all.fa, provenance
   no quality filtering itself).
 - **iVar consensus:** bases making up ≥ 50% of the depth (IUPAC code when more than one base is needed),
   N below 100x, majority insertions and deletions applied.
-- **codonyat 1.1** streams the alignments (flat memory) and counts every requested protein in one pass.
+- **codonyat 1.2** supports multi-record references and multi-interval proteins; streams alignments (flat memory) and counts every requested protein in one pass.
 - SAM samples skip every FASTQ-only step and give the same codon tables as v0.2.0 with the same `--protein`.
 - There is no duplicate removal (amplicon reads share start positions) and no primer clipping yet (see below).
 

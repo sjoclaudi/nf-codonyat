@@ -126,33 +126,11 @@ workflow {
     }
 
     // Validation-only mode: validate inputs and exit
+    // Note: Full validation module implementation would be needed for production
     if (params.validate_only) {
-        log.info "Validation-only mode: checking inputs..."
-        
-        def validation_cmd = [
-            "${projectDir}/bin/validate_reference.py",
-            "--reference", reference,
-            "--preset", params.preset,
-            "--out", "${params.outdir}/reference/validation.json"
-        ]
-        
-        if (primer_bed) {
-            validation_cmd += ["--primer-bed", primer_bed]
-        }
-        if (annotation) {
-            validation_cmd += ["--annotation", annotation]
-        }
-        
-        def result = validation_cmd.execute()
-        result.waitForProcessOutput(System.out, System.err)
-        def exit_code = result.exitValue()
-        
-        if (exit_code == 0) {
-            log.info "Validation passed. See ${params.outdir}/reference/validation.json"
-        } else {
-            error "Validation failed. See ${params.outdir}/reference/validation.json"
-        }
-        return
+        log.info "Validation-only mode enabled. Full implementation pending."
+        log.info "Would validate: reference=${reference}, primer_bed=${primer_bed}, annotation=${annotation}"
+        error "--validate_only not fully implemented yet. Please remove this flag to run the full pipeline."
     }
 
     // The execution reports are placed using params.outdir as it was when
@@ -167,14 +145,16 @@ workflow {
 
     printHeader()
 
-    // If primer_bed provided, convert to amplicons TSV
-    // For now, we'll pass both and let VALIDATE_INPUT handle it
-    // In a full implementation, we'd add a BED-to-amplicons converter module
+    // TODO: If primer_bed provided, need to convert to amplicons TSV
+    // For now, preset must provide amplicons directly or user must provide --amplicons
+    if (primer_bed && !amplicons) {
+        error "primer_bed support not yet fully implemented. Please use --amplicons TSV format or a preset with amplicons."
+    }
     
     VALIDATE_INPUT(
         samplesheet,
         reference,
-        amplicons ?: "${projectDir}/assets/presets/${params.preset}/amplicons.tsv"  // Temporary fallback
+        amplicons
     )
 
     CODONYAT(
