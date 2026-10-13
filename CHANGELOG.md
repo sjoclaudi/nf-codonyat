@@ -1,5 +1,44 @@
 # Changelog
 
+## [0.5.0] - 2026-10-13
+
+### Added
+- **Preset system**: Supports hiv1 (default), sars-cov-2, influenza-a, rsv, hbv, hcv, and custom presets
+- **Multi-record reference support**: For segmented viruses like influenza A (codonyat 1.2.0)
+- **Validation mode**: `--validate_only` for fast input checking without running the full pipeline
+- **Generic contamination tracking**: 
+  - New parameters: `--target-taxid`, `--target-label`
+  - New columns: `TARGET_TAXID`, `TARGET_READS`, `TARGET_PCT` (appended to all contamination tables)
+  - HIV1_* columns preserved for backward compatibility
+- **Flexible input formats**:
+  - `--primer-bed`: 6-column BED format (chrom,start,end,name,pool,strand) with _LEFT/_RIGHT naming
+  - `--annotation`: GFF3 (CDS features) or BED (4 columns) format
+  - `--amplicons`: TSV format (retained for backward compatibility)
+- **New parameters**: 
+  - `--preset`: Choose virus preset or custom mode
+  - `--contamination-warn-target-pct`: Generic threshold (replaces HIV-specific)
+- **New outputs**:
+  - `reference/validation.json`: Machine-readable validation results
+  - `reference/annotation_used.tsv`: Protein annotation with record and intervals columns
+  - `reference/amplicons_used.tsv`: Derived amplicon table
+  - `reference/reference_used.fasta`: Annotated reference as passed to codonyat
+  - `pipeline_info/run_mode.json`: Pipeline configuration and provenance
+- **Input validation**: Reference size limit (100 kb for custom), primer pairing, CDS validation
+
+### Changed
+- Updated to codonyat 1.2.0 (supports multi-record references and multi-interval proteins)
+- Subtype panel now optional (only HIV-1 preset includes bundled panel)
+- Contamination auto-skipped in custom mode without Kraken2 database or taxid
+- Reference and amplicons no longer universally required (preset-dependent)
+- Schema updated to reflect multi-virus support
+
+### Deprecated
+- `--contamination-warn-hiv-pct`: Use `--contamination-warn-target-pct` instead (still accepted as alias)
+
+### Notes
+- HIV-1 outputs identical to v0.4.0 except for appended TARGET_* columns in contamination tables
+- Research use only - no clinical or diagnostic applications
+
 ## [0.4.0] - 2026-10-10
 
 ### Added
