@@ -3,7 +3,7 @@
 
 Per sample:
     contamination_summary.py sample --sample S --report S.kraken2.report.txt \
-        --warn-hiv-pct 50 --warn-human-pct 50 > S.contamination.tsv
+        --target-taxid 11676 --target-label HIV1 --warn-target-pct 50 --warn-human-pct 50 > S.contamination.tsv
 Combine:
     contamination_summary.py combine S1.contamination.tsv ... \
         --out contamination_summary.tsv --mqc contamination_mqc.tsv
@@ -18,11 +18,15 @@ from __future__ import annotations
 import argparse
 import sys
 
-HIV1, PHIX, HUMAN, VIRUSES, BACTERIA = 11676, 10847, 9606, 10239, 2
+PHIX, HUMAN, VIRUSES, BACTERIA = 10847, 9606, 10239, 2
+
+# HIV1 kept for backward compatibility
+HIV1 = 11676
 
 COLUMNS = [
     "SAMPLE", "TOTAL_FRAGMENTS", "UNCLASSIFIED_PCT", "CLASSIFIED_PCT", "HIV1_PCT", "HIV1_PCT_OF_CLASSIFIED",
     "HUMAN_PCT", "PHIX_PCT", "BACTERIA_PCT", "OTHER_VIRAL_PCT", "OTHER_PCT", "WARNING",
+    "TARGET_TAXID", "TARGET_READS", "TARGET_PCT",
 ]
 
 
@@ -47,24 +51,34 @@ def pct(n: int, d: int) -> float:
     return round(100.0 * n / d, 3) if d else 0.0
 
 
-def sample_row(sample: str, report: str, warn_hiv: float, warn_human: float) -> dict:
+def sample_row(sample: str, report: str, target_taxid: int | None, target_label: str, 
+               warn_target: float, warn_human: float) -> dict:
     unclassified, clade = read_report(report)
     classified = clade.get(1, 0)
     total = unclassified + classified
     hiv, phix, human = clade.get(HIV1, 0), clade.get(PHIX, 0), clade.get(HUMAN, 0)
     viruses, bacteria = clade.get(VIRUSES, 0), clade.get(BACTERIA, 0)
+    
+    # Generic target (may be None if not provided)
+    target_reads = clade.get(target_taxid, 0) if target_taxid else 0
+    target_pct = pct(target_reads, total)
+    target_of_classified = pct(target_reads, classified)
+    
     other_viral = max(0, viruses - hiv - phix)
     other = max(0, classified - viruses - human - bacteria)
     hiv_of_classified = pct(hiv, classified)
     human_pct = pct(human, total)
+    
     warnings = []
     if total == 0:
         warnings.append("no_reads")
     else:
-        if hiv_of_classified < warn_hiv:
-            warnings.append(f"HIV1<{warn_hiv:g}%_of_classified")
+        # Target-based warning
+        if target_taxid and target_of_classified < warn_target:
+            warnings.append(f"{target_label}<{warn_target:g}%_of_classified")
         if human_pct > warn_human:
             warnings.append(f"human>{warn_human:g}%")
+    
     return {
         "SAMPLE": sample,
         "TOTAL_FRAGMENTS": total,
@@ -78,6 +92,9 @@ def sample_row(sample: str, report: str, warn_hiv: float, warn_human: float) -> 
         "OTHER_VIRAL_PCT": pct(other_viral, total),
         "OTHER_PCT": pct(other, total),
         "WARNING": ";".join(warnings) or "none",
+        "TARGET_TAXID": target_taxid or "",
+        "TARGET_READS": target_reads,
+        "TARGET_PCT": target_pct,
     }
 
 
@@ -117,7 +134,10 @@ def main(argv: list[str] | None = None) -> None:
     s = sub.add_parser("sample")
     s.add_argument("--sample", required=True)
     s.add_argument("--report", required=True)
-    s.add_argument("--warn-hiv-pct", type=float, default=50.0)
+    s.add_argument("--target-taxid", type=int, default=None)
+    s.add_argument("--target-label", default="TARGET")
+    s.add_argument("--warn-target-pct", type=float, default=50.0)
+    s.add_argument("--warn-hiv-pct", type=float, default=None, help="Deprecated; use --warn-target-pct")
     s.add_argument("--warn-human-pct", type=float, default=50.0)
     c = sub.add_parser("combine")
     c.add_argument("tables", nargs="+")
@@ -125,7 +145,10 @@ def main(argv: list[str] | None = None) -> None:
     c.add_argument("--mqc", required=True)
     args = ap.parse_args(argv)
     if args.cmd == "sample":
-        write_rows([sample_row(args.sample, args.report, args.warn_hiv_pct, args.warn_human_pct)], sys.stdout)
+        # Handle deprecated --warn-hiv-pct
+        warn_target = args.warn_hiv_pct if args.warn_hiv_pct is not None else args.warn_target_pct
+        write_rows([sample_row(args.sample, args.report, args.target_taxid, args.target_label, 
+                              warn_target, args.warn_human_pct)], sys.stdout)
     else:
         rows = read_rows(args.tables)
         with open(args.out, "w") as fh:
