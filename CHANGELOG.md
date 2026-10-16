@@ -7,6 +7,7 @@
 
 ### Fixed
 - Samplesheet, reference, primer, annotation, Kraken2 database and subtype panel paths accept `s3://` URIs; Kraken2 DB prefixes stage as a directory (`hash.k2d`, `opts.k2d`, `taxo.k2d`).
+- `s3://` samplesheet rows are detected via the original URI / `toUriString()` (not `file().toString()`, which is `/bucket/key`); the FASTQ header is not read for remote paths. A remote `--kraken2_db` gets a cheap `exists()` check when credentials allow, otherwise a warning.
 
 ## [0.6.0] - 2026-10-16
 

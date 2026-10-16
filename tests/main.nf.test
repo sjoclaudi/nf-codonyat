@@ -305,6 +305,35 @@ nextflow_pipeline {
         }
     }
 
+    test("remote S3 samplesheet FASTQ skips local exists() and header check (stub)") {
+
+        tag "s3_samplesheet"
+        options "-stub"
+        config "./s3_anonymous.config"
+
+        when {
+            params {
+                samplesheet        = "${projectDir}/tests/samplesheet_s3.csv"
+                reference          = "${projectDir}/assets/testdata/reference.fasta"
+                amplicons          = "${projectDir}/assets/testdata/amplicons.tsv"
+                skip_contamination = true
+                skip_subtype       = true
+                skip_consensus     = true
+                outdir             = "${outputDir}"
+            }
+        }
+
+        then {
+            def nxfLog = path("${launchDir}/meta/nextflow.log").text
+            assertAll(
+                { assert workflow.success },
+                // Must not treat s3://bucket/key as local /bucket/key
+                { assert !nxfLog.contains("File for sample 'S1' not found") },
+                { assert !nxfLog.contains("not found: /nf-codonyat-no-such-bucket") }
+            )
+        }
+    }
+
     test("fails when a FASTQ sample has no --kraken2_db and --skip_contamination is not set") {
 
         when {

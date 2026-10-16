@@ -56,12 +56,15 @@ workflow VALIDATE_INPUT {
             if (fq1 && !params.skip_contamination && !params.kraken2_db && !auto_skip_contamination) {
                 error "Sample '${sample}' has FASTQ input: set --kraken2_db (Kraken2 database folder, e.g. Standard-8) or use --skip_contamination"
             }
-            if (fq1) {
-                checkIlluminaHeader(sample, resolveSheetPath(ss_file, sample, fq1))
+            def files = sam
+                ? [resolveSheetPath(ss_file, sample, sam)]
+                : (fq2 ? [resolveSheetPath(ss_file, sample, fq1), resolveSheetPath(ss_file, sample, fq2)] : [resolveSheetPath(ss_file, sample, fq1)])
+            if (fq1 && !NfCodonyat.isRemoteUri(fq1) && !NfCodonyat.isRemoteUri(files[0])) {
+                checkIlluminaHeader(sample, files[0])
             }
             sam
-                ? tuple([id: sample], 'sam', [resolveSheetPath(ss_file, sample, sam)])
-                : tuple([id: sample, single_end: !fq2], 'fastq', fq2 ? [resolveSheetPath(ss_file, sample, fq1), resolveSheetPath(ss_file, sample, fq2)] : [resolveSheetPath(ss_file, sample, fq1)])
+                ? tuple([id: sample], 'sam', files)
+                : tuple([id: sample, single_end: !fq2], 'fastq', files)
         }
 
     fastq_ch = rows_ch
@@ -131,11 +134,12 @@ def checkIlluminaHeader(String sample, fq) {
 }
 
 // Relative paths in the samplesheet are resolved against its folder.
-// Object-store URIs (s3://, gs://, az://) skip exists(): prefixes are not
-// local files, and Nextflow stages the object when the process runs.
+// Object-store URIs skip exists() and the Illumina header peek: file('s3://bucket/key')
+// stringifies as /bucket/key, so the check must use p or f.toUriString(), not f.toString().
 def resolveSheetPath(sheet, String sample, String p) {
     def f = p.contains('://') || p.startsWith('/') ? file(p) : file("${sheet.parent}/${p}")
-    if (!NfCodonyat.isRemoteUri(f) && !f.exists()) {
+    def remote = NfCodonyat.isRemoteUri(p) || NfCodonyat.isRemoteUri(f)
+    if (!remote && !f.exists()) {
         error "File for sample '${sample}' not found: ${f}"
     }
     return f

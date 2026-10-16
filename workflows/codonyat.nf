@@ -82,7 +82,7 @@ workflow CODONYAT {
     if (run_contamination) {
         KRAKEN2_KRAKEN2(
             trimmed,
-            inputDir(params.kraken2_db),
+            inputDir(params.kraken2_db, 'Kraken2 database prefix'),
             false,                     // save_output_fastqs
             params.save_intermediates  // save_reads_assignment
         )
@@ -293,9 +293,20 @@ workflow CODONYAT {
     multiqc    = MULTIQC.out.report
 }
 
-// Local directories use checkIfExists. Object-store prefixes (s3://...) are
-// not directories, so we only normalise the URI and let Nextflow stage objects.
-def inputDir(p) {
+// Local directories use checkIfExists. Remote prefixes: cheap exists() when the
+// object store is reachable; otherwise warn that the prefix was not validated.
+def inputDir(p, String label = 'directory') {
     def uri = NfCodonyat.dirUri(p)
-    return NfCodonyat.isRemoteUri(p) ? file(uri) : file(uri, checkIfExists: true)
+    if (!NfCodonyat.isRemoteUri(p) && !NfCodonyat.isRemoteUri(uri)) {
+        return file(uri, checkIfExists: true)
+    }
+    def f = file(uri)
+    try {
+        if (!f.exists()) {
+            log.warn "${label} '${uri}' does not exist or is not listable; Nextflow will still try to stage it"
+        }
+    } catch (Exception e) {
+        log.warn "${label} '${uri}' was not validated (${e.message})"
+    }
+    return f
 }
