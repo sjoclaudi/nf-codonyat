@@ -244,7 +244,7 @@ See [docs/output.md](docs/output.md) for the columns of every table.
 ## Software
 
 - **Local steps** (codonyat and the helper scripts in `bin/`, Python standard library only):
-  container `ghcr.io/sjoclaudi/nf-codonyat:0.6.0` built from the `Dockerfile`, or the conda environment
+  container `ghcr.io/sjoclaudi/nf-codonyat:0.7.0-dev` built from the `Dockerfile`, or the conda environment
   `modules/local/codonyat/run/environment.yml`.
   Both install `codonyat==1.3.1` from PyPI.
 - **Third-party steps** use [nf-core modules](https://nf-co.re/modules) (`modules/nf-core/`, pinned in
@@ -296,7 +296,7 @@ git clone https://github.com/sjoclaudi/nf-codonyat.git
 cd nf-codonyat
 
 nextflow lint .                          # must be clean; CI enforces it
-docker build -t ghcr.io/sjoclaudi/nf-codonyat:0.6.0 .   # task image (CI builds it for the docker tests)
+docker build -t ghcr.io/sjoclaudi/nf-codonyat:0.7.0-dev .   # task image (CI builds it for the docker tests)
 nextflow run . -profile test,docker      # or test,conda
 nf-test test --profile docker            # or --profile conda
 ```

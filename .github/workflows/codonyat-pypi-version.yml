@@ -1,0 +1,21 @@
+name: Codonyat PyPI version check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 6 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Compare pin to PyPI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check pinned codonyat vs latest PyPI
+        run: python3 .github/scripts/check_codonyat_pypi.py
