@@ -2,8 +2,10 @@
 """Regenerate the synthetic test SAM files from reference.fasta.
 
 Reads are exact copies of HXB2 (K03455) amplicon regions with a few known
-known amino-acid substitutions spiked in. The trailing `_<n>` in each read name is
-the read multiplicity understood by codonyat, which keeps the files tiny.
+amino-acid substitutions spiked in. Each logical read is written once per
+count (names do not end in `_<digits>`: codonyat 1.3.1 only treats that as a
+collapsed-read count when --collapsed-read-counts is passed, and nf-codonyat
+does not pass it).
 
   Amp_1  RT codons   1-80   (HXB2 2550-2789)
   Amp_2  RT codons 150-200  (HXB2 2997-3149)
@@ -54,10 +56,10 @@ def reads_for(amp, variants):
         for pos, base in muts.items():
             read = mutate(read, start, pos, base)
         cigar = f"{len(read)}M"
-        if fw:
-            out.append(record(f"{amp}_{label}_fw_{fw}", 0, start, cigar, read))
-        if rv:
-            out.append(record(f"{amp}_{label}_rv_{rv}", 16, start, cigar, read))
+        for i in range(fw):
+            out.append(record(f"{amp}_{label}_fw:r{i}", 0, start, cigar, read))
+        for i in range(rv):
+            out.append(record(f"{amp}_{label}_rv:r{i}", 16, start, cigar, read))
     return out
 
 
@@ -74,8 +76,9 @@ sample2 = reads_for("Amp_1", [("wt", {}, 20, 20), ("K65Rfw", K65R, 5, 0)])
 s, e = AMPLICONS["Amp_1"]
 d0 = 2754 - s
 deleted = region(s, e)[:d0] + region(s, e)[d0 + 3 :]
-sample2.append(record("Amp_1_T69del_fw_2", 0, s, f"{d0}M3D{len(deleted) - d0}M", deleted))
-sample2.append(record("Amp_1_T69del_rv_2", 16, s, f"{d0}M3D{len(deleted) - d0}M", deleted))
+for i in range(2):
+    sample2.append(record(f"Amp_1_T69del_fw:r{i}", 0, s, f"{d0}M3D{len(deleted) - d0}M", deleted))
+    sample2.append(record(f"Amp_1_T69del_rv:r{i}", 16, s, f"{d0}M3D{len(deleted) - d0}M", deleted))
 sample2 += reads_for("Amp_2", [("wt", {}, 15, 15)])
 
 write_sam("sample1.sam", sample1)

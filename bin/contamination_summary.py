@@ -64,7 +64,9 @@ def sample_row(sample: str, report: str, target_taxid: int | None, target_label:
     target_pct = pct(target_reads, total)
     target_of_classified = pct(target_reads, classified)
     
-    other_viral = max(0, viruses - hiv - phix)
+    # Other viral = Viruses clade minus the target clade minus phiX.
+    # HIV1_* columns stay HIV-1 taxid 11676 (hiv1 preset compatibility).
+    other_viral = max(0, viruses - target_reads - phix)
     other = max(0, classified - viruses - human - bacteria)
     hiv_of_classified = pct(hiv, classified)
     human_pct = pct(human, total)

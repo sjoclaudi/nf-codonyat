@@ -116,7 +116,7 @@ v0.2.0 (below). With several proteins each protein's positions sit inside a `<Pr
 
 ## Opt-in stats (`samples/{sample}/{sample}.stats.tsv`)
 
-Published only with `--emit_stats`. Written by codonyat 1.3.0 (`--stats`). Research use only:
+Published only with `--emit_stats`. Written by codonyat (`--stats`). Research use only:
 Wilson 95% CI, strand-bias p-value, flags and diversity indices. Default TSV/XML are unchanged
 whether this flag is on or off.
 
@@ -135,7 +135,7 @@ whether this flag is on or off.
 
 ## Opt-in AAVF (`samples/{sample}/{sample}.aavf`)
 
-Published only with `--emit_aavf`. AAVF v1.0 from codonyat 1.3.0 (`--aavf`). Research use only.
+Published only with `--emit_aavf`. AAVF v1.0 from codonyat (`--aavf`). Research use only.
 `##source` includes `research use only`. CAT and SRVL fields are omitted. Default TSV/XML are
 unchanged whether this flag is on or off.
 
@@ -186,6 +186,8 @@ Percentages of all read fragments given to Kraken2 (a pair counts once): `TOTAL_
 **New in v0.5.0:** `TARGET_TAXID`, `TARGET_READS`, `TARGET_PCT` columns are appended. For the hiv1 preset,
 `TARGET_TAXID=11676` and `TARGET_PCT` matches `HIV1_PCT`. For custom mode without a target taxid, these
 columns are empty. The `HIV1_*` columns are preserved for v0.4.0 compatibility.
+`OTHER_VIRAL_PCT` is the Viruses clade minus the target clade minus phiX (not minus HIV-1 unless
+HIV-1 is the target).
 
 The warning lists issues (e.g. `no_reads`, `{target_label}<{threshold}%_of_classified`, `human>50%`),
 separated by `;` (`none` if no warnings). Percentages are informative only: no reads are removed and the

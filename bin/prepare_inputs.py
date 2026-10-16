@@ -446,7 +446,7 @@ def amplicon_overlaps_cds(state: State) -> None:
                     overlaps = True
                     break
         if not overlaps:
-            state.err(
+            state.warn(
                 "AMPLICON_NO_CDS",
                 "amplicons",
                 f"Amplicon '{row.get('label')}' does not overlap any CDS",

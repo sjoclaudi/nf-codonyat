@@ -131,7 +131,7 @@ nextflow_pipeline {
                 { assert !path("${outputDir}/strand/sample1.strand_metrics_unmerged.tsv").exists() },
 
                 // provenance
-                { assert path("${outputDir}/pipeline_info/software_versions.yml").text.contains('codonyat: "1.3.0"') },
+                { assert path("${outputDir}/pipeline_info/software_versions.yml").text.contains('codonyat: "1.3.1"') },
                 { assert path("${outputDir}/pipeline_info/software_versions.yml").text.contains('multiqc') },
                 { assert path("${outputDir}/pipeline_info/methods.md").text.contains('Research use only') },
                 { assert path("${outputDir}/pipeline_info/provenance.json").json.checksums_sha256.keySet().any { k -> k.startsWith('kraken2_db/') } },
@@ -547,6 +547,94 @@ nextflow_pipeline {
                 { assert path("${outputDir}/samples/SARS2_S/SARS2_S.tsv").exists() },
                 { assert path("${outputDir}/samples/SARS2_S/SARS2_S.xml").exists() },
                 { assert path("${outputDir}/consensus/SARS2_S.consensus.fa").exists() }
+            )
+        }
+    }
+
+    test("custom mode SARS-CoV-2 ARTIC synthetic pairs: 401 aa rows, S614 D>G 70.0, consensus 29903") {
+
+        when {
+            params {
+                preset             = "custom"
+                samplesheet        = "${projectDir}/assets/testdata/sarscov2/samplesheet_sim.csv"
+                reference          = "${projectDir}/assets/testdata/sarscov2/reference.fasta"
+                primer_bed         = "${projectDir}/assets/testdata/sarscov2/primers.bed"
+                annotation         = "${projectDir}/assets/testdata/sarscov2/annotation.gff3"
+                skip_contamination = true
+                outdir             = "${outputDir}"
+            }
+        }
+
+        then {
+            def tsvRows = { String file ->
+                def lines  = path(file).readLines().findAll { l -> !l.startsWith('#') }
+                def header = lines[0].split('\t') as List
+                lines.drop(1).collect { l -> [header, l.split('\t', -1) as List].transpose().collectEntries() }
+            }
+            def aa = tsvRows("${outputDir}/variants/aa_variants_summary.tsv")
+            def s614g = aa.find { r -> r.PROTEIN == 'S' && r.AA_POSITION == '614' && r.AA == 'G' }
+            def cons = tsvRows("${outputDir}/consensus/consensus_stats.tsv")
+            def nxfLog = path("${launchDir}/meta/nextflow.log").text
+            assertAll(
+                { assert workflow.success },
+                { assert path("${outputDir}/reference/validation.json").json.valid == true },
+                { assert path("${outputDir}/reference/validation.json").json.errors.isEmpty() },
+                { assert !nxfLog.contains('Reference header lacks protein annotations') },
+                { assert path("${outputDir}/pipeline_info/run_mode.json").json.preset == 'custom' },
+                { assert path("${outputDir}/pipeline_info/run_mode.json").json.reference_accessions == ['MN908947.3'] },
+                { assert path("${outputDir}/pipeline_info/run_mode.json").json.kraken2_skipped == true },
+                { assert !path("${outputDir}/contamination").exists() },
+                { assert aa.size() == 401 },
+                { assert s614g != null },
+                { assert s614g.REF_AA == 'D' },
+                { assert (s614g.FREQ as double) == 70.0 },
+                { assert cons.size() == 1 },
+                { assert cons[0].CONSENSUS_LENGTH == '29903' }
+            )
+        }
+    }
+
+    test("custom mode influenza A HA+NA synthetic pairs: 257 aa rows, HA5 L>V 25.0, NA3 P>A 60.0, consensus 1778/1413") {
+
+        when {
+            params {
+                preset             = "custom"
+                samplesheet        = "${projectDir}/assets/testdata/influenza/samplesheet.csv"
+                reference          = "${projectDir}/assets/testdata/influenza/reference.fasta"
+                primer_bed         = "${projectDir}/assets/testdata/influenza/primers.bed"
+                annotation         = "${projectDir}/assets/testdata/influenza/annotation.bed"
+                skip_contamination = true
+                outdir             = "${outputDir}"
+            }
+        }
+
+        then {
+            def tsvRows = { String file ->
+                def lines  = path(file).readLines().findAll { l -> !l.startsWith('#') }
+                def header = lines[0].split('\t') as List
+                lines.drop(1).collect { l -> [header, l.split('\t', -1) as List].transpose().collectEntries() }
+            }
+            def aa = tsvRows("${outputDir}/variants/aa_variants_summary.tsv")
+            def ha5v = aa.find { r -> r.PROTEIN == 'HA' && r.AA_POSITION == '5' && r.AA == 'V' }
+            def na3a = aa.find { r -> r.PROTEIN == 'NA' && r.AA_POSITION == '3' && r.AA == 'A' }
+            def cons = tsvRows("${outputDir}/consensus/consensus_stats.tsv")
+            def haCons = cons.find { r -> r.RECORD == 'NC_002017.1' }
+            def naCons = cons.find { r -> r.RECORD == 'NC_002018.1' }
+            def nxfLog = path("${launchDir}/meta/nextflow.log").text
+            assertAll(
+                { assert workflow.success },
+                { assert path("${outputDir}/reference/validation.json").json.valid == true },
+                { assert path("${outputDir}/reference/validation.json").json.errors.isEmpty() },
+                { assert !nxfLog.contains('Reference header lacks protein annotations') },
+                { assert path("${outputDir}/pipeline_info/run_mode.json").json.preset == 'custom' },
+                { assert path("${outputDir}/pipeline_info/run_mode.json").json.reference_accessions == ['NC_002017.1', 'NC_002018.1'] },
+                { assert path("${outputDir}/pipeline_info/run_mode.json").json.kraken2_skipped == true },
+                { assert !path("${outputDir}/contamination").exists() },
+                { assert aa.size() == 257 },
+                { assert ha5v != null && ha5v.REF_AA == 'L' && (ha5v.FREQ as double) == 25.0 },
+                { assert na3a != null && na3a.REF_AA == 'P' && (na3a.FREQ as double) == 60.0 },
+                { assert haCons != null && haCons.CONSENSUS_LENGTH == '1778' },
+                { assert naCons != null && naCons.CONSENSUS_LENGTH == '1413' }
             )
         }
     }

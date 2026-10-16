@@ -184,7 +184,8 @@ Use `-profile` to select an execution environment:
 - `conda` — Conda environments (`modules/local/codonyat/run/environment.yml` and each nf-core module's own)
 - `mamba` — same environment, created with mamba
 - `test` — bundled HIV-1 test dataset: two synthetic SAM samples, one real FASTQ pair and a tiny Kraken2 database (combine with one of the above, e.g. `-profile test,docker`)
-- `test_sarscov2` — synthetic MN908947.3 S-gene pairs with the ARTIC v4.1 BED (`--skip_contamination` / `--skip_subtype`)
+- `test_sarscov2` — synthetic MN908947.3 amplicon pairs in custom mode (`--reference`, `--primer_bed`, `--annotation`, `--skip_contamination`)
+- `test_flua` — synthetic influenza A HA+NA pairs in custom mode (`--reference`, `--primer_bed`, `--annotation`, `--skip_contamination`)
 - `standard` — local execution; `codonyat-runner` must already be on your `PATH`
 
 ## `--validate_only`
@@ -193,7 +194,7 @@ Runs `PREPARE_REFERENCE` (always exits 0 so artefacts publish) then `CHECK_VALID
 
 Each issue in `validation.json` has `code`, `file`, `line` (nullable) and `message`. Codes include:
 
-`REF_EMPTY`, `REF_TOO_LARGE` (total > 100 kb), `REF_READ_ERROR`, `BED_COLUMNS`, `BED_STRAND`, `BED_EMPTY`, `BED_OUT_OF_RANGE`, `CHROM_MISMATCH`, `BED_NAMING`, `BED_UNPAIRED`, `BED_CHROM_MISMATCH`, `BED_ORDER`, `BED_READ_ERROR`, `AMP_COLUMNS`, `AMP_READ_ERROR`, `AMP_XOR_BED`, `AMP_OR_BED`, `ANNOTATION_FORMAT`, `CDS_UNSUPPORTED` (minus strand, including a FASTA-header interval with start > end), `CDS_INVALID_NAME`, `CDS_OUT_OF_RANGE`, `CDS_NOT_MULTIPLE_OF_3`, `AMPLICON_NO_CDS`, `SAMPLESHEET`, `PROTEIN_UNKNOWN`. Warning: `NO_ANNOTATION`. `AMPLICON_NO_CDS` is not reported when a CDS_* error is already present.
+`REF_EMPTY`, `REF_TOO_LARGE` (total > 100 kb), `REF_READ_ERROR`, `BED_COLUMNS`, `BED_STRAND`, `BED_EMPTY`, `BED_OUT_OF_RANGE`, `CHROM_MISMATCH`, `BED_NAMING`, `BED_UNPAIRED`, `BED_CHROM_MISMATCH`, `BED_ORDER`, `BED_READ_ERROR`, `AMP_COLUMNS`, `AMP_READ_ERROR`, `AMP_XOR_BED`, `AMP_OR_BED`, `ANNOTATION_FORMAT`, `CDS_UNSUPPORTED` (minus strand, including a FASTA-header interval with start > end), `CDS_INVALID_NAME`, `CDS_OUT_OF_RANGE`, `CDS_NOT_MULTIPLE_OF_3`, `SAMPLESHEET`, `PROTEIN_UNKNOWN`. Warnings: `NO_ANNOTATION`, `AMPLICON_NO_CDS`. `AMPLICON_NO_CDS` is not reported when a CDS_* error is already present.
 
 ## Small machines (< 16 GB RAM)
 
