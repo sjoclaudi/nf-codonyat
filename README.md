@@ -232,6 +232,22 @@ Kraken2 with Standard-8 needs about 8 GB RAM (the process asks for 10 GB; use `-
 on smaller machines). BBSplit and BBMerge ask for 4 GB each. codonyat 1.2 stays under ~120 MB for 1M
 alignments. A 16 GB machine runs the full pipeline.
 
+Hosts with **under 16 GB RAM** should cap Nextflow so Kraken2/BBMap cannot request more than the
+machine has. Put this in a config file and pass it with `-c` (or add it to `nextflow.config`):
+
+```groovy
+process {
+    resourceLimits = [
+        cpus: 4,
+        memory: 8.GB,
+        time: 12.h
+    ]
+}
+```
+
+Also set `--kraken2_memory_mapping` (database read from disk) or `--skip_contamination` if you do not
+have ~8 GB free for Standard-8.
+
 ## Future options
 
 - **Primer clipping** (e.g. `ivar trim` or `samtools ampliconclip` with a primer BED) is not done yet.

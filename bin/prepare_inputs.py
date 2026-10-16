@@ -171,13 +171,17 @@ def proteins_from_header(record_id: str, header: str) -> list[Protein]:
         m = PROTEIN_PART_RE.match(part)
         if not m:
             continue
+        intervals = parse_intervals(m.group("iv"), ",")
+        # Header interval start > end is how a minus-strand CDS is written; not origin-crossing
+        # (that is two intervals, each start <= end).
+        minus = any(iv.start > iv.end for iv in intervals)
         proteins.append(
             Protein(
                 record=record_id,
                 name=m.group("name"),
                 description=m.group("desc"),
-                intervals=parse_intervals(m.group("iv"), ","),
-                strand="+",
+                intervals=intervals,
+                strand="-" if minus else "+",
                 source="header",
             )
         )
@@ -397,7 +401,7 @@ def parse_annot_tsv(path: Path) -> list[Protein]:
 
 def validate_proteins(annot_path: str, state: State) -> None:
     for p in state.proteins:
-        if p.strand == "-":
+        if p.strand == "-" or any(iv.start > iv.end for iv in p.intervals):
             state.err("CDS_UNSUPPORTED", annot_path, f"CDS '{p.name}' on minus strand not supported")
             continue
         if any(c in p.name for c in "(:;"):
@@ -407,8 +411,8 @@ def validate_proteins(annot_path: str, state: State) -> None:
             continue
         seq_len = len(state.records[p.record])
         for iv in p.intervals:
-            if iv.start < 1 or iv.end > seq_len or iv.start > iv.end:
-                # origin-crossing is represented as two intervals, not end<start on one interval
+            if iv.start < 1 or iv.end > seq_len:
+                # origin-crossing is two intervals, each with start <= end
                 state.err(
                     "CDS_OUT_OF_RANGE",
                     annot_path,
@@ -424,6 +428,8 @@ def validate_proteins(annot_path: str, state: State) -> None:
 
 def amplicon_overlaps_cds(state: State) -> None:
     if not state.amplicon_rows or not state.proteins:
+        return
+    if any(e.code.startswith("CDS_") for e in state.errors):
         return
     for row in state.amplicon_rows:
         try:

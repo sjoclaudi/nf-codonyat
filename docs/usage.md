@@ -191,7 +191,25 @@ Runs `PREPARE_REFERENCE` (always exits 0 so artefacts publish) then `CHECK_VALID
 
 Each issue in `validation.json` has `code`, `file`, `line` (nullable) and `message`. Codes include:
 
-`REF_EMPTY`, `REF_TOO_LARGE` (total > 100 kb), `REF_READ_ERROR`, `BED_COLUMNS`, `BED_STRAND`, `BED_EMPTY`, `BED_OUT_OF_RANGE`, `CHROM_MISMATCH`, `BED_NAMING`, `BED_UNPAIRED`, `BED_CHROM_MISMATCH`, `BED_ORDER`, `BED_READ_ERROR`, `AMP_COLUMNS`, `AMP_READ_ERROR`, `AMP_XOR_BED`, `AMP_OR_BED`, `ANNOTATION_FORMAT`, `CDS_UNSUPPORTED` (minus strand), `CDS_INVALID_NAME`, `CDS_OUT_OF_RANGE`, `CDS_NOT_MULTIPLE_OF_3`, `AMPLICON_NO_CDS`, `SAMPLESHEET`, `PROTEIN_UNKNOWN`. Warning: `NO_ANNOTATION`.
+`REF_EMPTY`, `REF_TOO_LARGE` (total > 100 kb), `REF_READ_ERROR`, `BED_COLUMNS`, `BED_STRAND`, `BED_EMPTY`, `BED_OUT_OF_RANGE`, `CHROM_MISMATCH`, `BED_NAMING`, `BED_UNPAIRED`, `BED_CHROM_MISMATCH`, `BED_ORDER`, `BED_READ_ERROR`, `AMP_COLUMNS`, `AMP_READ_ERROR`, `AMP_XOR_BED`, `AMP_OR_BED`, `ANNOTATION_FORMAT`, `CDS_UNSUPPORTED` (minus strand, including a FASTA-header interval with start > end), `CDS_INVALID_NAME`, `CDS_OUT_OF_RANGE`, `CDS_NOT_MULTIPLE_OF_3`, `AMPLICON_NO_CDS`, `SAMPLESHEET`, `PROTEIN_UNKNOWN`. Warning: `NO_ANNOTATION`. `AMPLICON_NO_CDS` is not reported when a CDS_* error is already present.
+
+## Small machines (< 16 GB RAM)
+
+`conf/base.config` does not cap memory. On a laptop or VM with under 16 GB, set `process.resourceLimits`
+so Kraken2 (10 GB) and BBMap (4 GB) cannot oversubscribe the host:
+
+```groovy
+process {
+    resourceLimits = [
+        cpus: 4,
+        memory: 8.GB,
+        time: 12.h
+    ]
+}
+```
+
+Save that as e.g. `conf/small.config` and run with `-c conf/small.config`. Use `--kraken2_memory_mapping`
+or `--skip_contamination` when Standard-8 will not fit in RAM.
 
 ## Samplesheet
 

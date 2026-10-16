@@ -68,33 +68,37 @@ def merge_tsv(paths: list[Path], dest: Path) -> None:
             w.writerow(row)
 
 
-def merge_xml(paths: list[Path], dest: Path) -> None:
-    """Rebuild one SamContainer with Position elements sorted by index.
+def merge_xml(named_paths: list[tuple[str, Path]], dest: Path) -> None:
+    """Merge per-protein 1.2.0 XML into the 1.1.0 / v0.4.0 multi-protein layout.
 
-    1.2.0 writes one protein per invocation; HIV-1 proteins do not overlap, so
-    the merged tree matches a single-pass dump sorted by genomic position.
+    One protein → copy the flat SamContainer (same as 1.1.0 write_xml).
+    Several proteins → wrap each protein's Position elements in
+    ``<Protein name="X">`` in annotation order (1.1.0 write_xml_proteins).
     """
     import xml.etree.ElementTree as ET
 
-    existing = [p for p in paths if p.exists() and p.stat().st_size]
-    if not existing:
+    if not named_paths:
         dest.write_text("")
         return
-    if len(existing) == 1:
-        dest.write_bytes(existing[0].read_bytes())
+    if len(named_paths) == 1:
+        _name, only = named_paths[0]
+        dest.write_bytes(only.read_bytes() if only.exists() else b"")
         return
-    roots = [ET.parse(p).getroot() for p in existing]
-    root = ET.Element(
-        "SamContainer",
-        sample=roots[0].get("sample") or "",
-        reference=roots[0].get("reference") or "",
-    )
-    positions = []
-    for r in roots:
-        positions.extend(list(r.findall("Position")))
-    positions.sort(key=lambda e: int(e.get("index") or 0))
-    for pos in positions:
-        root.append(pos)
+    sample = ""
+    reference = ""
+    for _name, path in named_paths:
+        if path.exists() and path.stat().st_size:
+            src = ET.parse(path).getroot()
+            sample = src.get("sample") or sample
+            reference = src.get("reference") or reference
+            break
+    root = ET.Element("SamContainer", sample=sample, reference=reference)
+    for name, path in named_paths:
+        prot = ET.SubElement(root, "Protein", name=name)
+        if path.exists() and path.stat().st_size:
+            src = ET.parse(path).getroot()
+            for pos in list(src.findall("Position")):
+                prot.append(pos)
     ET.ElementTree(root).write(dest, encoding="utf-8", xml_declaration=True)
 
 
@@ -181,7 +185,7 @@ def main() -> int:
             tsvs.append(csv_p)
             xmls.append(xml_p)
         merge_tsv(tsvs, Path(args.csv_path))
-        merge_xml(xmls, Path(args.xml_path))
+        merge_xml(list(zip(proteins, xmls)), Path(args.xml_path))
     return 0
 
 

@@ -226,9 +226,11 @@ workflow {
     def fasta_ok = CHECK_VALIDATION.out.json
         .combine(PREPARE_REFERENCE.out.fasta)
         .map { _json, fasta -> fasta }
+        .first()
     def amplicons_ok = CHECK_VALIDATION.out.json
         .combine(PREPARE_REFERENCE.out.amplicons)
         .map { _json, amp -> amp }
+        .first()
 
     CODONYAT(
         VALIDATE_INPUT.out.fastq,

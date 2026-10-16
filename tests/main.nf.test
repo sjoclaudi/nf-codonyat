@@ -46,6 +46,12 @@ nextflow_pipeline {
                 { assert path("${outputDir}/samples/sample2/sample2.xml").text.contains('<Position') },
 
                 { assert path("${outputDir}/samples/HVG286PL/HVG286PL.tsv").exists() },
+                { assert path("${outputDir}/samples/HVG286PL/HVG286PL.xml").exists() },
+                // every samplesheet sample must get a codon table (value-channel reference)
+                { assert path("${projectDir}/assets/testdata/samplesheet.csv").readLines().drop(1).findAll { l -> l.trim() }.every { line ->
+                    def id = line.split(',')[0]
+                    path("${outputDir}/samples/${id}/${id}.tsv").exists() && path("${outputDir}/samples/${id}/${id}.xml").exists()
+                } },
 
                 // FASTQ path: QC, trimming, alignment and flagstat outputs
                 { assert path("${outputDir}/fastqc/HVG286PL_1_fastqc.html").exists() },
@@ -531,7 +537,37 @@ nextflow_pipeline {
                 { assert !path("${outputDir}/contamination").exists() },
                 { assert !path("${outputDir}/subtype").exists() },
                 { assert path("${outputDir}/samples/SARS2_S/SARS2_S.tsv").exists() },
+                { assert path("${outputDir}/samples/SARS2_S/SARS2_S.xml").exists() },
                 { assert path("${outputDir}/consensus/SARS2_S.consensus.fa").exists() }
+            )
+        }
+    }
+
+    test("every samplesheet sample produces samples/<id>/<id>.tsv and .xml") {
+
+        when {
+            params {
+                samplesheet        = "${projectDir}/tests/samplesheet_two_sam.csv"
+                reference          = "${projectDir}/assets/testdata/reference.fasta"
+                amplicons          = "${projectDir}/assets/testdata/amplicons.tsv"
+                protein            = "RT"
+                skip_contamination = true
+                skip_subtype       = true
+                skip_consensus     = true
+                outdir             = "${outputDir}"
+            }
+        }
+
+        then {
+            def ids = path("${projectDir}/tests/samplesheet_two_sam.csv").readLines()
+                .drop(1).findAll { l -> l.trim() }.collect { l -> l.split(',')[0] }
+            assertAll(
+                { assert workflow.success },
+                { assert ids == ['sample1', 'sample2'] },
+                { assert ids.every { id -> path("${outputDir}/samples/${id}/${id}.tsv").exists() } },
+                { assert ids.every { id -> path("${outputDir}/samples/${id}/${id}.xml").exists() } },
+                { assert path("${outputDir}/samples/sample1/sample1.xml").text.contains('<SamContainer') },
+                { assert path("${outputDir}/samples/sample2/sample2.xml").text.contains('<SamContainer') }
             )
         }
     }

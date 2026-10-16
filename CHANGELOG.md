@@ -36,6 +36,7 @@
 - Reference and amplicons no longer universally required (preset-dependent)
 - Schema updated to reflect multi-virus support
 - `--validate_only` is a real fast path (PREPARE_REFERENCE + CHECK_VALIDATION); `validation.json` is published even when invalid, then the workflow exits non-zero
+- Prepared reference/amplicons are value channels (`.first()`) so every samplesheet sample is processed
 
 ### Deprecated
 - `--contamination-warn-hiv-pct`: Use `--contamination-warn-target-pct` instead (still accepted as alias)
