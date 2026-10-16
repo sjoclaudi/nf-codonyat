@@ -164,6 +164,25 @@ def test_unknown_protein(tmp: Path) -> None:
     assert any("no annotation for --protein NEF" in e["message"] for e in val["errors"])
 
 
+def test_amplicon_no_cds_is_warning(tmp: Path) -> None:
+    fa = tmp / "ref.fasta"
+    bed = tmp / "primers.bed"
+    fa.write_text(">rec S(spike):10-69\n" + "ATG" * 40 + "\n")
+    bed.write_text(
+        "rec\t0\t10\tA_LEFT\t1\t+\n"
+        "rec\t50\t60\tA_RIGHT\t1\t-\n"
+        "rec\t70\t80\tB_LEFT\t1\t+\n"
+        "rec\t100\t110\tB_RIGHT\t1\t-\n"
+    )
+    out = tmp / "out"
+    rc = run(["--reference", str(fa), "--primer-bed", str(bed), "--outdir", str(out)])
+    assert rc.returncode == 0, rc.stderr
+    val = load_json(out / "validation.json")
+    assert val["valid"] is True
+    assert val["errors"] == []
+    assert any(w["code"] == "AMPLICON_NO_CDS" and "B" in w["message"] for w in val["warnings"])
+
+
 def test_no_strict_exit_still_zero(tmp: Path) -> None:
     rc = run(
         ["--reference", str(FLU_FASTA), "--preset", "influenza-a", "--outdir", str(tmp)],
@@ -183,6 +202,7 @@ def main() -> int:
         test_minus_strand_rejected,
         test_ref_too_large,
         test_unknown_protein,
+        test_amplicon_no_cds_is_warning,
         test_no_strict_exit_still_zero,
     ]
     failed = 0

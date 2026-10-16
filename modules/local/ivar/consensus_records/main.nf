@@ -39,7 +39,8 @@ process IVAR_CONSENSUS_RECORDS {
         grep '^>' "${fasta}" | sed 's/^>//' | awk '{print \$1}' | while read -r rec; do
             safe=\$(echo "\$rec" | tr '/| ' '___')
             samtools view -b "${bam}" "\$rec" > "\${safe}.bam"
-            samtools mpileup --reference "${fasta}" ${args2} "\${safe}.bam" \\
+            samtools index "\${safe}.bam"
+            samtools mpileup --reference "${fasta}" ${args2} -r "\$rec" "\${safe}.bam" \\
                 | tee "\${safe}.mpileup" \\
                 | ivar consensus ${args} -p "\${safe}"
             # iVar writes a single header; rename to the contig id

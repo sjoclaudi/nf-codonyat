@@ -104,7 +104,7 @@ This keeps alignments with mapping quality ≥ 20 and removes unmapped (0x4), se
 
 For each read, codonyat builds a map from reference positions to read positions by walking the CIGAR operations: M, = and X consume both reference and read; I and S consume only the read; D and N consume only the reference and map to a gap; H and P consume neither. For every codon start of the selected protein (from the annotated start coordinate to the end coordinate, in steps of three), codonyat considers each mapped read that spans the position and reads the three bases at that position and the next two. A reference position that falls in a deletion contributes `-`, so a codon deleted in the read is reported as `---`. If a position is not covered by the read's alignment at all, the read is skipped for that codon.
 
-The read's strand is taken from SAM flag bit 16. A numeric suffix `_<n>` at the end of a read name is interpreted as a read multiplicity, so the read counts `n` times. This allows compact, collapsed input. Aligners that keep the instrument read name, such as bowtie2 on Illumina data, do not produce such suffixes.
+The read's strand is taken from SAM flag bit 16. From codonyat 1.3.1 a numeric suffix `_<n>` at the end of a read name is only treated as a collapsed-read count when `--collapsed-read-counts` is passed; nf-codonyat does not pass that flag. Aligners that keep the instrument read name, such as bowtie2 on Illumina data, do not produce such suffixes.
 
 ### 2.6 Strand coverage, strand ratio and entropy
 

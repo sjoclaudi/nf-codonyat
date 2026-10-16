@@ -58,6 +58,8 @@ docker build -t ghcr.io/sjoclaudi/nf-codonyat:dev .
 # Run tests
 nf-test test --profile docker
 nextflow run . -profile test,docker
+nextflow run . -profile test_sarscov2,docker
+nextflow run . -profile test_flua,docker
 ```
 
 ## Style Guide

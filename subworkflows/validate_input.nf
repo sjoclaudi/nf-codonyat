@@ -10,7 +10,8 @@
  *      custom-mode auto-skip (no DB / no taxid); a warning is printed when
  *      the first read header does not look like Illumina
  *    • reference FASTA header carries protein annotations, including every
- *      protein requested with --protein (one name, a list or 'all')
+ *      protein requested with --protein (one name, a list or 'all'); the
+ *      missing-header warning is skipped when --annotation is set
  *
  *  Any failed check stops the run with a clear error message.
  *
@@ -88,7 +89,9 @@ workflow VALIDATE_INPUT {
     }
     proteins = proteins.unique()
     if (!proteins) {
-        log.warn "Reference header lacks protein annotations. Expected format: '>ID PR(Protease):2253-2549;RT(Reverse Transcriptase):2550-3869'"
+        if (!params.annotation) {
+            log.warn "Reference header lacks protein annotations. Expected format: '>ID PR(Protease):2253-2549;RT(Reverse Transcriptase):2550-3869'"
+        }
     }
     else {
         def requested = params.protein.toString().split(',').collect { p -> p.trim() }.findAll { p -> p }

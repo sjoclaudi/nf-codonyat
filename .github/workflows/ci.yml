@@ -34,6 +34,9 @@ jobs:
       - name: prepare_inputs stub tests
         run: python3 tests/test_prepare_inputs.py
 
+      - name: contamination_summary stub tests
+        run: python3 tests/test_contamination_summary.py
+
   test:
     name: test (${{ matrix.profile }})
     needs: lint
@@ -123,22 +126,60 @@ jobs:
       - name: Check execution reports are in the outdir
         run: ls -l results-test/pipeline_info/{execution_report.html,execution_timeline.html,execution_trace.txt,pipeline_dag.html}
 
-      - name: Run SARS-CoV-2 test profile
+      - name: Run SARS-CoV-2 custom-mode test profile
         run: nextflow run . -profile test_sarscov2,${{ matrix.profile }} --outdir results-test-sarscov2
 
       - name: Check SARS-CoV-2 outputs
         run: |
           python3 - <<'PY'
-          import json
+          import csv, json
           v = json.load(open("results-test-sarscov2/reference/validation.json"))
           assert v["valid"] is True
+          assert v["errors"] == []
           m = json.load(open("results-test-sarscov2/pipeline_info/run_mode.json"))
-          assert m["preset"] == "sars-cov-2"
+          assert m["preset"] == "custom"
           assert m["reference_accessions"] == ["MN908947.3"]
+          with open("results-test-sarscov2/variants/aa_variants_summary.tsv") as fh:
+              aa = list(csv.DictReader(fh, delimiter="\t"))
+          assert len(aa) == 401, len(aa)
+          s614g = next(r for r in aa if r["PROTEIN"] == "S" and r["AA_POSITION"] == "614" and r["AA"] == "G")
+          assert s614g["REF_AA"] == "D"
+          assert float(s614g["FREQ"]) == 70.0
+          with open("results-test-sarscov2/consensus/consensus_stats.tsv") as fh:
+              cons = list(csv.DictReader(fh, delimiter="\t"))
+          assert cons[0]["CONSENSUS_LENGTH"] == "29903"
           PY
           test $(tail -n +2 results-test-sarscov2/reference/amplicons_used.tsv | wc -l) -eq 99
-          test -f results-test-sarscov2/samples/SARS2_S/SARS2_S.tsv
+          test -f results-test-sarscov2/samples/SARS2_SIM/SARS2_SIM.tsv
           test ! -d results-test-sarscov2/contamination
+
+      - name: Run influenza A custom-mode test profile
+        run: nextflow run . -profile test_flua,${{ matrix.profile }} --outdir results-test-flua
+
+      - name: Check influenza A outputs
+        run: |
+          python3 - <<'PY'
+          import csv, json
+          v = json.load(open("results-test-flua/reference/validation.json"))
+          assert v["valid"] is True
+          assert v["errors"] == []
+          m = json.load(open("results-test-flua/pipeline_info/run_mode.json"))
+          assert m["preset"] == "custom"
+          assert m["reference_accessions"] == ["NC_002017.1", "NC_002018.1"]
+          with open("results-test-flua/variants/aa_variants_summary.tsv") as fh:
+              aa = list(csv.DictReader(fh, delimiter="\t"))
+          assert len(aa) == 257, len(aa)
+          ha5v = next(r for r in aa if r["PROTEIN"] == "HA" and r["AA_POSITION"] == "5" and r["AA"] == "V")
+          assert ha5v["REF_AA"] == "L" and float(ha5v["FREQ"]) == 25.0
+          na3a = next(r for r in aa if r["PROTEIN"] == "NA" and r["AA_POSITION"] == "3" and r["AA"] == "A")
+          assert na3a["REF_AA"] == "P" and float(na3a["FREQ"]) == 60.0
+          with open("results-test-flua/consensus/consensus_stats.tsv") as fh:
+              cons = {r["RECORD"]: r for r in csv.DictReader(fh, delimiter="\t")}
+          assert cons["NC_002017.1"]["CONSENSUS_LENGTH"] == "1778"
+          assert cons["NC_002018.1"]["CONSENSUS_LENGTH"] == "1413"
+          PY
+          test -f results-test-flua/samples/FLU_SIM/FLU_SIM.tsv
+          test ! -d results-test-flua/contamination
 
       - name: Upload results on failure
         if: failure()
@@ -148,6 +189,7 @@ jobs:
           path: |
             results-test/
             results-test-sarscov2/
+            results-test-flua/
             .nf-test/tests/*/meta/
             .nextflow.log
           if-no-files-found: ignore
