@@ -10,7 +10,9 @@ results/
 ├── codonyat_summary.tsv          # Combined codon table (all samples, all requested proteins)
 ├── samples/<s>/
 │   ├── <s>.tsv                   # Per-codon table (codonyat)
-│   └── <s>.xml                   # Per-position counts (codonyat)
+│   ├── <s>.xml                   # Per-position counts (codonyat)
+│   ├── <s>.stats.tsv             # Opt-in (--emit_stats): Wilson CI, strand-bias, diversity
+│   └── <s>.aavf                  # Opt-in (--emit_aavf): AAVF v1.0 (research use only)
 ├── variants/
 │   ├── <s>.aa_variants.tsv       # Amino-acid frequencies per protein position
 │   └── aa_variants_summary.tsv   # All samples
@@ -111,6 +113,31 @@ v0.2.0 (below). With several proteins each protein's positions sit inside a `<Pr
   </Position>
 </SamContainer>
 ```
+
+## Opt-in stats (`samples/{sample}/{sample}.stats.tsv`)
+
+Published only with `--emit_stats`. Written by codonyat 1.3.0 (`--stats`). Research use only:
+Wilson 95% CI, strand-bias p-value, flags and diversity indices. No drug-resistance or clinical
+annotation. Default TSV/XML are unchanged whether this flag is on or off.
+
+| Column | Description |
+|--------|-------------|
+| `LEVEL` | Row level (`variant`, `codon` or `gene`) |
+| `FILE` / `REFERENCE` / `RECORD` / `PROTEIN` | Sample file, reference and protein |
+| `POSITION` / `AA_POS` | Nucleotide coordinate and 1-based amino-acid position |
+| `VARIANT` / `AA` | Observed codon and translated amino acid |
+| `COUNT` / `FREQ` | Count and frequency |
+| `FREQ_CI_LOW` / `FREQ_CI_HIGH` | Wilson 95% confidence interval |
+| `FW` / `RV` / `SB_P` | Strand counts and Fisher exact strand-bias p-value |
+| `FLAGS` | `lowfreq`, `sb`, `lowcov` (or empty) |
+| `COVERAGE` | Depth at the codon |
+| `SHANNON` / `SHANNON_NORM` / `GINI_SIMPSON` / `PI_NT` / `PI_AA` / `N_TYPES` / `N_CODONS` | Diversity indices |
+
+## Opt-in AAVF (`samples/{sample}/{sample}.aavf`)
+
+Published only with `--emit_aavf`. AAVF v1.0 from codonyat 1.3.0 (`--aavf`). Research use only.
+`##source` includes `research use only`. CAT and SRVL fields are omitted. Default TSV/XML are
+unchanged whether this flag is on or off.
 
 ## Amino-acid table (`variants/{sample}.aa_variants.tsv`)
 
@@ -216,7 +243,7 @@ The normalised FASTA actually given to Bowtie2 / codonyat / iVar. Headers use th
 
 | Field | Notes |
 |-------|-------|
-| `pipeline_version` | Manifest version (0.5.0) |
+| `pipeline_version` | Manifest version (0.6.0-dev) |
 | `preset` | `hiv1` / `sars-cov-2` / … / `custom` |
 | `target_taxid` | Integer or `null` |
 | `target_label` | Display label or `null` |
