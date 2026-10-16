@@ -6,7 +6,7 @@ process PROVENANCE {
     label 'process_single'
 
     conda "${moduleDir}/../../codonyat/run/environment.yml"
-    container 'ghcr.io/sjoclaudi/nf-codonyat:0.6.0-dev'
+    container 'ghcr.io/sjoclaudi/nf-codonyat:0.6.0'
 
     input:
     path versions
