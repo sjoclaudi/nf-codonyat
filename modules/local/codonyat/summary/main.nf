@@ -28,4 +28,9 @@ process CODONYAT_SUMMARY {
     """
     codonyat_summary.py inputs/*.tsv > codonyat_summary.tsv
     """
+
+    stub:
+    """
+    echo -e "SAMPLE\\tPROTEIN\\tPOSITION\\tVARIANT\\tFREQ" > codonyat_summary.tsv
+    """
 }

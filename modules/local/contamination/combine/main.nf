@@ -18,4 +18,9 @@ process CONTAMINATION_COMBINE {
     """
     contamination_summary.py combine inputs/* --out contamination_summary.tsv --mqc contamination_mqc.tsv
     """
+
+    stub:
+    """
+    touch contamination_summary.tsv contamination_mqc.tsv
+    """
 }

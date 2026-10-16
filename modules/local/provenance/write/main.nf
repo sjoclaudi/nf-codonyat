@@ -32,4 +32,9 @@ process PROVENANCE {
         --checksum "subtype_panel=subtype_panel" \\
         --checksum "kraken2_db=kraken2_db"
     """
+
+    stub:
+    """
+    touch software_versions.yml provenance.json methods.md
+    """
 }

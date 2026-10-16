@@ -187,6 +187,7 @@ Use `-profile` to select an execution environment:
 - `test_sarscov2` — synthetic MN908947.3 amplicon pairs in custom mode (`--reference`, `--primer_bed`, `--annotation`, `--skip_contamination`)
 - `test_flua` — synthetic influenza A HA+NA pairs in custom mode (`--reference`, `--primer_bed`, `--annotation`, `--skip_contamination`)
 - `standard` — local execution; `codonyat-runner` must already be on your `PATH`
+- `awsbatch` — AWS Batch (Spot queue `--awsbatch_queue`, default `codonyat-queue`, region `eu-central-1`). Head node needs no Docker. See the README AWS Batch section. Research use only.
 
 ## `--validate_only`
 

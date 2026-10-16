@@ -30,4 +30,9 @@ process CONSENSUS_REPORT {
         --insertion-threshold ${params.consensus_insertion_threshold} \\
         --min-depth ${params.consensus_min_depth}
     """
+
+    stub:
+    """
+    touch "${meta.id}.consensus.fa" "${meta.id}.consensus_indels.tsv" "${meta.id}.consensus_stats.tsv"
+    """
 }

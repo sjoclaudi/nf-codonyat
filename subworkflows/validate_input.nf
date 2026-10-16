@@ -130,10 +130,12 @@ def checkIlluminaHeader(String sample, fq) {
     }
 }
 
-// Relative paths in the samplesheet are resolved against its folder
+// Relative paths in the samplesheet are resolved against its folder.
+// Object-store URIs (s3://, gs://, az://) skip exists(): prefixes are not
+// local files, and Nextflow stages the object when the process runs.
 def resolveSheetPath(sheet, String sample, String p) {
-    def f = p.contains('://') || p.startsWith('/') ? file(p) : sheet.parent.resolve(p)
-    if (!f.exists()) {
+    def f = p.contains('://') || p.startsWith('/') ? file(p) : file("${sheet.parent}/${p}")
+    if (!NfCodonyat.isRemoteUri(f) && !f.exists()) {
         error "File for sample '${sample}' not found: ${f}"
     }
     return f

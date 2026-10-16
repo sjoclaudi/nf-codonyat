@@ -24,4 +24,9 @@ process CODON_TO_AA {
     codon_to_aa.py --sample "${meta.id}" --codons "${codon_tsv}" --reference "${reference}" ${strand} \\
         > "${meta.id}.aa_variants.tsv"
     """
+
+    stub:
+    """
+    touch "${meta.id}.aa_variants.tsv"
+    """
 }

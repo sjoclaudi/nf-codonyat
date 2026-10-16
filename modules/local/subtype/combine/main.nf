@@ -18,4 +18,9 @@ process SUBTYPE_COMBINE {
     """
     estimate_subtype.py combine inputs/* --out subtype_summary.tsv --mqc subtype_mqc.tsv
     """
+
+    stub:
+    """
+    touch subtype_summary.tsv subtype_mqc.tsv
+    """
 }

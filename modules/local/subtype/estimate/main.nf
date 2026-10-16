@@ -29,4 +29,9 @@ process SUBTYPE_ESTIMATE {
         --min-margin ${params.subtype_min_margin} \\
         > "${meta.id}.subtype.tsv"
     """
+
+    stub:
+    """
+    touch "${meta.id}.subtype.tsv"
+    """
 }

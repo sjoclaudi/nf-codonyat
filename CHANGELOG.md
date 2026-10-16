@@ -5,6 +5,7 @@
 ### Added
 - **Opt-in research outputs**: `--emit_stats` and `--emit_aavf` (default `false`) pass `--stats` / `--aavf` to `codonyat-runner` and publish `samples/<id>/<id>.stats.tsv` and `samples/<id>/<id>.aavf`. Off by default so existing codon TSV/XML stay unchanged.
 - **`-profile test_flua`**: synthetic A/Puerto Rico/8/1934 HA+NA pairs in custom mode (`--reference`, `--primer_bed`, `--annotation`, `--skip_contamination`)
+- **`-profile awsbatch`**: Spot-only AWS Batch executor (`conf/awsbatch.config`, queue `--awsbatch_queue`, default `codonyat-queue`, region `eu-central-1`). No Wave, Fusion or Seqera token. `s3://` inputs, Kraken2 database prefixes and `--outdir` are supported. Research use only.
 
 ### Changed
 - Updated to codonyat **1.3.1** (read names ending in `_<digits>` are not collapsed unless `--collapsed-read-counts`; nf-codonyat does not pass that flag. Junction codons in multi-part proteins are kept; protein names match exactly. Opt-in Wilson CI / strand-bias / diversity stats and AAVF v1.0 from 1.3.0; default TSV/XML identical to 1.3.0 on uncollapsed names)

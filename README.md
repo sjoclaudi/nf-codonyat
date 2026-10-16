@@ -106,6 +106,28 @@ nextflow run sjoclaudi/nf-codonyat -profile test_flua,docker
 
 ---
 
+## AWS Batch
+
+Run tasks on AWS Batch (Spot). The head node does not need Docker: Batch/ECS pulls the process
+containers (`ghcr.io/sjoclaudi/nf-codonyat` and `community.wave.seqera.io`) on the compute nodes.
+There is no Wave, no Fusion and no Seqera token. Credentials come from the instance role.
+Research use only.
+
+```bash
+nextflow run sjoclaudi/nf-codonyat \
+    -profile awsbatch \
+    -work-dir s3://codonyat-nf-work/work \
+    --kraken2_db s3://... \
+    --outdir s3://...
+```
+
+The default queue is `codonyat-queue` (Spot only; override with `--awsbatch_queue`). Region
+`eu-central-1`. The AMI must provide the AWS CLI at `/home/ec2-user/miniconda/bin/aws` (used to
+stage `s3://` inputs, including a Kraken2 database folder). Samplesheet, reference, primer,
+annotation and FASTQ/SAM paths may be local or `s3://`. `--outdir` may be an `s3://` prefix.
+
+---
+
 ## Input Files
 
 ### Samplesheet (CSV)
@@ -166,7 +188,7 @@ or split between bins (flagged when the margin between the top two bins is below
 | `--emit_stats` | `false` | Publish `samples/<id>/<id>.stats.tsv` (codonyat `--stats`; research use only) |
 | `--emit_aavf` | `false` | Publish `samples/<id>/<id>.aavf` (codonyat `--aavf`; AAVF v1.0, research use only) |
 | `--fastp_args` | `--qualified_quality_phred 20 --unqualified_percent_limit 40 --length_required 50 --cut_tail --cut_tail_mean_quality 20` | fastp options; `--detect_adapter_for_pe` is added for paired-end |
-| `--kraken2_db` | — | Kraken2 database folder (required for FASTQ unless `--skip_contamination`) |
+| `--kraken2_db` | — | Kraken2 database folder, local or `s3://` (required for FASTQ unless `--skip_contamination`) |
 | `--skip_contamination` | `false` | Skip the Kraken2 report |
 | `--kraken2_confidence` | `0.0` | Kraken2 `--confidence` |
 | `--kraken2_memory_mapping` | `false` | Kraken2 `--memory-mapping` |
@@ -186,8 +208,9 @@ or split between bins (flagged when the margin between the top two bins is below
 | `--consensus_insertion_threshold` | `0.5` | iVar `-c` |
 | `--consensus_min_bq` | `20` | iVar `-q` |
 | `--save_intermediates` | `false` | Also publish trimmed FASTQ, per-part BAMs, raw iVar output, Kraken2 per-read output |
-| `--outdir` | `results` | Output directory |
+| `--outdir` | `results` | Output directory (local or `s3://`) |
 | `--publish_dir_mode` | `copy` | How to publish files |
+| `--awsbatch_queue` | `codonyat-queue` | AWS Batch job queue for `-profile awsbatch` (Spot only) |
 
 All parameters are also described in `nextflow_schema.json`.
 
@@ -262,7 +285,7 @@ have ~8 GB free for Standard-8.
 
 - Nextflow ≥ 25.04 (tested with 26.04.6)
 - Java 17 or 21
-- Docker, Singularity/Apptainer, or Conda/Mamba
+- Docker, Singularity/Apptainer, Conda/Mamba, or AWS Batch (`-profile awsbatch`)
 
 ---
 

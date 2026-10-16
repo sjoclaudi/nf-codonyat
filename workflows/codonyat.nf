@@ -82,7 +82,7 @@ workflow CODONYAT {
     if (run_contamination) {
         KRAKEN2_KRAKEN2(
             trimmed,
-            file(params.kraken2_db, checkIfExists: true),
+            inputDir(params.kraken2_db),
             false,                     // save_output_fastqs
             params.save_intermediates  // save_reads_assignment
         )
@@ -97,8 +97,10 @@ workflow CODONYAT {
     // BBSplit names the first bin "primary"; SUBTYPE_ESTIMATE maps it back.
     subtype_mqc = channel.empty()
     if (run_subtype) {
-        def panel_dir = file(subtype_panel, checkIfExists: true)
-        def bins = panel_dir.resolve('panel.tsv').readLines().drop(1)
+        def panel_root = NfCodonyat.dirRoot(subtype_panel)
+        // panel.tsv and <bin>.fa are files (objects); the panel folder itself
+        // may be an s3:// prefix, which is not a local directory.
+        def bins = file("${panel_root}/panel.tsv", checkIfExists: true).readLines().drop(1)
             .findAll { line -> line.trim() }
             .collect { line -> line.split('\t')[0] }
             .unique()
@@ -107,8 +109,8 @@ workflow CODONYAT {
         BBMAP_BBSPLIT(
             trimmed,
             [],                                                            // no pre-built index (panel is ~25 kb)
-            panel_dir.resolve("${primary}.fa"),
-            tuple(others, others.collect { b -> panel_dir.resolve("${b}.fa") }),
+            file("${panel_root}/${primary}.fa", checkIfExists: true),
+            tuple(others, others.collect { b -> file("${panel_root}/${b}.fa", checkIfExists: true) }),
             false                                                          // only_build_index
         )
         SUBTYPE_ESTIMATE(BBMAP_BBSPLIT.out.stats, primary, bins)
@@ -279,8 +281,8 @@ workflow CODONYAT {
         params_tsv,
         reference_ch,
         amplicons_ch,
-        run_subtype ? file(subtype_panel) : [],
-        run_contamination ? file(params.kraken2_db) : []
+        run_subtype ? inputDir(subtype_panel) : [],
+        run_contamination ? inputDir(params.kraken2_db) : []
     )
 
     emit:
@@ -289,4 +291,11 @@ workflow CODONYAT {
     aa_summary = aa_summary
     consensus  = consensus_fasta
     multiqc    = MULTIQC.out.report
+}
+
+// Local directories use checkIfExists. Object-store prefixes (s3://...) are
+// not directories, so we only normalise the URI and let Nextflow stage objects.
+def inputDir(p) {
+    def uri = NfCodonyat.dirUri(p)
+    return NfCodonyat.isRemoteUri(p) ? file(uri) : file(uri, checkIfExists: true)
 }

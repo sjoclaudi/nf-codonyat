@@ -31,4 +31,9 @@ process CONTAMINATION_SUMMARY {
         --warn-human-pct ${params.contamination_warn_human_pct} \\
         > "${meta.id}.contamination.tsv"
     """
+
+    stub:
+    """
+    touch "${meta.id}.contamination.tsv"
+    """
 }
