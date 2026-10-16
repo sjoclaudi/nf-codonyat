@@ -1,0 +1,9 @@
+# SARS-CoV-2 preset (Wuhan-Hu-1 MN908947.3)
+# Primer scheme: ARTIC nCoV-2019 V4.1 (CC BY 4.0)
+# Research use only
+target_taxid: 2697049
+target_label: SARS-CoV-2
+primer_unverified: false
+requires_primer_bed: false
+reference_accessions:
+  - MN908947.3

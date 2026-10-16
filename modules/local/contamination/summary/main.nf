@@ -6,12 +6,13 @@ process CONTAMINATION_SUMMARY {
     label 'process_single'
 
     conda "${moduleDir}/../../codonyat/run/environment.yml"
-    container 'ghcr.io/sjoclaudi/nf-codonyat:0.3.0'
+    container 'ghcr.io/sjoclaudi/nf-codonyat:0.5.0'
 
     input:
     tuple val(meta), path(report)
     val target_taxid
     val target_label
+    val warn_target_pct
 
     output:
     tuple val(meta), path("${meta.id}.contamination.tsv"), emit: tsv
@@ -20,15 +21,13 @@ process CONTAMINATION_SUMMARY {
     script:
     def taxid_arg = target_taxid ? "--target-taxid ${target_taxid}" : ""
     def label_arg = target_label ? "--target-label ${target_label}" : ""
-    // Handle deprecated parameter
-    def warn_pct = params.contamination_warn_hiv_pct ?: params.contamination_warn_target_pct
     """
     contamination_summary.py sample \\
         --sample "${meta.id}" \\
         --report "${report}" \\
         ${taxid_arg} \\
         ${label_arg} \\
-        --warn-target-pct ${warn_pct} \\
+        --warn-target-pct ${warn_target_pct} \\
         --warn-human-pct ${params.contamination_warn_human_pct} \\
         > "${meta.id}.contamination.tsv"
     """

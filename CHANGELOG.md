@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.5.0] - 2026-10-13
+## [0.5.0] - 2026-10-16
 
 ### Added
 - **Preset system**: Supports hiv1 (default), sars-cov-2, influenza-a, rsv, hbv, hcv, and custom presets
@@ -23,21 +23,27 @@
   - `reference/amplicons_used.tsv`: Derived amplicon table
   - `reference/reference_used.fasta`: Annotated reference as passed to codonyat
   - `pipeline_info/run_mode.json`: Pipeline configuration and provenance
-- **Input validation**: Reference size limit (100 kb for custom), primer pairing, CDS validation
+- **Input validation**: 100 kb total reference limit, minus-strand CDS rejected, primer pairing, CDS length multiple of 3
+- **SARS-CoV-2 ARTIC nCoV-2019 V4.1** primer BED (CC BY 4.0) bundled with MN908947.3
+- **Unverified presets** (`influenza-a`, `rsv`, `hbv`, `hcv`): reference only; `--primer_bed` or `--amplicons` required (primers are not invented)
+- **`-profile test_sarscov2`**: synthetic MN908947.3 S-gene pairs
 
 ### Changed
-- Updated to codonyat 1.2.0 (supports multi-record references and multi-interval proteins)
-- Subtype panel now optional (only HIV-1 preset includes bundled panel)
+- Updated to codonyat 1.2.0 (multi-record references and multi-interval proteins; one protein per invocation, wrapper expands `--protein all`)
+- Task image `ghcr.io/sjoclaudi/nf-codonyat:0.5.0`
+- Subtype panel now optional (only HIV-1 preset includes bundled panel); subtype is auto-skipped when no panel is provided
 - Contamination auto-skipped in custom mode without Kraken2 database or taxid
 - Reference and amplicons no longer universally required (preset-dependent)
 - Schema updated to reflect multi-virus support
+- `--validate_only` is a real fast path (PREPARE_REFERENCE + CHECK_VALIDATION); `validation.json` is published even when invalid, then the workflow exits non-zero
 
 ### Deprecated
 - `--contamination-warn-hiv-pct`: Use `--contamination-warn-target-pct` instead (still accepted as alias)
 
 ### Notes
-- HIV-1 outputs identical to v0.4.0 except for appended TARGET_* columns in contamination tables
-- Research use only - no clinical or diagnostic applications
+- HIV-1 analysis tables are identical to v0.4.0 except appended `TARGET_*` columns on contamination tables, plus new `reference/` and `pipeline_info/run_mode.json` files (provenance/timestamps may differ)
+- `run_mode.json` field `reference_accessions` is always a JSON list
+- Research use only — no drug-resistance or clinical interpretation
 
 ## [0.4.0] - 2026-10-10
 

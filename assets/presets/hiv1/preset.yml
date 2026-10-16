@@ -4,4 +4,7 @@
 
 target_taxid: 11676
 target_label: HIV1
-reference_accession: K03455.1
+primer_unverified: false
+requires_primer_bed: false
+reference_accessions:
+  - K03455|HIVHXB2CG

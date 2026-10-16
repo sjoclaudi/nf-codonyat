@@ -4,12 +4,8 @@
  *
  *  Process: CODONYAT_RUN
  *
- *  Wraps:  codonyat-runner <sam> <ref.fasta> <amplicons.tsv>
- *          --protein <name | A,B,C | all> --ratio-upper --ratio-lower
- *          --entropy-threshold --csv-path <prefix>.tsv --xml-path <prefix>.xml
- *
- *  codonyat >= 1.1 streams the alignments (flat memory) and counts every
- *  requested protein in one pass.
+ *  Wraps:  run_codonyat.py (codonyat 1.2.0 is one protein per invocation;
+ *          the wrapper expands --protein all / lists and merges TSV/XML).
  *
  *  Input  : tuple val(meta), path(sam); path(reference); path(amplicons)
  *  Output : tuple val(meta), path(<prefix>.tsv), path(<prefix>.xml)
@@ -22,7 +18,7 @@ process CODONYAT_RUN {
     label 'process_low'
 
     conda "${moduleDir}/environment.yml"
-    container 'ghcr.io/sjoclaudi/nf-codonyat:0.3.0'
+    container 'ghcr.io/sjoclaudi/nf-codonyat:0.5.0'
 
     input:
     tuple val(meta), path(sam)
@@ -38,7 +34,7 @@ process CODONYAT_RUN {
     """
     [ "${sam}" = "${meta.id}.sam" ] || ln -s "${sam}" "${meta.id}.sam"
 
-    codonyat-runner \\
+    run_codonyat.py \\
         "${meta.id}.sam" \\
         "${reference}" \\
         "${amplicons}" \\

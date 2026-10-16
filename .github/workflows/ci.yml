@@ -15,7 +15,7 @@ env:
   NXF_VER: "26.04.6"
   NFT_VER: "0.9.5"
   NXF_ANSI_LOG: false
-  IMAGE: ghcr.io/sjoclaudi/nf-codonyat:0.3.0  # keep in sync with the modules' container directive
+  IMAGE: ghcr.io/sjoclaudi/nf-codonyat:0.5.0  # keep in sync with the modules' container directive
 
 jobs:
   lint:
@@ -30,6 +30,9 @@ jobs:
 
       - name: nextflow lint
         run: nextflow lint .
+
+      - name: prepare_inputs stub tests
+        run: python3 tests/test_prepare_inputs.py
 
   test:
     name: test (${{ matrix.profile }})
@@ -102,8 +105,40 @@ jobs:
           grep -q 'Research use only' results-test/pipeline_info/methods.md
           cat results-test/pipeline_info/software_versions.yml
 
+      - name: Check v0.5.0 reference/ and run_mode.json
+        run: |
+          python3 - <<'PY'
+          import json
+          v = json.load(open("results-test/reference/validation.json"))
+          assert v["valid"] is True
+          m = json.load(open("results-test/pipeline_info/run_mode.json"))
+          assert isinstance(m["reference_accessions"], list)
+          assert m["reference_accessions"] == ["K03455|HIVHXB2CG"]
+          assert m["preset"] == "hiv1"
+          PY
+          grep -q TARGET_TAXID results-test/contamination/contamination_summary.tsv
+          awk -F'\t' 'NR==1 {for (i=1;i<=NF;i++) h[$i]=i} NR==2 {print $h["TARGET_TAXID"]}' \
+            results-test/contamination/contamination_summary.tsv | grep -qx 11676
+
       - name: Check execution reports are in the outdir
         run: ls -l results-test/pipeline_info/{execution_report.html,execution_timeline.html,execution_trace.txt,pipeline_dag.html}
+
+      - name: Run SARS-CoV-2 test profile
+        run: nextflow run . -profile test_sarscov2,${{ matrix.profile }} --outdir results-test-sarscov2
+
+      - name: Check SARS-CoV-2 outputs
+        run: |
+          python3 - <<'PY'
+          import json
+          v = json.load(open("results-test-sarscov2/reference/validation.json"))
+          assert v["valid"] is True
+          m = json.load(open("results-test-sarscov2/pipeline_info/run_mode.json"))
+          assert m["preset"] == "sars-cov-2"
+          assert m["reference_accessions"] == ["MN908947.3"]
+          PY
+          test $(tail -n +2 results-test-sarscov2/reference/amplicons_used.tsv | wc -l) -eq 99
+          test -f results-test-sarscov2/samples/SARS2_S/SARS2_S.tsv
+          test ! -d results-test-sarscov2/contamination
 
       - name: Upload results on failure
         if: failure()
@@ -112,6 +147,7 @@ jobs:
           name: test-${{ matrix.profile }}
           path: |
             results-test/
+            results-test-sarscov2/
             .nf-test/tests/*/meta/
             .nextflow.log
           if-no-files-found: ignore

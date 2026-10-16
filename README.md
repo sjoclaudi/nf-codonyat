@@ -5,7 +5,7 @@
 Wraps the [`codonyat`](https://github.com/mnoguera/codonyat) Python package in a Nextflow pipeline for viral amplicon NGS analysis.
 
 > **Research use only.** The outputs are descriptive: QC, a contamination report, a read-mapping based
-> subtype estimate (HIV-1 only), a consensus sequence, and codon and amino-acid frequency tables. The pipeline does
+> subtype estimate (bundled for HIV-1), a consensus sequence, and codon and amino-acid frequency tables. The pipeline does
 > no drug-resistance or clinical interpretation and is not a diagnostic tool.
 
 **What's new in v0.5.0:**
@@ -54,7 +54,7 @@ End: codonyat_summary.tsv, aa_variants_summary.tsv, consensus_all.fa, provenance
 
 - **FastQC** runs on the raw reads; fastp's report covers the trimmed reads.
 - **Kraken2** (step 2) and the **subtype estimate** (step 3) are report-only branches: they never remove reads or
-  stop a sample. A warning flag is set when HIV-1 is below 50% of classified fragments or human reads exceed 50%.
+  stop a sample. A warning flag is set when the target is below 50% of classified fragments or human reads exceed 50%.
 - **BBMerge** merges overlapping pairs, so an overlapping fragment counts once per codon instead of twice.
   Merged reads (single-end) and the pairs that did not merge (paired-end) are aligned in one Bowtie2 step and
   combined into one sorted BAM.
@@ -85,13 +85,22 @@ mkdir -p k2_standard_08 && curl -L https://genome-idx.s3.amazonaws.com/kraken/k2
 # 3. Run with Docker
 nextflow run sjoclaudi/nf-codonyat \
     -profile docker \
-    --samplesheet samples.csv \
-    --reference reference.fasta \
-    --amplicons amplicons.tsv \
+    --input samples.csv \
     --kraken2_db k2_standard_08
 
-# Bundled test data (tiny Kraken2 database, no download)
+# Custom virus (6-column primer BED)
+nextflow run sjoclaudi/nf-codonyat \
+    -profile docker \
+    --preset custom \
+    --input samples.csv \
+    --reference reference.fasta \
+    --primer_bed primers.bed \
+    --kraken2_db k2_standard_08
+
+# Bundled HIV-1 test data (tiny Kraken2 database, no download)
 nextflow run sjoclaudi/nf-codonyat -profile test,docker
+# Bundled SARS-CoV-2 test (ARTIC v4.1, contamination skipped)
+nextflow run sjoclaudi/nf-codonyat -profile test_sarscov2,docker
 ```
 
 ---
@@ -130,7 +139,7 @@ plasmid, human, UniVec_Core; capped at 8 GB) is the intended default. Required f
 `--skip_contamination`. Its file checksums are recorded in `pipeline_info/provenance.json`.
 
 ### Subtype panel
-`assets/presets/hiv1_subtype_panel_v1/` (default `--subtype_panel`): pol-region references in three bins,
+`assets/presets/hiv1/subtype_panel/` (hiv1 preset default): pol-region references in three bins,
 A (A1), B and a group M consensus. See its `SOURCES.md` for accessions, sources and how it was built.
 The estimate is the % of reads that map unambiguously to each bin. It is a read-mapping based estimate for
 research use, not a genotyping result: other subtypes and recombinants are expected to fall into the M bin
@@ -142,9 +151,14 @@ or split between bins (flagged when the margin between the top two bins is below
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `--samplesheet` | *required* | CSV with `sample,fastq_1,fastq_2,sam` columns |
-| `--reference` | *required* | Annotated reference FASTA |
-| `--amplicons` | *required* | Amplicon definitions TSV |
+| `--preset` | `hiv1` | `hiv1`, `sars-cov-2`, `influenza-a`, `rsv`, `hbv`, `hcv`, or `custom` |
+| `--input` / `--samplesheet` | *required unless `--validate_only`* | CSV with `sample,fastq_1,fastq_2,sam` columns |
+| `--reference` | from preset | Annotated reference FASTA (required when `preset=custom`) |
+| `--primer_bed` | from preset | 6-column primer BED (`_LEFT`/`_RIGHT`); required for unverified presets |
+| `--amplicons` | from preset | 7-column amplicons TSV (mutually exclusive with `--primer_bed`) |
+| `--annotation` | FASTA header | GFF3 CDS, BED (4 columns), or annotation TSV |
+| `--validate_only` | `false` | Validate inputs only; writes `reference/validation.json`; exits non-zero on failure |
+| `--target_taxid` / `--target_label` | from preset | Kraken2 target clade and display label |
 | `--protein` | `all` | One protein, a comma-separated list (`PR,RT,INT`) or `all` annotated proteins |
 | `--ratio_upper` / `--ratio_lower` | `3.162` / `0.316` | codonyat strand ratio thresholds |
 | `--entropy_threshold` | `0.0` | Minimum Shannon entropy per position |
@@ -153,8 +167,8 @@ or split between bins (flagged when the margin between the top two bins is below
 | `--skip_contamination` | `false` | Skip the Kraken2 report |
 | `--kraken2_confidence` | `0.0` | Kraken2 `--confidence` |
 | `--kraken2_memory_mapping` | `false` | Kraken2 `--memory-mapping` |
-| `--contamination_warn_hiv_pct` / `--contamination_warn_human_pct` | `50` / `50` | Warning thresholds (report only) |
-| `--subtype_panel` | bundled `hiv1_subtype_panel_v1` | Panel folder (`<bin>.fa` per bin + `panel.tsv`) |
+| `--contamination_warn_target_pct` / `--contamination_warn_human_pct` | `50` / `50` | Warning thresholds (report only) |
+| `--subtype_panel` | hiv1 preset only | Panel folder (`<bin>.fa` per bin + `panel.tsv`) |
 | `--skip_subtype` | `false` | Skip the subtype estimate |
 | `--subtype_min_reads` / `--subtype_min_margin` | `100` / `10` | Minimum assigned reads; minimum margin (% points) between the top two bins |
 | `--merge_pairs` | `true` | Merge overlapping pairs with BBMerge (PE only) |
@@ -191,8 +205,9 @@ results/
 ├── strand/<s>.strand_metrics_unmerged.tsv, <s>.pairs.bowtie2.log
 ├── alignment/<s>.bam, <s>.{merged,unmerged}.bowtie2.log (PE) or <s>.bowtie2.log (SE), flagstat/
 ├── fastqc/  fastp/
+├── reference/validation.json, annotation_used.tsv, amplicons_used.tsv, reference_used.fasta
 ├── multiqc/multiqc_report.html
-└── pipeline_info/  software_versions.yml, provenance.json, methods.md, execution reports
+└── pipeline_info/  software_versions.yml, provenance.json, run_mode.json, methods.md, execution reports
 ```
 
 See [docs/output.md](docs/output.md) for the columns of every table.
@@ -202,9 +217,9 @@ See [docs/output.md](docs/output.md) for the columns of every table.
 ## Software
 
 - **Local steps** (codonyat and the helper scripts in `bin/`, Python standard library only):
-  container `ghcr.io/sjoclaudi/nf-codonyat:0.3.0` built from the `Dockerfile`, or the conda environment
+  container `ghcr.io/sjoclaudi/nf-codonyat:0.5.0` built from the `Dockerfile`, or the conda environment
   `modules/local/codonyat/run/environment.yml`.
-  Both install `codonyat==1.1.0` from PyPI.
+  Both install `codonyat==1.2.0` from PyPI.
 - **Third-party steps** use [nf-core modules](https://nf-co.re/modules) (`modules/nf-core/`, pinned in
   `modules.json`), each with its own BioContainers image and conda environment: FastQC 0.12.1, fastp 1.3.6,
   Kraken2 2.1.6, BBMap 39.18 (BBSplit, BBMerge), Bowtie2 2.5.4, samtools 1.21/1.24, iVar 1.4.4 and MultiQC 1.35.
@@ -214,7 +229,7 @@ Nothing is installed at run time beyond the container images or conda environmen
 ## Resources
 
 Kraken2 with Standard-8 needs about 8 GB RAM (the process asks for 10 GB; use `--kraken2_memory_mapping`
-on smaller machines). BBSplit and BBMerge ask for 4 GB each. codonyat 1.1 stays under ~120 MB for 1M
+on smaller machines). BBSplit and BBMerge ask for 4 GB each. codonyat 1.2 stays under ~120 MB for 1M
 alignments. A 16 GB machine runs the full pipeline.
 
 ## Future options
@@ -238,7 +253,7 @@ git clone https://github.com/sjoclaudi/nf-codonyat.git
 cd nf-codonyat
 
 nextflow lint .                          # must be clean; CI enforces it
-docker build -t ghcr.io/sjoclaudi/nf-codonyat:0.3.0 .   # task image (CI builds it for the docker tests)
+docker build -t ghcr.io/sjoclaudi/nf-codonyat:0.5.0 .   # task image (CI builds it for the docker tests)
 nextflow run . -profile test,docker      # or test,conda
 nf-test test --profile docker            # or --profile conda
 ```

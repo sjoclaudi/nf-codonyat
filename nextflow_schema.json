@@ -48,7 +48,7 @@
                 },
                 "validate_only": {
                     "type": "boolean",
-                    "description": "Validate inputs only (reference, primers, annotation). No Kraken2/alignment. Writes reference/validation.json. Fast (seconds)."
+                    "description": "Validate inputs only (reference, primers, annotation). No Kraken2/alignment. Writes reference/validation.json and exits non-zero when valid is false. Fast (seconds)."
                 },
                 "outdir": {
                     "type": "string",
@@ -75,7 +75,6 @@
                 }
             },
             "required": [
-                "samplesheet",
                 "outdir"
             ]
         },

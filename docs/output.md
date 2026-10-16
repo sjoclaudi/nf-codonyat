@@ -156,15 +156,13 @@ Percentages of all read fragments given to Kraken2 (a pair counts once): `TOTAL_
 `UNCLASSIFIED_PCT`, `CLASSIFIED_PCT`, `HIV1_PCT`, `HIV1_PCT_OF_CLASSIFIED`, `HUMAN_PCT`, `PHIX_PCT`,
 `BACTERIA_PCT`, `OTHER_VIRAL_PCT`, `OTHER_PCT`, `WARNING`, `TARGET_TAXID`, `TARGET_READS`, `TARGET_PCT`.
 
-**New in v0.5.0:** `TARGET_TAXID`, `TARGET_READS`, `TARGET_PCT` columns are appended. For HIV-1 preset, 
-`TARGET_TAXID=11676` and matches `HIV1_*` columns. For custom mode without a target taxid, these columns 
-are empty. The `HIV1_*` columns are preserved for backward compatibility.
+**New in v0.5.0:** `TARGET_TAXID`, `TARGET_READS`, `TARGET_PCT` columns are appended. For the hiv1 preset,
+`TARGET_TAXID=11676` and `TARGET_PCT` matches `HIV1_PCT`. For custom mode without a target taxid, these
+columns are empty. The `HIV1_*` columns are preserved for v0.4.0 compatibility.
 
-The warning lists issues (e.g. `no_reads`, `<target_label><threshold%_of_classified`, `human>50%`), 
-separated by `;` (`none` if no warnings). Percentages are informative only: no reads are removed and the 
+The warning lists issues (e.g. `no_reads`, `{target_label}<{threshold}%_of_classified`, `human>50%`),
+separated by `;` (`none` if no warnings). Percentages are informative only: no reads are removed and the
 pipeline never stops a sample for contamination.
-`BACTERIA_PCT`, `OTHER_VIRAL_PCT`, `OTHER_PCT` and `WARNING` (`none`, or which threshold was crossed).
-Report only: no reads are removed.
 
 ## Subtype estimate (`subtype/{sample}.subtype.tsv`)
 
@@ -174,3 +172,58 @@ One row per panel bin: `READS` (assigned unambiguously to the bin), `PCT_OF_ASSI
 (`none`, `fewer_than_<n>_assigned_reads` or `ambiguous_or_possible_recombinant`). The M bin is the group M
 consensus and is labelled "group M, not assigned to A or B". This is a read-mapping based estimate for
 research use, not a genotyping result.
+
+The `subtype/` folder is omitted when `--skip_subtype` is set or the preset has no panel (everything except
+hiv1, unless you pass `--subtype_panel`).
+
+## Reference artefacts (`reference/`)
+
+Written by `PREPARE_REFERENCE` on every run, including `--validate_only`.
+
+### `validation.json`
+
+```json
+{"valid": true, "errors": [], "warnings": []}
+```
+
+Each error or warning: `code`, `file`, `line` (null if not a file line), `message`. The process that writes
+this file always succeeds so the JSON is published; `CHECK_VALIDATION` then exits 1 when `valid` is false.
+
+### `annotation_used.tsv`
+
+| Column | Description |
+|--------|-------------|
+| `record` | FASTA record id |
+| `protein` | Protein name |
+| `description` | From the FASTA header, GFF `product`, or TSV |
+| `intervals` | 1-based inclusive ranges, `;`-joined when a CDS has several intervals (e.g. `266-13468;13468-21555`) |
+| `strand` | `+` (minus-strand CDS is rejected) |
+| `start` / `end` | First and last coordinate across the joined intervals |
+| `length_aa` | Joined nucleotide length / 3 |
+| `source` | `header`, `gff`, `bed` or `tsv` |
+
+### `amplicons_used.tsv`
+
+Seven columns: `label`, `protein`, `reference`, `5p_seq`, `3p_seq`, `start`, `end` (1-based inclusive insert
+coordinates). From `--amplicons` or derived from a 6-column `--primer_bed`.
+
+### `reference_used.fasta`
+
+The normalised FASTA actually given to Bowtie2 / codonyat / iVar. Headers use the codonyat 1.2.0 form
+`Name(Description):start-end,start-end` (`;` between proteins, `,` between intervals of one protein).
+
+## `pipeline_info/run_mode.json`
+
+| Field | Notes |
+|-------|-------|
+| `pipeline_version` | Manifest version (0.5.0) |
+| `preset` | `hiv1` / `sars-cov-2` / … / `custom` |
+| `target_taxid` | Integer or `null` |
+| `target_label` | Display label or `null` |
+| `reference_accessions` | **Always a JSON list** of FASTA record ids in file order |
+| `reference_sha256` | SHA-256 of the input `--reference` (or preset FASTA) |
+| `primer_file_sha256` | SHA-256 of `--primer_bed` or `--amplicons` |
+| `annotation_sha256` | SHA-256 of `--annotation`, or `null` when the FASTA header is used |
+| `kraken2_skipped` | Boolean |
+| `kraken2_skip_reason` | `skip_contamination`, `custom_mode_no_kraken2_db`, `custom_mode_no_target_taxid`, `no_kraken2_db`, or `null` |
+| `subtype_skipped` | Boolean |

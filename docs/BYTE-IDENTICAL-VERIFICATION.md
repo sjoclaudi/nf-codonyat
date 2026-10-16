@@ -1,7 +1,25 @@
-# Byte-identical verification vs v0.3.1 (`9b11f81`)
+# Byte-identical verification
 
-Research use only. This documents a real run of `-profile test,docker` on
-`main@9b11f81` and on this PR branch, into separate outdirs, then a recursive
+Research use only.
+
+## v0.5.0 vs v0.4.0 (HIV-1)
+
+HIV-1 analysis tables must match v0.4.0 except:
+
+- contamination tables **append** `TARGET_TAXID`, `TARGET_READS`, `TARGET_PCT` (`HIV1_*` values unchanged)
+- new files: `reference/{validation.json,annotation_used.tsv,amplicons_used.tsv,reference_used.fasta}` and `pipeline_info/run_mode.json`
+- provenance / timestamps / `software_versions.yml` (`codonyat: "1.2.0"`) / pipeline version
+- two extra processes (`PREPARE_REFERENCE`, `CHECK_VALIDATION`) so the HIV-1 test graph is 46 succeeded tasks (was 44)
+
+A full side-by-side `-profile test,docker` diff against a v0.4.0 outdir was **not** re-run in this
+environment (no Nextflow on the agent). CI on this branch is the check: existing codon / amino-acid /
+consensus / subtype snapshots stay pinned; the contamination snapshot is dropped because of the appended
+columns.
+
+## v0.4.0 vs v0.3.1 (`9b11f81`)
+
+This documents a real run of `-profile test,docker` on
+`main@9b11f81` and on the 0.4.0 branch, into separate outdirs, then a recursive
 diff of the published results.
 
 ## Commands (2026-10-05, Europe/Madrid)

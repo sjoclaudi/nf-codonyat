@@ -34,7 +34,7 @@ include { SAMTOOLS_VIEW     as FILTER_ALIGNMENTS  } from '../modules/nf-core/sam
 include { SAMTOOLS_VIEW     as FILTER_STRAND      } from '../modules/nf-core/samtools/view/main'
 include { SAMTOOLS_FLAGSTAT as FLAGSTAT_FILTERED  } from '../modules/nf-core/samtools/flagstat/main'
 include { SAMTOOLS_SORT     as SORT_FILTERED      } from '../modules/nf-core/samtools/sort/main'
-include { IVAR_CONSENSUS                          } from '../modules/nf-core/ivar/consensus/main'
+include { IVAR_CONSENSUS_RECORDS                  } from '../modules/local/ivar/consensus_records/main'
 include { MULTIQC                                 } from '../modules/nf-core/multiqc/main'
 include { CODONYAT_RUN                            } from '../modules/local/codonyat/run/main.nf'
 include { CODONYAT_RUN      as CODONYAT_STRAND    } from '../modules/local/codonyat/run/main.nf'
@@ -54,15 +54,16 @@ workflow CODONYAT {
     sam_ch          // queue: [ meta, sam ]
     reference_ch    // value: path
     amplicons_ch    // value: path
-    target_taxid    // value: int or null
-    target_label    // value: string
-    subtype_panel   // value: path or null
+    target_taxid        // value: int or null
+    target_label        // value: string
+    subtype_panel       // value: path or null
+    run_contamination   // boolean
+    warn_target_pct     // number
 
     main:
 
-    def run_contamination = !params.skip_contamination && params.kraken2_db
-    def run_subtype       = !params.skip_subtype && subtype_panel
-    def run_consensus     = !params.skip_consensus
+    def run_subtype   = !params.skip_subtype && subtype_panel
+    def run_consensus = !params.skip_consensus
 
     // ── FASTQ path: QC and trimming ───────────────────────
     FASTQC(fastq_ch)
@@ -86,7 +87,7 @@ workflow CODONYAT {
             params.save_intermediates  // save_reads_assignment
         )
         kraken2_reports = KRAKEN2_KRAKEN2.out.report
-        CONTAMINATION_SUMMARY(kraken2_reports, target_taxid, target_label)
+        CONTAMINATION_SUMMARY(kraken2_reports, target_taxid, target_label, warn_target_pct)
         CONTAMINATION_COMBINE(CONTAMINATION_SUMMARY.out.tsv.map { _meta, f -> f }.collect())
         contamination_mqc = CONTAMINATION_COMBINE.out.mqc
     }
@@ -226,10 +227,14 @@ workflow CODONYAT {
     consensus_fasta = channel.empty()
     if (run_consensus) {
         SORT_FILTERED(filtered, [[:], [], []], '')
-        IVAR_CONSENSUS(SORT_FILTERED.out.bam, reference_ch, true)
+        IVAR_CONSENSUS_RECORDS(SORT_FILTERED.out.bam, reference_ch)
         CONSENSUS_REPORT(
-            IVAR_CONSENSUS.out.fasta.join(IVAR_CONSENSUS.out.mpileup),
-            reference_ch.map { fasta -> fasta.withReader { r -> r.readLine() }.substring(1).tokenize(' ')[0] }
+            IVAR_CONSENSUS_RECORDS.out.fasta.join(IVAR_CONSENSUS_RECORDS.out.mpileup),
+            reference_ch.map { fasta ->
+                fasta.readLines().findAll { l -> l.startsWith('>') }
+                    .collect { l -> l.substring(1).tokenize(' ')[0] }
+                    .join(',')
+            }
         )
         consensus_fasta = CONSENSUS_REPORT.out.fasta
             .map { _meta, f -> f }

@@ -1,0 +1,16 @@
+# Influenza A preset (A/Puerto Rico/8/1934(H1N1), 8 segments)
+# No bundled primer scheme: provide --primer_bed (unverified).
+# Research use only
+target_taxid: 11320
+target_label: InfluenzaA
+primer_unverified: true
+requires_primer_bed: true
+reference_accessions:
+  - NC_002023.1
+  - NC_002021.1
+  - NC_002022.1
+  - NC_002017.1
+  - NC_002019.1
+  - NC_002018.1
+  - NC_002016.1
+  - NC_002020.1

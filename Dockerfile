@@ -5,7 +5,7 @@
 FROM python:3.12-slim
 
 LABEL org.opencontainers.image.source="https://github.com/sjoclaudi/nf-codonyat"
-LABEL org.opencontainers.image.description="codonyat 1.1.0 runtime for the nf-codonyat Nextflow pipeline (research use only)"
+LABEL org.opencontainers.image.description="codonyat 1.2.0 runtime for the nf-codonyat Nextflow pipeline (research use only)"
 LABEL org.opencontainers.image.licenses="MIT"
 
 # procps provides `ps`, which Nextflow uses to collect task metrics
@@ -13,7 +13,8 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends procps \
     && rm -rf /var/lib/apt/lists/*
 
-# codonyat 1.1.0 is now available on PyPI
-RUN pip install --no-cache-dir "biopython==1.85" "codonyat==1.1.0"
+# CI publishes this image on pushes to main / version tags (never from a PR).
+# Local docker tests: docker build -t ghcr.io/sjoclaudi/nf-codonyat:0.5.0 .
+RUN pip install --no-cache-dir "biopython==1.85" "codonyat==1.2.0"
 
 CMD ["codonyat-runner", "--help"]
