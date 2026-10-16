@@ -179,7 +179,7 @@ new folder, but the reports stay in the earlier `pipeline_info` folder (the prof
 
 Use `-profile` to select an execution environment:
 
-- `docker` — Docker: `ghcr.io/sjoclaudi/nf-codonyat:0.6.0` for codonyat and the helper scripts, BioContainers images for the nf-core modules (recommended)
+- `docker` — Docker: `ghcr.io/sjoclaudi/nf-codonyat:0.7.0-dev` for codonyat and the helper scripts, BioContainers images for the nf-core modules (recommended)
 - `singularity` — Singularity/Apptainer, same images
 - `conda` — Conda environments (`modules/local/codonyat/run/environment.yml` and each nf-core module's own)
 - `mamba` — same environment, created with mamba
