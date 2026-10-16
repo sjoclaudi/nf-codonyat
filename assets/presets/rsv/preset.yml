@@ -1,0 +1,9 @@
+# RSV preset (Human orthopneumovirus subgroup B, NC_001781.1)
+# No bundled primer scheme: provide --primer_bed (unverified).
+# Research use only
+target_taxid: 11259
+target_label: RSV
+primer_unverified: true
+requires_primer_bed: true
+reference_accessions:
+  - NC_001781.1

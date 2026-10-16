@@ -59,11 +59,11 @@ frequencies). They contain no drug-resistance or clinical interpretation.
 
 FASTQ samples were quality-checked with FastQC {fastqc} and trimmed with fastp {fastp}.
 A contamination report was produced with Kraken2 {kraken2} against the database
-`{kraken2_db}` (report only; no reads were removed; a warning is raised when HIV-1 is
-below {warn_hiv}% of classified fragments or human reads exceed {warn_human}% of all fragments).
-An HIV-1 subtype estimate was obtained by competitive read mapping with BBSplit (BBMap {bbmap})
-against the panel `{panel}` (bins A, B and group M consensus), reported as the % of reads
-assigned unambiguously to each bin (read-mapping based; research use only).
+`{kraken2_db}` (report only; no reads were removed; a warning is raised when {target_label} is
+below {warn_target}% of classified fragments or human reads exceed {warn_human}% of all fragments).
+A subtype estimate was obtained by competitive read mapping with BBSplit (BBMap {bbmap})
+against the panel `{panel}`, reported as the % of reads assigned unambiguously to each bin
+(read-mapping based; research use only).
 Overlapping read pairs were merged with BBMerge (BBMap {bbmap}); merged reads (single-end)
 and unmerged pairs (paired-end) were aligned with Bowtie2 {bowtie2} (`{bowtie2_args}`) to the
 annotated reference and combined with samtools {samtools}. Alignments with MAPQ < {min_mapq}
@@ -125,7 +125,9 @@ def main(argv: list[str] | None = None) -> None:
         fh.write(METHODS.format(
             version=args.pipeline_version, fastqc=t("fastqc"), fastp=t("fastp"), kraken2=t("kraken2"),
             kraken2_db=os.path.basename(str(params.get("kraken2_db") or "n/a").rstrip("/")),
-            warn_hiv=params.get("contamination_warn_hiv_pct"), warn_human=params.get("contamination_warn_human_pct"),
+            target_label=params.get("target_label") or params.get("preset") or "the target",
+            warn_target=params.get("contamination_warn_target_pct") or params.get("contamination_warn_hiv_pct"),
+            warn_human=params.get("contamination_warn_human_pct"),
             bbmap=t("bbmap"), panel=os.path.basename(str(params.get("subtype_panel") or "n/a").rstrip("/")),
             bowtie2=t("bowtie2"), bowtie2_args=params.get("bowtie2_args"), samtools=t("samtools"),
             min_mapq=params.get("min_mapq"), exclude_flags=params.get("exclude_flags"), ivar=t("ivar"),

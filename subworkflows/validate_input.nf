@@ -6,12 +6,11 @@
  *    • samplesheet exists; each row has a sample and either FASTQ
  *      (fastq_1, optional fastq_2) or a SAM; every file exists
  *      (relative paths are resolved against the samplesheet's folder)
- *    • FASTQ samples need --kraken2_db unless --skip_contamination; a
- *      warning is printed when the first read header does not look like
- *      Illumina (the pipeline supports Illumina PE/SE only)
+ *    • FASTQ samples need --kraken2_db unless --skip_contamination or
+ *      custom-mode auto-skip (no DB / no taxid); a warning is printed when
+ *      the first read header does not look like Illumina
  *    • reference FASTA header carries protein annotations, including every
  *      protein requested with --protein (one name, a list or 'all')
- *    • amplicons TSV has 7 tab-separated columns
  *
  *  Any failed check stops the run with a clear error message.
  *
@@ -25,9 +24,9 @@
 
 workflow VALIDATE_INPUT {
     take:
-    samplesheet_path  // String
-    reference_path    // String
-    amplicons_path    // String
+    samplesheet_path          // String
+    reference_path            // String
+    auto_skip_contamination   // boolean
 
     main:
 
@@ -53,7 +52,7 @@ workflow VALIDATE_INPUT {
             if (fq2 && !fq1) {
                 error "Samplesheet ${ss_file}: sample '${sample}' has fastq_2 but no fastq_1"
             }
-            if (fq1 && !params.skip_contamination && !params.kraken2_db) {
+            if (fq1 && !params.skip_contamination && !params.kraken2_db && !auto_skip_contamination) {
                 error "Sample '${sample}' has FASTQ input: set --kraken2_db (Kraken2 database folder, e.g. Standard-8) or use --skip_contamination"
             }
             if (fq1) {
@@ -79,7 +78,15 @@ workflow VALIDATE_INPUT {
     if (!header.startsWith('>')) {
         error "Reference ${ref_file} does not look like a FASTA file"
     }
-    def proteins = (header =~ /(\w+)\([^)]*\):\d+-\d+/).collect { m -> m[1] }
+    def proteins = []
+    ref_file.withReader { reader ->
+        reader.eachLine { line ->
+            if (line.startsWith('>')) {
+                proteins.addAll((line =~ /([A-Za-z0-9][A-Za-z0-9_.-]*)\([^)]*\):/).collect { m -> m[1] })
+            }
+        }
+    }
+    proteins = proteins.unique()
     if (!proteins) {
         log.warn "Reference header lacks protein annotations. Expected format: '>ID PR(Protease):2253-2549;RT(Reverse Transcriptase):2550-3869'"
     }
@@ -98,21 +105,10 @@ workflow VALIDATE_INPUT {
     }
     reference_ch = channel.value(ref_file)
 
-    // ── 3. Amplicons TSV ──────────────────────────────────
-    def amp_file = file(amplicons_path, checkIfExists: true)
-    def ampHeader = amp_file.withReader { reader -> reader.readLine() } ?: ''
-    def nCols = ampHeader.split('\t').size()
-    if (nCols != 7) {
-        error "Amplicons file ${amp_file} must have 7 tab-separated columns " +
-              "(label,protein,reference,5p_seq,3p_seq,start,end); found ${nCols}"
-    }
-    amplicons_ch = channel.value(amp_file)
-
     emit:
     fastq     = fastq_ch       // [ meta, [ fastq_1, (fastq_2) ] ]
     sam       = sam_ch         // [ meta, sam ]
     reference = reference_ch
-    amplicons = amplicons_ch
 }
 
 // Illumina only (PE or SE): warn when the first header looks like another

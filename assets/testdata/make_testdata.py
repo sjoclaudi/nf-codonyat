@@ -2,7 +2,7 @@
 """Regenerate the synthetic test SAM files from reference.fasta.
 
 Reads are exact copies of HXB2 (K03455) amplicon regions with a few known
-drug-resistance mutations spiked in. The trailing `_<n>` in each read name is
+known amino-acid substitutions spiked in. The trailing `_<n>` in each read name is
 the read multiplicity understood by codonyat, which keeps the files tiny.
 
   Amp_1  RT codons   1-80   (HXB2 2550-2789)

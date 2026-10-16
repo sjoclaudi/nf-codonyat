@@ -37,7 +37,7 @@ nextflow_pipeline {
                 //   strand branch (bowtie2, filter, codonyat, strand metrics);
                 // all 3 samples: flagstat x2, filter, codonyat, aa table, sort, ivar, consensus report;
                 // codonyat summary, provenance, multiqc
-                { assert workflow.trace.succeeded().size() == 44 },
+                { assert workflow.trace.succeeded().size() == 46 },
 
                 // per-sample outputs
                 { assert path("${outputDir}/samples/sample1/sample1.tsv").exists() },
@@ -46,6 +46,12 @@ nextflow_pipeline {
                 { assert path("${outputDir}/samples/sample2/sample2.xml").text.contains('<Position') },
 
                 { assert path("${outputDir}/samples/HVG286PL/HVG286PL.tsv").exists() },
+                { assert path("${outputDir}/samples/HVG286PL/HVG286PL.xml").exists() },
+                // every samplesheet sample must get a codon table (value-channel reference)
+                { assert path("${projectDir}/assets/testdata/samplesheet.csv").readLines().drop(1).findAll { l -> l.trim() }.every { line ->
+                    def id = line.split(',')[0]
+                    path("${outputDir}/samples/${id}/${id}.tsv").exists() && path("${outputDir}/samples/${id}/${id}.xml").exists()
+                } },
 
                 // FASTQ path: QC, trimming, alignment and flagstat outputs
                 { assert path("${outputDir}/fastqc/HVG286PL_1_fastqc.html").exists() },
@@ -83,6 +89,18 @@ nextflow_pipeline {
                 { assert path("${outputDir}/contamination/HVG286PL.kraken2.report.txt").exists() },
                 { assert tsvRow("${outputDir}/contamination/contamination_summary.tsv", 'HVG286PL').WARNING == 'none' },
                 { assert (tsvRow("${outputDir}/contamination/contamination_summary.tsv", 'HVG286PL').HIV1_PCT as double) > 90 },
+                { assert tsvRow("${outputDir}/contamination/contamination_summary.tsv", 'HVG286PL').TARGET_TAXID == '11676' },
+                { assert (tsvRow("${outputDir}/contamination/contamination_summary.tsv", 'HVG286PL').TARGET_PCT as double) > 90 },
+                { assert tsvRow("${outputDir}/contamination/contamination_summary.tsv", 'HVG286PL').HIV1_PCT == tsvRow("${outputDir}/contamination/contamination_summary.tsv", 'HVG286PL').TARGET_PCT },
+
+                // v0.5.0 reference/ + run_mode.json
+                { assert path("${outputDir}/reference/validation.json").json.valid == true },
+                { assert path("${outputDir}/reference/annotation_used.tsv").text.contains('intervals') },
+                { assert path("${outputDir}/reference/annotation_used.tsv").text.contains('record') },
+                { assert path("${outputDir}/reference/amplicons_used.tsv").readLines()[0].split('\t') as List == ['label', 'protein', 'reference', '5p_seq', '3p_seq', 'start', 'end'] },
+                { assert path("${outputDir}/reference/reference_used.fasta").text.startsWith('>') },
+                { assert path("${outputDir}/pipeline_info/run_mode.json").json.reference_accessions instanceof List },
+                { assert path("${outputDir}/pipeline_info/run_mode.json").json.reference_accessions == ['K03455|HIVHXB2CG'] },
 
                 // step 3: subtype estimate (HVG286PL is subtype B)
                 { assert path("${outputDir}/subtype/bbsplit/HVG286PL.stats.txt").exists() },
@@ -108,7 +126,7 @@ nextflow_pipeline {
                 { assert !path("${outputDir}/strand/sample1.strand_metrics_unmerged.tsv").exists() },
 
                 // provenance
-                { assert path("${outputDir}/pipeline_info/software_versions.yml").text.contains('codonyat: "1.1.0"') },
+                { assert path("${outputDir}/pipeline_info/software_versions.yml").text.contains('codonyat: "1.2.1"') },
                 { assert path("${outputDir}/pipeline_info/software_versions.yml").text.contains('multiqc') },
                 { assert path("${outputDir}/pipeline_info/methods.md").text.contains('Research use only') },
                 { assert path("${outputDir}/pipeline_info/provenance.json").json.checksums_sha256.keySet().any { k -> k.startsWith('kraken2_db/') } },
@@ -135,8 +153,7 @@ nextflow_pipeline {
                     path("${outputDir}/strand/HVG286PL.strand_metrics_unmerged.tsv"),
                     path("${outputDir}/consensus/consensus_all.fa"),
                     path("${outputDir}/consensus/HVG286PL.consensus_indels.tsv"),
-                    path("${outputDir}/subtype/subtype_summary.tsv"),
-                    path("${outputDir}/contamination/contamination_summary.tsv")
+                    path("${outputDir}/subtype/subtype_summary.tsv")
                 ).match() }
             )
         }
@@ -194,7 +211,7 @@ nextflow_pipeline {
                 { assert workflow.success },
                 // fastqc, fastp, kraken2 + 2, bbsplit + 2, bowtie2 build + align, flagstat x2, filter,
                 // codonyat, aa table, sort, ivar, consensus report, summary, provenance, multiqc
-                { assert workflow.trace.succeeded().size() == 21 },
+                { assert workflow.trace.succeeded().size() == 23 },
                 { assert path("${outputDir}/alignment/HVG286PL_SE.bam").exists() },
                 { assert path("${outputDir}/alignment/HVG286PL_SE.bowtie2.log").exists() },
                 { assert !path("${outputDir}/merge").exists() },
@@ -230,7 +247,7 @@ nextflow_pipeline {
                 { assert workflow.success },
                 // fastqc, fastp, bowtie2 build + align (PE), flagstat x2, filter, codonyat, aa table,
                 // summary, provenance, multiqc
-                { assert workflow.trace.succeeded().size() == 12 },
+                { assert workflow.trace.succeeded().size() == 14 },
                 { assert path("${outputDir}/alignment/HVG286PL.bowtie2.log").exists() },
                 { assert !path("${outputDir}/merge").exists() },
                 { assert !path("${outputDir}/strand").exists() },
@@ -400,6 +417,157 @@ nextflow_pipeline {
                 { assert !path("${outdir}/pipeline_info/execution_report.html").exists() },
                 { assert path("${outdir}/pipeline_info/provenance.json").exists() },
                 { assert path("${launchDir}/results/pipeline_info/execution_report.html").exists() }
+            )
+        }
+    }
+
+    test("validate_only writes reference/ JSON and skips Kraken2 and alignment") {
+
+        when {
+            params {
+                samplesheet    = "${projectDir}/assets/testdata/samplesheet.csv"
+                reference      = "${projectDir}/assets/testdata/reference.fasta"
+                amplicons      = "${projectDir}/assets/testdata/amplicons.tsv"
+                validate_only  = true
+                outdir         = "${outputDir}"
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success },
+                { assert workflow.trace.succeeded().size() == 2 },
+                { assert path("${outputDir}/reference/validation.json").json.valid == true },
+                { assert path("${outputDir}/reference/annotation_used.tsv").text.contains('2253-2549') },
+                { assert path("${outputDir}/pipeline_info/run_mode.json").json.reference_accessions == ['K03455|HIVHXB2CG'] },
+                { assert !path("${outputDir}/contamination").exists() },
+                { assert !path("${outputDir}/alignment").exists() },
+                { assert !path("${outputDir}/samples").exists() }
+            )
+        }
+    }
+
+    test("validate_only with unpaired primers writes errors JSON and exits non-zero") {
+
+        when {
+            params {
+                reference     = "${projectDir}/assets/testdata/reference.fasta"
+                primer_bed    = "${projectDir}/tests/fixtures/unpaired.bed"
+                validate_only = true
+                outdir        = "${outputDir}"
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.failed },
+                { assert path("${outputDir}/reference/validation.json").json.valid == false },
+                { assert path("${outputDir}/reference/validation.json").text.contains('BED_UNPAIRED') },
+                { assert workflow.stdout.any { line -> line.contains('BED_UNPAIRED') } },
+                { assert !path("${outputDir}/alignment").exists() }
+            )
+        }
+    }
+
+    test("custom preset auto-skips Kraken2 when FASTQ has no --kraken2_db") {
+
+        when {
+            params {
+                preset      = "custom"
+                samplesheet = "${projectDir}/tests/samplesheet_se.csv"
+                reference   = "${projectDir}/assets/testdata/reference.fasta"
+                amplicons   = "${projectDir}/assets/testdata/amplicons.tsv"
+                kraken2_db  = null
+                outdir      = "${outputDir}"
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success },
+                { assert workflow.trace.succeeded().size() == 17 },
+                { assert !path("${outputDir}/contamination").exists() },
+                { assert !path("${outputDir}/subtype").exists() },
+                { assert path("${outputDir}/pipeline_info/run_mode.json").json.kraken2_skipped == true },
+                { assert path("${outputDir}/pipeline_info/run_mode.json").json.kraken2_skip_reason == 'custom_mode_no_kraken2_db' },
+                { assert path("${outputDir}/samples/HVG286PL_SE/HVG286PL_SE.tsv").exists() }
+            )
+        }
+    }
+
+    test("unverified preset without --primer_bed fails with a clear message") {
+
+        when {
+            params {
+                preset        = "influenza-a"
+                validate_only = true
+                outdir        = "${outputDir}"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert workflow.stdout.any { line ->
+                line.contains('unverified') && line.contains('--primer_bed')
+            }
+        }
+    }
+
+    test("SARS-CoV-2 ARTIC preset on synthetic S-gene pairs") {
+
+        when {
+            params {
+                preset             = "sars-cov-2"
+                samplesheet        = "${projectDir}/assets/testdata/sarscov2/samplesheet.csv"
+                skip_contamination = true
+                skip_subtype       = true
+                outdir             = "${outputDir}"
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success },
+                { assert path("${outputDir}/reference/validation.json").json.valid == true },
+                { assert path("${outputDir}/reference/amplicons_used.tsv").readLines().size() == 100 },
+                { assert path("${outputDir}/reference/annotation_used.tsv").text.contains('266-13468;13468-21555') },
+                { assert path("${outputDir}/pipeline_info/run_mode.json").json.preset == 'sars-cov-2' },
+                { assert path("${outputDir}/pipeline_info/run_mode.json").json.reference_accessions == ['MN908947.3'] },
+                { assert path("${outputDir}/pipeline_info/run_mode.json").json.kraken2_skipped == true },
+                { assert !path("${outputDir}/contamination").exists() },
+                { assert !path("${outputDir}/subtype").exists() },
+                { assert path("${outputDir}/samples/SARS2_S/SARS2_S.tsv").exists() },
+                { assert path("${outputDir}/samples/SARS2_S/SARS2_S.xml").exists() },
+                { assert path("${outputDir}/consensus/SARS2_S.consensus.fa").exists() }
+            )
+        }
+    }
+
+    test("every samplesheet sample produces samples/<id>/<id>.tsv and .xml") {
+
+        when {
+            params {
+                samplesheet        = "${projectDir}/tests/samplesheet_two_sam.csv"
+                reference          = "${projectDir}/assets/testdata/reference.fasta"
+                amplicons          = "${projectDir}/assets/testdata/amplicons.tsv"
+                protein            = "RT"
+                skip_contamination = true
+                skip_subtype       = true
+                skip_consensus     = true
+                outdir             = "${outputDir}"
+            }
+        }
+
+        then {
+            def ids = path("${projectDir}/tests/samplesheet_two_sam.csv").readLines()
+                .drop(1).findAll { l -> l.trim() }.collect { l -> l.split(',')[0] }
+            assertAll(
+                { assert workflow.success },
+                { assert ids == ['sample1', 'sample2'] },
+                { assert ids.every { id -> path("${outputDir}/samples/${id}/${id}.tsv").exists() } },
+                { assert ids.every { id -> path("${outputDir}/samples/${id}/${id}.xml").exists() } },
+                { assert path("${outputDir}/samples/sample1/sample1.xml").text.contains('<SamContainer') },
+                { assert path("${outputDir}/samples/sample2/sample2.xml").text.contains('<SamContainer') }
             )
         }
     }

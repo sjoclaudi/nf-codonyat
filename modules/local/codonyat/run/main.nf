@@ -8,8 +8,9 @@
  *          --protein <name | A,B,C | all> --ratio-upper --ratio-lower
  *          --entropy-threshold --csv-path <prefix>.tsv --xml-path <prefix>.xml
  *
- *  codonyat >= 1.1 streams the alignments (flat memory) and counts every
- *  requested protein in one pass.
+ *  codonyat 1.2.1 streams the alignments (flat memory) and counts every
+ *  requested protein in one pass. Multi-protein XML matches 1.1.0 / v0.4.0
+ *  (<Protein name="X"> wrappers).
  *
  *  Input  : tuple val(meta), path(sam); path(reference); path(amplicons)
  *  Output : tuple val(meta), path(<prefix>.tsv), path(<prefix>.xml)
@@ -22,7 +23,7 @@ process CODONYAT_RUN {
     label 'process_low'
 
     conda "${moduleDir}/environment.yml"
-    container 'ghcr.io/sjoclaudi/nf-codonyat:0.3.0'
+    container 'ghcr.io/sjoclaudi/nf-codonyat:0.5.0'
 
     input:
     tuple val(meta), path(sam)

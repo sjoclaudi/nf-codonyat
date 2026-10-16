@@ -2,14 +2,20 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://raw.githubusercontent.com/sjoclaudi/nf-codonyat/main/nextflow_schema.json",
     "title": "sjoclaudi/nf-codonyat pipeline parameters",
-    "description": "Codon-aware amino acid variant typing of HIV-1 amplicon NGS data (FASTQ or SAM); research use only",
+    "description": "Codon-aware amino acid variant typing of viral amplicon NGS data (FASTQ or SAM); research use only",
     "type": "object",
     "$defs": {
         "input_output_options": {
             "title": "Input/output options",
             "type": "object",
-            "description": "Samplesheet, reference, amplicons and output folder.",
+            "description": "Preset, samplesheet, reference, primers, annotation and output folder.",
             "properties": {
+                "preset": {
+                    "type": "string",
+                    "default": "hiv1",
+                    "description": "Preset: hiv1 (default), sars-cov-2, influenza-a, rsv, hbv, hcv, or custom.",
+                    "enum": ["hiv1", "sars-cov-2", "influenza-a", "rsv", "hbv", "hcv", "custom"]
+                },
                 "samplesheet": {
                     "type": "string",
                     "format": "file-path",
@@ -20,13 +26,29 @@
                     "type": "string",
                     "format": "file-path",
                     "exists": true,
-                    "description": "Annotated reference FASTA; the header lists proteins, e.g. 'PR(Protease):2253-2549;RT(Reverse Transcriptase):2550-3869'."
+                    "description": "Reference FASTA; can be annotated in header or via --annotation. Required when preset=custom."
+                },
+                "primer_bed": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "description": "6-column primer BED: chrom,start,end,name,pool,strand. Name must be <amplicon>_LEFT or <amplicon>_RIGHT. Required for custom preset without --amplicons."
                 },
                 "amplicons": {
                     "type": "string",
                     "format": "file-path",
                     "exists": true,
-                    "description": "Amplicons TSV: label,protein,reference,5p_seq,3p_seq,start,end."
+                    "description": "Amplicons TSV: label,protein,reference,5p_seq,3p_seq,start,end. Mutually exclusive with --primer-bed. For backward compatibility only."
+                },
+                "annotation": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "description": "Annotation: GFF3 (CDS features) or BED (4 columns: chrom,start,end,name). If null, FASTA header annotation is used."
+                },
+                "validate_only": {
+                    "type": "boolean",
+                    "description": "Validate inputs only (reference, primers, annotation). No Kraken2/alignment. Writes reference/validation.json and exits non-zero when valid is false. Fast (seconds)."
                 },
                 "outdir": {
                     "type": "string",
@@ -53,9 +75,6 @@
                 }
             },
             "required": [
-                "samplesheet",
-                "reference",
-                "amplicons",
                 "outdir"
             ]
         },
@@ -132,6 +151,14 @@
             "type": "object",
             "description": "Report only; no reads are removed.",
             "properties": {
+                "target_taxid": {
+                    "type": "integer",
+                    "description": "Kraken2 target clade taxid (null → preset value; 11676 for hiv1)."
+                },
+                "target_label": {
+                    "type": "string",
+                    "description": "Target label for display (null → preset value; HIV1 for hiv1)."
+                },
                 "kraken2_db": {
                     "type": "string",
                     "format": "directory-path",
@@ -150,10 +177,16 @@
                     "type": "boolean",
                     "description": "Kraken2 --memory-mapping (database not loaded into RAM)."
                 },
+                "contamination_warn_target_pct": {
+                    "type": "number",
+                    "default": 50.0,
+                    "description": "Warn when target is below this % of classified fragments."
+                },
                 "contamination_warn_hiv_pct": {
                     "type": "number",
                     "default": 50.0,
-                    "description": "Warn when HIV-1 is below this % of classified fragments."
+                    "description": "Deprecated alias for contamination_warn_target_pct (v0.4.0 compatibility).",
+                    "hidden": true
                 },
                 "contamination_warn_human_pct": {
                     "type": "number",
@@ -170,8 +203,7 @@
                 "subtype_panel": {
                     "type": "string",
                     "format": "directory-path",
-                    "description": "Panel folder with <bin>.fa per bin and panel.tsv (default: assets/presets/hiv1_subtype_panel_v1, bins A, B, M).",
-                    "default": "/workspace/assets/presets/hiv1_subtype_panel_v1"
+                    "description": "Panel folder with <bin>.fa per bin and panel.tsv. Null for presets except hiv1 (which uses bundled panel)."
                 },
                 "skip_subtype": {
                     "type": "boolean",

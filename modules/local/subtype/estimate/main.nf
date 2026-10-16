@@ -7,7 +7,7 @@ process SUBTYPE_ESTIMATE {
     label 'process_single'
 
     conda "${moduleDir}/../../codonyat/run/environment.yml"
-    container 'ghcr.io/sjoclaudi/nf-codonyat:0.3.0'
+    container 'ghcr.io/sjoclaudi/nf-codonyat:0.5.0'
 
     input:
     tuple val(meta), path(stats)

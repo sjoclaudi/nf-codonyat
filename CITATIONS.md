@@ -4,7 +4,7 @@
 
 If you use nf-codonyat for your analysis, please cite it as follows:
 
-> **nf-codonyat: A Nextflow pipeline for codon-aware amino acid variant typing of HIV-1 amplicon NGS data**
+> **nf-codonyat: A Nextflow pipeline for codon-aware amino acid variant typing of viral amplicon NGS data**
 >
 > Marc Noguera Julian.
 >
@@ -49,6 +49,10 @@ If you use nf-codonyat for your analysis, please cite it as follows:
 - [iVar](https://pubmed.ncbi.nlm.nih.gov/30621750/)
 
   > Grubaugh ND, Gangavarapu K, Quick J, Matteson NL, De Jesus JG, Main BJ, Tan AL, Paul LM, Brackney DE, Grewal S, Gurfield N, Van Rompay KKA, Isern S, Michael SF, Coffey LL, Loman NJ, Andersen KG. An amplicon-based sequencing framework for accurately measuring intrahost virus diversity using PrimalSeq and iVar. Genome Biol. 2019 Jan 8;20(1):8. doi: 10.1186/s13059-018-1618-7. PubMed PMID: 30621750.
+
+- [ARTIC Network primer schemes](https://github.com/artic-network/primer-schemes) (SARS-CoV-2 V4.1; CC BY 4.0)
+
+  > ARTIC Network. nCoV-2019 / SARS-CoV-2 sequencing primers and protocol. https://github.com/artic-network/primer-schemes (V4.1).
 
 - [MultiQC](https://pubmed.ncbi.nlm.nih.gov/27312411/)
 

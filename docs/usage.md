@@ -6,17 +6,67 @@
 ## Command Line
 
 ```bash
-nextflow run sjoclaudi/nf-codonyat [options]
+# HIV-1 (default preset)
+nextflow run sjoclaudi/nf-codonyat \
+    --input samples.csv \
+    --kraken2_db /path/to/k2_standard_08 \
+    --outdir results
+
+# Custom virus with primer BED
+nextflow run sjoclaudi/nf-codonyat \
+    --preset custom \
+    --input samples.csv \
+    --reference ref.fasta \
+    --primer_bed primers.bed \
+    --annotation genes.gff3 \
+    --target_taxid 2697049 \
+    --target_label "SARS-CoV-2" \
+    --outdir results
+
+# Validate inputs only (no Kraken2, no alignment; non-zero exit when invalid)
+nextflow run sjoclaudi/nf-codonyat \
+    --preset custom \
+    --reference ref.fasta \
+    --primer_bed primers.bed \
+    --annotation genes.gff3 \
+    --validate_only \
+    --outdir validation
 ```
 
 ## Required Parameters
 
 | Flag | Description |
 |------|-------------|
-| `--samplesheet` | Path to samplesheet CSV |
-| `--reference` | Path to annotated reference FASTA |
-| `--amplicons` | Path to amplicon definitions TSV |
-| `--kraken2_db` | Kraken2 database folder; required when the samplesheet has FASTQ samples, unless `--skip_contamination` |
+| `--input` (or `--samplesheet`) | Path to samplesheet CSV (not required with `--validate_only`) |
+| `--preset` | Preset: `hiv1` (default), `sars-cov-2`, `influenza-a`, `rsv`, `hbv`, `hcv`, or `custom` |
+
+**For custom preset:**
+| Flag | Description |
+|------|-------------|
+| `--reference` | Path to reference FASTA (can be multi-record for segmented viruses) |
+| `--primer_bed` or `--amplicons` | Either 6-column primer BED (preferred) or 7-column amplicons TSV |
+| `--annotation` | Optional: GFF3 (CDS) or BED (4 columns). If not provided, FASTA header annotation is used |
+| `--target-taxid` | Optional: Kraken2 target taxid for contamination tracking |
+| `--target-label` | Optional: Display label for target (default: "TARGET") |
+
+## Presets
+
+| Preset | Reference | Primers | Subtype panel | Notes |
+|--------|-----------|---------|---------------|-------|
+| `hiv1` (default) | HXB2 `K03455\|HIVHXB2CG` | bundled 7-column amplicons TSV (OQ-10) | bundled A/B/M pol panel | HIV-1 tables match v0.4.0 plus appended `TARGET_*` |
+| `sars-cov-2` | MN908947.3 | ARTIC nCoV-2019 **V4.1** 6-column BED (CC BY 4.0) | none (auto-skipped) | Cite ARTIC if you use this preset |
+| `influenza-a` | PR8, 8 segments | **unverified** — supply `--primer_bed` | none | Primers are not bundled and are not invented |
+| `rsv` | NC_001781.1 | **unverified** — supply `--primer_bed` | none | |
+| `hbv` | NC_003977.2 (origin-crossing P/L) | **unverified** — supply `--primer_bed` | none | |
+| `hcv` | NC_004102.1 | **unverified** — supply `--primer_bed` | none | |
+| `custom` | `--reference` required | `--primer_bed` or `--amplicons` | optional | Kraken2 auto-skipped if no DB or `--target_taxid` |
+
+See each preset's `assets/presets/<name>/SOURCES.md`.
+
+**For FASTQ samples:**
+| Flag | Description |
+|------|-------------|
+| `--kraken2_db` | Kraken2 database folder; required unless `--skip_contamination` |
 
 ## Analysis Parameters
 
@@ -50,14 +100,20 @@ branch is not needed (with `--protein RT` the codon table is identical to v0.2.0
 
 | Flag | Default | Description |
 |------|---------|-------------|
+| `--target_taxid` | preset | Kraken2 target clade taxid (11676 for hiv1) |
+| `--target_label` | preset | Display label for target (HIV1 for hiv1) |
 | `--kraken2_db` | — | Kraken2 database folder (`hash.k2d`, `opts.k2d`, `taxo.k2d`), e.g. Standard-8 |
 | `--skip_contamination` | `false` | Skip the report |
 | `--kraken2_confidence` | `0.0` | Kraken2 `--confidence` |
 | `--kraken2_memory_mapping` | `false` | Kraken2 `--memory-mapping` (database read from disk instead of RAM) |
-| `--contamination_warn_hiv_pct` | `50` | Warning when HIV-1 is below this % of classified fragments |
+| `--contamination_warn_target_pct` | `50` | Warning when target is below this % of classified fragments |
 | `--contamination_warn_human_pct` | `50` | Warning when human reads exceed this % of all fragments |
 
-The report runs on the trimmed reads and never removes reads or stops a sample.
+The report runs on the trimmed reads and never removes reads or stops a sample. In custom mode without
+`--kraken2_db` or `--target-taxid`, contamination is auto-skipped (no error).
+
+**Deprecated:** `--contamination_warn_hiv_pct` is accepted as an alias for `--contamination_warn_target_pct`
+for backward compatibility.
 
 Getting Standard-8 (about 5.5 GB download, about 8 GB RAM to run):
 
@@ -72,7 +128,7 @@ Newer releases are listed at https://benlangmead.github.io/aws-indexes/k2.
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--subtype_panel` | `assets/presets/hiv1_subtype_panel_v1` | Panel folder: one `<bin>.fa` per bin and `panel.tsv` (first column = bin; the first bin listed is BBSplit's primary reference) |
+| `--subtype_panel` | hiv1 only | Panel folder: one `<bin>.fa` per bin and `panel.tsv`. Only hiv1 preset includes a bundled panel. |
 | `--skip_subtype` | `false` | Skip the estimate |
 | `--subtype_min_reads` | `100` | Fewer reads assigned to the panel → `undetermined` |
 | `--subtype_min_margin` | `10` | Margin (% points) between the top two bins below which the call is flagged `ambiguous_or_possible_recombinant` |
@@ -80,6 +136,8 @@ Newer releases are listed at https://benlangmead.github.io/aws-indexes/k2.
 BBSplit maps the trimmed reads competitively to all panel references (`ambiguous2=toss`: reads that fit two
 bins equally well are counted as ambiguous, not assigned). The estimate is the % of unambiguously assigned
 reads per bin. It is a read-mapping based estimate for research use, not a genotyping result.
+
+Subtype is auto-skipped when no panel is provided (all presets except hiv1).
 
 ## Consensus (iVar)
 
@@ -119,12 +177,39 @@ new folder, but the reports stay in the earlier `pipeline_info` folder (the prof
 
 Use `-profile` to select an execution environment:
 
-- `docker` — Docker: `ghcr.io/sjoclaudi/nf-codonyat:0.3.0` for codonyat and the helper scripts, BioContainers images for the nf-core modules (recommended)
+- `docker` — Docker: `ghcr.io/sjoclaudi/nf-codonyat:0.5.0` for codonyat and the helper scripts, BioContainers images for the nf-core modules (recommended)
 - `singularity` — Singularity/Apptainer, same images
 - `conda` — Conda environments (`modules/local/codonyat/run/environment.yml` and each nf-core module's own)
 - `mamba` — same environment, created with mamba
-- `test` — bundled test dataset: two synthetic SAM samples, one real FASTQ pair and a tiny Kraken2 database (combine with one of the above, e.g. `-profile test,docker`)
+- `test` — bundled HIV-1 test dataset: two synthetic SAM samples, one real FASTQ pair and a tiny Kraken2 database (combine with one of the above, e.g. `-profile test,docker`)
+- `test_sarscov2` — synthetic MN908947.3 S-gene pairs with the ARTIC v4.1 BED (`--skip_contamination` / `--skip_subtype`)
 - `standard` — local execution; `codonyat-runner` must already be on your `PATH`
+
+## `--validate_only`
+
+Runs `PREPARE_REFERENCE` (always exits 0 so artefacts publish) then `CHECK_VALIDATION` (exits 1 when `valid` is false). There is no Kraken2, alignment, or typing. On success or failure the run writes `reference/validation.json`; on a parseable FASTA it also writes `reference/annotation_used.tsv`, `reference/amplicons_used.tsv`, `reference/reference_used.fasta` and `pipeline_info/run_mode.json`.
+
+Each issue in `validation.json` has `code`, `file`, `line` (nullable) and `message`. Codes include:
+
+`REF_EMPTY`, `REF_TOO_LARGE` (total > 100 kb), `REF_READ_ERROR`, `BED_COLUMNS`, `BED_STRAND`, `BED_EMPTY`, `BED_OUT_OF_RANGE`, `CHROM_MISMATCH`, `BED_NAMING`, `BED_UNPAIRED`, `BED_CHROM_MISMATCH`, `BED_ORDER`, `BED_READ_ERROR`, `AMP_COLUMNS`, `AMP_READ_ERROR`, `AMP_XOR_BED`, `AMP_OR_BED`, `ANNOTATION_FORMAT`, `CDS_UNSUPPORTED` (minus strand, including a FASTA-header interval with start > end), `CDS_INVALID_NAME`, `CDS_OUT_OF_RANGE`, `CDS_NOT_MULTIPLE_OF_3`, `AMPLICON_NO_CDS`, `SAMPLESHEET`, `PROTEIN_UNKNOWN`. Warning: `NO_ANNOTATION`. `AMPLICON_NO_CDS` is not reported when a CDS_* error is already present.
+
+## Small machines (< 16 GB RAM)
+
+`conf/base.config` does not cap memory. On a laptop or VM with under 16 GB, set `process.resourceLimits`
+so Kraken2 (10 GB) and BBMap (4 GB) cannot oversubscribe the host:
+
+```groovy
+process {
+    resourceLimits = [
+        cpus: 4,
+        memory: 8.GB,
+        time: 12.h
+    ]
+}
+```
+
+Save that as e.g. `conf/small.config` and run with `-c conf/small.config`. Use `--kraken2_memory_mapping`
+or `--skip_contamination` when Standard-8 will not fit in RAM.
 
 ## Samplesheet
 
