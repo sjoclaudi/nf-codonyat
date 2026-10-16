@@ -1,7 +1,7 @@
 # nf-codonyat — Output Description
 
-> Research use only. All tables are descriptive (counts, frequencies, coverage, QC). None of them
-> contains drug-resistance or clinical interpretation.
+> Research use only. The pipeline characterises viral genetic diversity (codon and amino-acid
+> variant frequencies). All tables are descriptive (counts, frequencies, coverage, QC).
 
 ## Directory Structure
 
@@ -117,8 +117,8 @@ v0.2.0 (below). With several proteins each protein's positions sit inside a `<Pr
 ## Opt-in stats (`samples/{sample}/{sample}.stats.tsv`)
 
 Published only with `--emit_stats`. Written by codonyat 1.3.0 (`--stats`). Research use only:
-Wilson 95% CI, strand-bias p-value, flags and diversity indices. No drug-resistance or clinical
-annotation. Default TSV/XML are unchanged whether this flag is on or off.
+Wilson 95% CI, strand-bias p-value, flags and diversity indices. Default TSV/XML are unchanged
+whether this flag is on or off.
 
 | Column | Description |
 |--------|-------------|
@@ -142,7 +142,7 @@ unchanged whether this flag is on or off.
 ## Amino-acid table (`variants/{sample}.aa_variants.tsv`)
 
 One row per protein position and observed amino acid. Codon frequencies that translate to the same amino
-acid are summed. No drug, resistance or clinical annotation.
+acid are summed.
 
 | Column | Description |
 |--------|-------------|

@@ -7,10 +7,11 @@
 
 ### Changed
 - Updated to codonyat **1.3.0** (opt-in Wilson CI / strand-bias / diversity stats and AAVF v1.0; default TSV/XML identical to 1.2.1)
+- Docs and README: research-use-only wording for characterising viral genetic diversity (codon and amino-acid variant frequencies)
 
 ### Notes
 - Default outputs are unchanged when the new flags are off
-- Research use only — no drug-resistance or clinical interpretation
+- Research use only — characterising viral genetic diversity (codon and amino-acid variant frequencies)
 
 ## [0.5.0] - 2026-10-16
 
