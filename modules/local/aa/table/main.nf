@@ -8,7 +8,7 @@ process CODON_TO_AA {
     label 'process_single'
 
     conda "${moduleDir}/../../codonyat/run/environment.yml"
-    container 'ghcr.io/sjoclaudi/nf-codonyat:0.5.0'
+    container 'ghcr.io/sjoclaudi/nf-codonyat:0.6.0-dev'
 
     input:
     tuple val(meta), path(codon_tsv), path(strand_tsv)
