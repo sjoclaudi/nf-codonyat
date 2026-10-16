@@ -7,7 +7,7 @@ TODO: affiliations
 
 **Keywords:** viral genomics, codon-aware variant calling, Nextflow, amplicon sequencing, HIV-1, intra-host diversity, research software
 
-> **Intended use.** nf-codonyat is research software for HIV-1 only. Its outputs (QC, contamination report, subtype estimate, consensus and codon/amino-acid frequency tables) are descriptive. It does not perform drug-resistance interpretation and is not intended for diagnostic or patient-care use.
+> **Intended use.** nf-codonyat is research software for characterising viral genetic diversity (codon and amino-acid variant frequencies) in HIV-1. Its outputs (QC, contamination report, subtype estimate, consensus and codon/amino-acid frequency tables) are descriptive and for research use only.
 >
 > **Draft status.** Items marked **TODO** need information that is not in the repository or in the test runs
 > described here (author list, affiliations, benchmarks, data provenance, some citations). All numbers in
@@ -216,14 +216,14 @@ The default strand-ratio window of 0.316–3.162 (10-fold asymmetry) mirrors the
 
 **Limitations and future options.**
 - **Primer clipping** is not performed. Bases under primer-binding sites reflect the primer rather than the template, so variants in primer regions should be interpreted with care. Primer clipping (for example with `ivar trim` or `samtools ampliconclip` and a primer BED file) is a future option.
-- **Variant effect prediction and interpretation** beyond codon translation are out of scope. nf-codonyat does not perform drug-resistance interpretation (for example Stanford HIVdb) and gives no clinical output.
+- **Variant effect prediction and interpretation** beyond codon translation are out of scope. Outputs are descriptive codon and amino-acid frequency tables for research use only.
 - **Haplotype reconstruction** is out of scope. A consensus sequence is produced with iVar (Grubaugh et al., 2019) at a 50% frequency threshold and 100x minimum depth (`--consensus_threshold`, `--consensus_min_depth`); it is a descriptive output only.
 - Only one protein is analysed per run (`--protein`).
 - Only the local executor and the docker and conda profiles have been tested.
 
 ## 5. Conclusion
 
-nf-codonyat brings the codon-aware variant typing of the codonyat Python package into a Nextflow pipeline that accepts raw FASTQ reads or SAM alignments. It applies a common alignment filter, produces per-sample and combined codon tables with a MultiQC report, and is tested with nf-test under Docker and Conda. It is freely available under the MIT licence.
+nf-codonyat brings the codon-aware variant typing of the codonyat Python package into a Nextflow pipeline that accepts raw FASTQ reads or SAM alignments. It applies a common alignment filter, produces per-sample and combined codon tables with a MultiQC report, and is tested with nf-test under Docker and Conda. It is research software for characterising viral genetic diversity (codon and amino-acid variant frequencies) and is freely available under the MIT licence.
 
 Future development may include primer clipping, multi-protein analysis per run, and validation on larger datasets (TODO).
 
