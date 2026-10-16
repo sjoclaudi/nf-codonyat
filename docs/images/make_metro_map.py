@@ -154,7 +154,7 @@ add(f'<rect x="{lx + 1260}" y="{ly - 7}" width="16" height="26" rx="4" fill="#22
 text(lx + 1286, ly + 11, "input", 14, "start")
 text(lx, ly + 42, "SE reads, or --merge_pairs false: BBMerge and samtools merge are skipped and reads go straight to Bowtie2. "
      "SAM samples skip every FASTQ-only step.", 13, "start", fill="#444")
-text(W - 20, H - 18, "nf-codonyat · research use only; no clinical or drug-resistance interpretation · github.com/sjoclaudi/nf-codonyat",
+text(W - 20, H - 18, "nf-codonyat · research use only · characterising viral genetic diversity · github.com/sjoclaudi/nf-codonyat",
      12.5, "end", fill="#777")
 add("</svg>")
 open(sys.argv[1], "w").write("\n".join(out) + "\n")

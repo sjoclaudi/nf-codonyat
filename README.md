@@ -4,9 +4,9 @@
 
 Wraps the [`codonyat`](https://github.com/mnoguera/codonyat) Python package in a Nextflow pipeline for viral amplicon NGS analysis.
 
-> **Research use only.** The outputs are descriptive: QC, a contamination report, a read-mapping based
-> subtype estimate (bundled for HIV-1), a consensus sequence, and codon and amino-acid frequency tables. The pipeline does
-> no drug-resistance or clinical interpretation and is not a diagnostic tool.
+> **Research use only.** The pipeline characterises viral genetic diversity (codon and amino-acid variant
+> frequencies). The outputs are descriptive: QC, a contamination report, a read-mapping based subtype
+> estimate (bundled for HIV-1), a consensus sequence, and codon and amino-acid frequency tables.
 
 **What's new in v0.5.0:**
 - Multi-virus preset system (hiv1, sars-cov-2, influenza-a, rsv, hbv, hcv, custom)

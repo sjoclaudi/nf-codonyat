@@ -2,22 +2,24 @@ nf-codonyat: a Nextflow pipeline for codon-aware amino acid variant typing from 
 =========================================================================================================
 
 :Authors:
-    Marc Noguera Julian\ :sup:`*` — TODO: complete author list and order
+    Marc Noguera-Julian, PhD\ :sup:`*` — TODO: complete author list and order
     :sup:`*` Corresponding author — TODO: corresponding author e-mail
 :Affiliations:
     TODO: affiliations
 :Type: Software Article
 :Abstract:
 
-    **Background.** Viral deep sequencing enables detection of low-frequency drug-resistance mutations, but most tools operate at the nucleotide level without translating reads into amino acid consequences. We present nf-codonyat, a Nextflow pipeline that wraps the codonyat Python package to perform codon-aware variant typing on viral amplicon NGS data, starting either from raw FASTQ reads or from existing SAM alignments.
+    **Background.** Viral deep sequencing allows low-frequency variants within HIV-1 populations to be characterised, but most tools operate at the nucleotide level without translating reads into amino acid consequences. We present nf-codonyat, a Nextflow pipeline that wraps the codonyat Python package to perform codon-aware variant typing on HIV-1 amplicon NGS data for research use, starting either from raw FASTQ reads or from existing SAM alignments.
 
-    **Results.** nf-codonyat takes a samplesheet that lists, per sample, either FASTQ files or a SAM file, together with an annotated reference FASTA and an amplicon definitions table. FASTQ samples are quality-checked with FastQC, trimmed with fastp and aligned with bowtie2; all samples are then filtered on mapping quality and alignment flags with samtools before codonyat produces per-codon variant frequency tables and strand-specific coverage diagnostics. A combined summary table and a MultiQC report are produced for each run. Read-processing steps use nf-core modules; codonyat runs from a pinned conda environment or a container image. The pipeline passes ``nextflow lint`` under Nextflow 26.04 and is tested with nf-test and GitHub Actions under Docker and Conda.
+    **Results.** nf-codonyat takes a samplesheet that lists, per sample, either FASTQ files or a SAM file, together with an annotated reference FASTA and an amplicon definitions table. FASTQ samples are quality-checked with FastQC and trimmed with fastp; a Kraken2 contamination report and a read-mapping subtype estimate (BBSplit against an A/B/M reference panel) are produced as descriptive reports; paired reads are merged with BBMerge and aligned in a single Bowtie2 pass, with an unmerged paired-end branch kept for strand metrics; all samples are then filtered on mapping quality and alignment flags with samtools before codonyat produces per-codon and per-amino-acid frequency tables and strand-specific coverage metrics, and iVar builds a consensus sequence (50% frequency threshold, 100x minimum depth). A combined summary table and a MultiQC report are produced for each run. Read-processing steps use nf-core modules; codonyat runs from a pinned conda environment or a container image. The pipeline passes ``nextflow lint`` under Nextflow 26.04 and is tested with nf-test and GitHub Actions under Docker and Conda.
 
     **Availability.** nf-codonyat is open-source (MIT) at https://github.com/sjoclaudi/nf-codonyat. The codonyat Python package is available at https://github.com/mnoguera/codonyat and on PyPI.
 
-    **Keywords:** viral genomics, codon-aware variant calling, Nextflow, amplicon sequencing, HIV drug resistance
+    **Keywords:** viral genomics, codon-aware variant calling, Nextflow, amplicon sequencing, HIV-1, intra-host diversity, research software
 
 .. note::
+
+   **Intended use.** nf-codonyat is research software for characterising viral genetic diversity (codon and amino-acid variant frequencies) in HIV-1. Its outputs (QC, contamination report, subtype estimate, consensus and codon/amino-acid frequency tables) are descriptive and for research use only.
 
    **Draft status.** Items marked **TODO** need information that is not in the repository or in the test runs described here (author list, affiliations, benchmarks, data provenance, some citations). All numbers in Section 3 come from the bundled test data and the commands listed there.
 
@@ -26,7 +28,7 @@ nf-codonyat: a Nextflow pipeline for codon-aware amino acid variant typing from 
 1. Introduction
 ---------------
 
-Viral populations within a host are highly heterogeneous, often comprising multiple quasispecies at low frequency [TODO: citation]. Detecting these low-frequency variants is important for characterising drug-resistance mutations, immune escape and transmission in viruses such as HIV-1, HCV and SARS-CoV-2 [TODO: citation]. Amplicon sequencing protocols for HIV generate large numbers of short reads that are mapped to a reference genome, producing SAM/BAM alignment files as the primary bioinformatic artefact.
+Viral populations within a host are highly heterogeneous, often comprising multiple quasispecies at low frequency [TODO: citation]. Describing these low-frequency variants is of research interest for studying intra-host evolution and population diversity in viruses such as HIV-1 [TODO: citation]. nf-codonyat targets HIV-1 only. Amplicon sequencing protocols for HIV generate large numbers of short reads that are mapped to a reference genome, producing SAM/BAM alignment files as the primary bioinformatic artefact.
 
 Existing variant-calling tools fall into two broad categories: nucleotide-level callers (e.g. LoFreq, VarScan 2, iVar) that report allele frequencies without codon translation, and protein-level tools that require pre-translated inputs [TODO: citations for LoFreq, VarScan 2, iVar]. Neither category natively reconstructs, read by read, the codon present at each protein position from CIGAR-described alignments while keeping forward- and reverse-strand coverage separate.
 
@@ -47,9 +49,9 @@ nf-codonyat requires three input files.
 ::
 
    sample,fastq_1,fastq_2,sam
-   patientA,patientA_R1.fastq.gz,patientA_R2.fastq.gz,
-   patientB,patientB.fastq.gz,,
-   patientC,,,/data/aligned/patientC.sam
+   sampleA,sampleA_R1.fastq.gz,sampleA_R2.fastq.gz,
+   sampleB,sampleB.fastq.gz,,
+   sampleC,,,/data/aligned/sampleC.sam
 
 Relative paths are resolved against the folder that contains the samplesheet. The original two-column ``sample,sam`` format is still accepted.
 
@@ -90,7 +92,9 @@ Each row gives an amplicon label, the protein it targets, the reference name, th
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 -  **FastQC** (Andrews, 2010) runs on the raw reads only. The trimmed reads are covered by fastp's own before/after report.
--  **fastp** (Chen et al., 2018) trims and filters reads with ``--qualified_quality_phred 20 --unqualified_percent_limit 40 --length_required 50 --cut_tail --cut_tail_mean_quality 20``; ``--detect_adapter_for_pe`` is added for paired-end data. Read pairs are **not merged**, because codonyat counts forward- and reverse-strand coverage separately.
+-  **fastp** (Chen et al., 2018) trims and filters reads with ``--qualified_quality_phred 20 --unqualified_percent_limit 40 --length_required 50 --cut_tail --cut_tail_mean_quality 20``; ``--detect_adapter_for_pe`` is added for paired-end data. For paired-end data, pairs are merged with BBMerge (Bushnell et al., 2017; TODO: confirm citation) and merged and unmerged reads are aligned in a single Bowtie2 pass; because codonyat counts forward- and reverse-strand coverage separately, an unmerged paired-end branch (all trimmed pairs) is also aligned and used for the strand metrics (``--merge_pairs``, ``--strand_metrics_unmerged``).
+-  **Kraken2** (Wood et al., 2019) produces a contamination report on the trimmed reads; no reads are removed (``--kraken2_db``, ``--skip_contamination``).
+-  **BBSplit** assigns reads to an HIV-1 A/B/M reference panel and reports the percentage of reads mapped to each bin as a descriptive subtype estimate (``--subtype_panel``, ``--subtype_min_reads``, ``--subtype_min_margin``). TODO: wording of how this estimate is interpreted is pending author confirmation.
 -  **bowtie2** (Langmead & Salzberg, 2012) builds an index from the reference FASTA and aligns the trimmed reads with ``--very-sensitive-local``. The alignments are written as a coordinate-sorted BAM file.
 
 All tool arguments can be changed through pipeline parameters (``--fastp_args``, ``--bowtie2_args``). No duplicate-removal step is included. In amplicon data, reads from the same amplicon share start positions, so position-based deduplication would discard genuine coverage.
@@ -179,13 +183,13 @@ GitHub Actions runs ``nextflow lint .`` and then, for both the ``docker`` and ``
 
 The two SAM test samples are generated by ``assets/testdata/make_testdata.py`` from HXB2 (GenBank K03455). They contain exact copies of two RT amplicon regions (HXB2 2550–2789 and 2997–3149), with known mutations spiked in.
 
--  **sample1** carries M41L, K65R and M184V with balanced strands.
+-  **sample1** carries the spiked-in RT substitutions M41L, K65R and M184V with balanced strands. These positions were chosen only as test targets; the pipeline does not annotate or interpret them.
 -  **sample2** is wild type, plus a forward-strand-only K65R artefact and a read with a deletion of codon 69.
 
 The pipeline reports these frequencies:
 
 ======= ================== ============= ======= ============
-Sample  Mutation           HXB2 position Codon   FREQ (%)
+Sample  Substitution       HXB2 position Codon   FREQ (%)
 ======= ================== ============= ======= ============
 sample1 M41L               2670          CTG     24.528
 sample1 K65R               2742          AGA     9.434
@@ -238,12 +242,12 @@ The FASTQ path uses widely used tools (FastQC, fastp, bowtie2, samtools, MultiQC
 
 The default strand-ratio window of 0.316–3.162 (10-fold asymmetry) mirrors the defaults of the earlier Perl implementation that codonyat replaces. Users working with other viral systems may need to adjust these thresholds; nf-codonyat exposes them as parameters. In codonyat 1.0.1 the ratio and entropy thresholds are computed but do not filter the reported rows (Section 2.6).
 
-**Limitations and future options.** - **Primer clipping** is not performed. Bases under primer-binding sites reflect the primer rather than the template, so variants in primer regions should be interpreted with care. Primer clipping (for example with ``ivar trim`` or ``samtools ampliconclip`` and a primer BED file) is a future option. - **Variant effect prediction** beyond codon translation is out of scope. - **Consensus or haplotype reconstruction** is out of scope. - Only one protein is analysed per run (``--protein``). - Only the local executor and the docker and conda profiles have been tested.
+**Limitations and future options.** - **Primer clipping** is not performed. Bases under primer-binding sites reflect the primer rather than the template, so variants in primer regions should be interpreted with care. Primer clipping (for example with ``ivar trim`` or ``samtools ampliconclip`` and a primer BED file) is a future option. - **Variant effect prediction and interpretation** beyond codon translation are out of scope. Outputs are descriptive codon and amino-acid frequency tables for research use only. - **Haplotype reconstruction** is out of scope. A consensus sequence is produced with iVar (Grubaugh et al., 2019) at a 50% frequency threshold and 100x minimum depth (``--consensus_threshold``, ``--consensus_min_depth``); it is a descriptive output only. - Only one protein is analysed per run (``--protein``). - Only the local executor and the docker and conda profiles have been tested.
 
 5. Conclusion
 -------------
 
-nf-codonyat brings the codon-aware variant typing of the codonyat Python package into a Nextflow pipeline that accepts raw FASTQ reads or SAM alignments. It applies a common alignment filter, produces per-sample and combined codon tables with a MultiQC report, and is tested with nf-test under Docker and Conda. It is freely available under the MIT licence.
+nf-codonyat brings the codon-aware variant typing of the codonyat Python package into a Nextflow pipeline that accepts raw FASTQ reads or SAM alignments. It applies a common alignment filter, produces per-sample and combined codon tables with a MultiQC report, and is tested with nf-test under Docker and Conda. It is research software for characterising viral genetic diversity (codon and amino-acid variant frequencies) and is freely available under the MIT licence.
 
 Future development may include primer clipping, multi-protein analysis per run, and validation on larger datasets (TODO).
 

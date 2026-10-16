@@ -8,6 +8,7 @@
 
 ### Changed
 - Updated to codonyat **1.3.1** (read names ending in `_<digits>` are not collapsed unless `--collapsed-read-counts`; nf-codonyat does not pass that flag. Junction codons in multi-part proteins are kept; protein names match exactly. Opt-in Wilson CI / strand-bias / diversity stats and AAVF v1.0 from 1.3.0; default TSV/XML identical to 1.3.0 on uncollapsed names)
+- Docs and README: research-use-only wording for characterising viral genetic diversity (codon and amino-acid variant frequencies)
 - **`-profile test_sarscov2`**: custom mode with unannotated MN908947.3, ARTIC v4.1 BED and GFF3 CDS (synthetic amplicon pairs; `--skip_contamination`)
 - **`AMPLICON_NO_CDS`** is a warning, not an error, so a primer scheme may include amplicons that do not overlap an annotated CDS
 - Contamination **`OTHER_VIRAL_PCT`** is viruses minus the target clade minus phiX (not minus HIV-1). `HIV1_*` columns are unchanged
@@ -18,7 +19,7 @@
 
 ### Notes
 - Default outputs are unchanged when the new flags are off
-- Research use only — no drug-resistance or clinical interpretation
+- Research use only — characterising viral genetic diversity (codon and amino-acid variant frequencies)
 
 ## [0.5.0] - 2026-10-16
 
