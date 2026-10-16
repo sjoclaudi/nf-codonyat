@@ -76,6 +76,8 @@ See each preset's `assets/presets/<name>/SOURCES.md`.
 | `--ratio_upper` | `3.162` | Upper strand ratio threshold |
 | `--ratio_lower` | `0.316` | Lower strand ratio threshold |
 | `--entropy_threshold` | `0.0` | Minimum Shannon entropy per position |
+| `--emit_stats` | `false` | Publish `samples/<id>/<id>.stats.tsv` via `codonyat-runner --stats` (Wilson CI, strand-bias, diversity). Research use only. Off by default so TSV/XML stay unchanged. |
+| `--emit_aavf` | `false` | Publish `samples/<id>/<id>.aavf` via `codonyat-runner --aavf` (AAVF v1.0). Research use only; no drug-resistance or clinical annotation. Off by default so TSV/XML stay unchanged. |
 
 ## Read Processing and Filtering Parameters
 

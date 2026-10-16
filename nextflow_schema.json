@@ -102,6 +102,16 @@
                     "type": "number",
                     "default": 0.0,
                     "description": "Minimum Shannon entropy per position."
+                },
+                "emit_stats": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Publish samples/<id>/<id>.stats.tsv (Wilson CI, strand-bias, diversity). Passes --stats to codonyat-runner. Off by default so TSV/XML stay unchanged. Research use only."
+                },
+                "emit_aavf": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Publish samples/<id>/<id>.aavf (AAVF v1.0). Passes --aavf to codonyat-runner. Off by default so TSV/XML stay unchanged. Research use only; no drug-resistance or clinical annotation."
                 }
             }
         },

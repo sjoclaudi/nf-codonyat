@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.6.0-dev] - unreleased
+
+### Added
+- **Opt-in research outputs**: `--emit_stats` and `--emit_aavf` (default `false`) pass `--stats` / `--aavf` to `codonyat-runner` and publish `samples/<id>/<id>.stats.tsv` and `samples/<id>/<id>.aavf`. Off by default so existing codon TSV/XML stay unchanged.
+
+### Changed
+- Updated to codonyat **1.3.0** (opt-in Wilson CI / strand-bias / diversity stats and AAVF v1.0; default TSV/XML identical to 1.2.1)
+
+### Notes
+- Default outputs are unchanged when the new flags are off
+- Research use only — no drug-resistance or clinical interpretation
+
 ## [0.5.0] - 2026-10-16
 
 ### Added

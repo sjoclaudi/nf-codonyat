@@ -162,6 +162,8 @@ or split between bins (flagged when the margin between the top two bins is below
 | `--protein` | `all` | One protein, a comma-separated list (`PR,RT,INT`) or `all` annotated proteins |
 | `--ratio_upper` / `--ratio_lower` | `3.162` / `0.316` | codonyat strand ratio thresholds |
 | `--entropy_threshold` | `0.0` | Minimum Shannon entropy per position |
+| `--emit_stats` | `false` | Publish `samples/<id>/<id>.stats.tsv` (codonyat `--stats`; research use only) |
+| `--emit_aavf` | `false` | Publish `samples/<id>/<id>.aavf` (codonyat `--aavf`; AAVF v1.0, research use only) |
 | `--fastp_args` | `--qualified_quality_phred 20 --unqualified_percent_limit 40 --length_required 50 --cut_tail --cut_tail_mean_quality 20` | fastp options; `--detect_adapter_for_pe` is added for paired-end |
 | `--kraken2_db` | — | Kraken2 database folder (required for FASTQ unless `--skip_contamination`) |
 | `--skip_contamination` | `false` | Skip the Kraken2 report |
@@ -196,6 +198,7 @@ All parameters are also described in `nextflow_schema.json`.
 results/
 ├── codonyat_summary.tsv               # codon table, all samples
 ├── samples/<s>/<s>.{tsv,xml}          # codonyat codon table and per-position XML
+├── samples/<s>/<s>.stats.tsv, <s>.aavf  # opt-in (--emit_stats / --emit_aavf); research use only
 ├── variants/<s>.aa_variants.tsv, aa_variants_summary.tsv          # amino-acid frequencies
 ├── consensus/<s>.consensus.fa, <s>.consensus_indels.tsv, <s>.consensus_stats.tsv,
 │             consensus_all.fa, consensus_stats.tsv
@@ -219,7 +222,7 @@ See [docs/output.md](docs/output.md) for the columns of every table.
 - **Local steps** (codonyat and the helper scripts in `bin/`, Python standard library only):
   container `ghcr.io/sjoclaudi/nf-codonyat:0.5.0` built from the `Dockerfile`, or the conda environment
   `modules/local/codonyat/run/environment.yml`.
-  Both install `codonyat==1.2.1` from PyPI.
+  Both install `codonyat==1.3.0` from PyPI.
 - **Third-party steps** use [nf-core modules](https://nf-co.re/modules) (`modules/nf-core/`, pinned in
   `modules.json`), each with its own BioContainers image and conda environment: FastQC 0.12.1, fastp 1.3.6,
   Kraken2 2.1.6, BBMap 39.18 (BBSplit, BBMerge), Bowtie2 2.5.4, samtools 1.21/1.24, iVar 1.4.4 and MultiQC 1.35.

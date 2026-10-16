@@ -47,6 +47,11 @@ nextflow_pipeline {
 
                 { assert path("${outputDir}/samples/HVG286PL/HVG286PL.tsv").exists() },
                 { assert path("${outputDir}/samples/HVG286PL/HVG286PL.xml").exists() },
+                // default: opt-in stats / AAVF are not published
+                { assert !path("${outputDir}/samples/sample1/sample1.stats.tsv").exists() },
+                { assert !path("${outputDir}/samples/sample1/sample1.aavf").exists() },
+                { assert !path("${outputDir}/samples/HVG286PL/HVG286PL.stats.tsv").exists() },
+                { assert !path("${outputDir}/samples/HVG286PL/HVG286PL.aavf").exists() },
                 // every samplesheet sample must get a codon table (value-channel reference)
                 { assert path("${projectDir}/assets/testdata/samplesheet.csv").readLines().drop(1).findAll { l -> l.trim() }.every { line ->
                     def id = line.split(',')[0]
@@ -126,7 +131,7 @@ nextflow_pipeline {
                 { assert !path("${outputDir}/strand/sample1.strand_metrics_unmerged.tsv").exists() },
 
                 // provenance
-                { assert path("${outputDir}/pipeline_info/software_versions.yml").text.contains('codonyat: "1.2.1"') },
+                { assert path("${outputDir}/pipeline_info/software_versions.yml").text.contains('codonyat: "1.3.0"') },
                 { assert path("${outputDir}/pipeline_info/software_versions.yml").text.contains('multiqc') },
                 { assert path("${outputDir}/pipeline_info/methods.md").text.contains('Research use only') },
                 { assert path("${outputDir}/pipeline_info/provenance.json").json.checksums_sha256.keySet().any { k -> k.startsWith('kraken2_db/') } },
@@ -181,7 +186,10 @@ nextflow_pipeline {
                 { assert !path("${outputDir}/contamination").exists() },
                 { assert !path("${outputDir}/subtype").exists() },
                 { assert !path("${outputDir}/merge").exists() },
-                { assert path("${outputDir}/variants/sample1.aa_variants.tsv").exists() }
+                { assert path("${outputDir}/variants/sample1.aa_variants.tsv").exists() },
+                // --emit_stats / --emit_aavf default false: extras absent
+                { assert !path("${outputDir}/samples/sample1/sample1.stats.tsv").exists() },
+                { assert !path("${outputDir}/samples/sample1/sample1.aavf").exists() }
             )
         }
     }
@@ -567,7 +575,38 @@ nextflow_pipeline {
                 { assert ids.every { id -> path("${outputDir}/samples/${id}/${id}.tsv").exists() } },
                 { assert ids.every { id -> path("${outputDir}/samples/${id}/${id}.xml").exists() } },
                 { assert path("${outputDir}/samples/sample1/sample1.xml").text.contains('<SamContainer') },
-                { assert path("${outputDir}/samples/sample2/sample2.xml").text.contains('<SamContainer') }
+                { assert path("${outputDir}/samples/sample2/sample2.xml").text.contains('<SamContainer') },
+                { assert ids.every { id -> !path("${outputDir}/samples/${id}/${id}.stats.tsv").exists() } },
+                { assert ids.every { id -> !path("${outputDir}/samples/${id}/${id}.aavf").exists() } }
+            )
+        }
+    }
+
+    test("emit_stats and emit_aavf publish extras; default TSV/XML stay byte-identical") {
+
+        when {
+            params {
+                samplesheet = "${projectDir}/tests/samplesheet_sam_only.csv"
+                reference   = "${projectDir}/assets/testdata/reference.fasta"
+                amplicons   = "${projectDir}/assets/testdata/amplicons.tsv"
+                protein     = "RT"
+                emit_stats  = true
+                emit_aavf   = true
+                outdir      = "${outputDir}"
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success },
+                { assert path("${outputDir}/samples/sample1/sample1.stats.tsv").exists() },
+                { assert path("${outputDir}/samples/sample1/sample1.aavf").exists() },
+                { assert path("${outputDir}/samples/sample1/sample1.stats.tsv").readLines()[0].split('\t')[0] == 'LEVEL' },
+                { assert path("${outputDir}/samples/sample1/sample1.aavf").text.contains('##fileformat=AAVFv1.0') },
+                { assert path("${outputDir}/samples/sample1/sample1.aavf").text.contains('research use only') },
+                // extras do not change the default codon table / XML
+                { assert path("${outputDir}/samples/sample1/sample1.tsv").md5 == '7b53cdae533aaa882f14066b50e34cad' },
+                { assert path("${outputDir}/samples/sample1/sample1.xml").md5 == '96380ca322570d0fd9478b2f54d82a18' }
             )
         }
     }
