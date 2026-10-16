@@ -10,7 +10,6 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "bin"))
 PREPARE = ROOT / "bin" / "prepare_inputs.py"
 HIV_FASTA = ROOT / "assets" / "presets" / "hiv1" / "reference.fasta"
 HIV_AMP = ROOT / "assets" / "presets" / "hiv1" / "amplicons.tsv"
@@ -165,32 +164,6 @@ def test_unknown_protein(tmp: Path) -> None:
     assert any("no annotation for --protein NEF" in e["message"] for e in val["errors"])
 
 
-def test_merge_xml_wraps_proteins(tmp: Path) -> None:
-    from run_codonyat import merge_xml
-
-    def write_flat(path: Path, sample: str, index: str) -> None:
-        path.write_text(
-            "<?xml version='1.0' encoding='utf-8'?>\n"
-            f'<SamContainer sample="{sample}" reference="REF">'
-            f'<Position index="{index}"><Depth>1</Depth>'
-            "<FwCover>1</FwCover><RvCover>0</RvCover>"
-            '<Variants><Variant codon="ATG" count="1" fw_reads="1" rv_reads="0" />'
-            "</Variants></Position></SamContainer>"
-        )
-
-    pr, rt = tmp / "PR.xml", tmp / "RT.xml"
-    write_flat(pr, "s.sam", "10")
-    write_flat(rt, "s.sam", "20")
-    dest = tmp / "merged.xml"
-    merge_xml([("PR", pr), ("RT", rt)], dest)
-    text = dest.read_text()
-    assert "<Protein name=\"PR\">" in text
-    assert "<Protein name=\"RT\">" in text
-    assert text.index("<Protein name=\"PR\">") < text.index("<Protein name=\"RT\">")
-    assert text.index('index="10"') < text.index('index="20"')
-    assert text.count("<Protein ") == 2
-
-
 def test_no_strict_exit_still_zero(tmp: Path) -> None:
     rc = run(
         ["--reference", str(FLU_FASTA), "--preset", "influenza-a", "--outdir", str(tmp)],
@@ -210,7 +183,6 @@ def main() -> int:
         test_minus_strand_rejected,
         test_ref_too_large,
         test_unknown_protein,
-        test_merge_xml_wraps_proteins,
         test_no_strict_exit_still_zero,
     ]
     failed = 0

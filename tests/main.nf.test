@@ -126,7 +126,7 @@ nextflow_pipeline {
                 { assert !path("${outputDir}/strand/sample1.strand_metrics_unmerged.tsv").exists() },
 
                 // provenance
-                { assert path("${outputDir}/pipeline_info/software_versions.yml").text.contains('codonyat: "1.2.0"') },
+                { assert path("${outputDir}/pipeline_info/software_versions.yml").text.contains('codonyat: "1.2.1"') },
                 { assert path("${outputDir}/pipeline_info/software_versions.yml").text.contains('multiqc') },
                 { assert path("${outputDir}/pipeline_info/methods.md").text.contains('Research use only') },
                 { assert path("${outputDir}/pipeline_info/provenance.json").json.checksums_sha256.keySet().any { k -> k.startsWith('kraken2_db/') } },

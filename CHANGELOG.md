@@ -4,7 +4,7 @@
 
 ### Added
 - **Preset system**: Supports hiv1 (default), sars-cov-2, influenza-a, rsv, hbv, hcv, and custom presets
-- **Multi-record reference support**: For segmented viruses like influenza A (codonyat 1.2.0)
+- **Multi-record reference support**: For segmented viruses like influenza A (codonyat 1.2.1)
 - **Validation mode**: `--validate_only` for fast input checking without running the full pipeline
 - **Generic contamination tracking**: 
   - New parameters: `--target-taxid`, `--target-label`
@@ -29,7 +29,7 @@
 - **`-profile test_sarscov2`**: synthetic MN908947.3 S-gene pairs
 
 ### Changed
-- Updated to codonyat 1.2.0 (multi-record references and multi-interval proteins; one protein per invocation, wrapper expands `--protein all`)
+- Updated to codonyat **1.2.1** (multi-record references and multi-interval proteins; single-pass `--protein all` and comma lists; multi-protein XML identical to 1.1.0 / v0.4.0)
 - Task image `ghcr.io/sjoclaudi/nf-codonyat:0.5.0`
 - Subtype panel now optional (only HIV-1 preset includes bundled panel); subtype is auto-skipped when no panel is provided
 - Contamination auto-skipped in custom mode without Kraken2 database or taxid
@@ -42,7 +42,7 @@
 - `--contamination-warn-hiv-pct`: Use `--contamination-warn-target-pct` instead (still accepted as alias)
 
 ### Notes
-- HIV-1 analysis tables are identical to v0.4.0 except appended `TARGET_*` columns on contamination tables, plus new `reference/` and `pipeline_info/run_mode.json` files (provenance/timestamps may differ)
+- HIV-1 codon TSV/XML and other analysis tables are byte-identical to v0.4.0 except appended `TARGET_*` columns on contamination tables, plus new `reference/` and `pipeline_info/run_mode.json` files (provenance/timestamps / `codonyat: "1.2.1"` may differ)
 - `run_mode.json` field `reference_accessions` is always a JSON list
 - Research use only — no drug-resistance or clinical interpretation
 

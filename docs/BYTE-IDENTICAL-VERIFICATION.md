@@ -8,7 +8,7 @@ HIV-1 analysis tables must match v0.4.0 except:
 
 - contamination tables **append** `TARGET_TAXID`, `TARGET_READS`, `TARGET_PCT` (`HIV1_*` values unchanged)
 - new files: `reference/{validation.json,annotation_used.tsv,amplicons_used.tsv,reference_used.fasta}` and `pipeline_info/run_mode.json`
-- provenance / timestamps / `software_versions.yml` (`codonyat: "1.2.0"`) / pipeline version
+- provenance / timestamps / `software_versions.yml` (`codonyat: "1.2.1"`) / pipeline version
 - two extra processes (`PREPARE_REFERENCE`, `CHECK_VALIDATION`) so the HIV-1 test graph is 46 succeeded tasks (was 44)
 
 A full side-by-side `-profile test,docker` diff against a v0.4.0 outdir was **not** re-run in this

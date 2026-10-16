@@ -9,4 +9,4 @@ dependencies:
   - conda-forge::biopython=1.85
   - conda-forge::pip
   - pip:
-      - "codonyat==1.2.0"
+      - "codonyat==1.2.1"
