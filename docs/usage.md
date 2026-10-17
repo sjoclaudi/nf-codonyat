@@ -78,6 +78,10 @@ See each preset's `assets/presets/<name>/SOURCES.md`.
 | `--entropy_threshold` | `0.0` | Minimum Shannon entropy per position |
 | `--emit_stats` | `false` | Publish `samples/<id>/<id>.stats.tsv` via `codonyat-runner --stats` (Wilson CI, strand-bias, diversity). Research use only. Off by default so TSV/XML stay unchanged. |
 | `--emit_aavf` | `false` | Publish `samples/<id>/<id>.aavf` via `codonyat-runner --aavf` (AAVF v1.0). Research use only. Off by default so TSV/XML stay unchanged. |
+| `--min_baseq` | *off* (`null`) | If set, pass `--min-baseq` to codonyat-runner (0–60): count a codon only when all three bases have Phred-like quality at least this value. Null keeps TSV/XML byte-identical. |
+| `--min_freq` | `0.01` | Frequency floor (0–1) for the stats `lowfreq` flag and AAVF FILTER. Passed as `--min-freq` only when `--emit_stats` or `--emit_aavf` is on. |
+| `--min_coverage` | `10` | Coverage floor for the stats `lowcov` flag and AAVF FILTER. Passed as `--min-coverage` only when `--emit_stats` or `--emit_aavf` is on. |
+| `--sb_alpha` | `0.05` | Fisher exact p-value cutoff for the stats `sb` flag. Passed as `--sb-alpha` only when `--emit_stats` or `--emit_aavf` is on. |
 
 ## Read Processing and Filtering Parameters
 
@@ -179,16 +183,22 @@ new folder, but the reports stay in the earlier `pipeline_info` folder (the prof
 
 Every parameter in `nextflow_schema.json` has an `x-ui` annotation so a hosted UI can build its
 config tab from the schema. `x-ui` is a JSON Schema `x-` vendor annotation: nf-schema ignores it
-during validation. Defaults and runtime behaviour are unchanged.
+during validation. Analysis options are shown with their schema defaults. Infrastructure
+settings are shown read-only.
 
 | Level | Shown in the config tab | Parameters |
 |-------|-------------------------|------------|
-| `basic` | Primary controls | `preset`, `protein`, `emit_stats`, `emit_aavf`, `skip_contamination`, `skip_subtype`, `skip_consensus`, `min_mapq`, `consensus_threshold`, `consensus_min_depth` |
-| `advanced` | Advanced / expert | Strand-ratio and entropy thresholds, trim/merge/align extra args, `exclude_flags`, Kraken2 confidence and warning %, target taxid/label, subtype min reads/margin, consensus insertion threshold and min base quality |
-| `internal` | Hidden | Inputs and paths, `outdir`, `publish_dir_mode`, `save_intermediates`, `kraken2_db`, `kraken2_memory_mapping`, `awsbatch_queue`, `validate_only`, `prov_enabled`, help/hidden flags, and deprecated aliases (`input`, `contamination_warn_hiv_pct`) |
+| `basic` | Primary, editable | `preset`, `protein`, `emit_stats`, `emit_aavf`, `skip_contamination`, `skip_subtype`, `skip_consensus`, `min_mapq`, `consensus_threshold`, `consensus_min_depth` |
+| `advanced` | Advanced, editable | Strand-ratio and entropy thresholds, `min_baseq`, `min_freq`, `min_coverage`, `sb_alpha`, trim/merge/align extra args, `exclude_flags`, Kraken2 confidence and warning %, `target_taxid` / `target_label`, subtype min reads/margin, consensus insertion threshold and min base quality |
+| `infra` | Shown, read-only | `kraken2_db`, `kraken2_memory_mapping`, `awsbatch_queue`, `publish_dir_mode`, `save_intermediates`, `prov_enabled` |
+| `internal` | Hidden | Inputs and paths (`samplesheet` / `input`, `reference`, `primer_bed`, `amplicons`, `annotation`, `subtype_panel`, `outdir`), `validate_only`, `help`, `helpFull`, `showHidden`, `validate_params`, `pipeline_info_outdir`, deprecated aliases (`contamination_warn_hiv_pct`) |
 
-CPU, memory and time limits are Nextflow `process.resourceLimits` in config (see below), not
-pipeline params. They are never user-editable in the config tab.
+CPU, memory and time limits are Nextflow `process.resourceLimits`, not params. The SaaS reads
+the read-only caps from [`assets/infra.json`](../assets/infra.json), which is a projection of
+`process.resourceLimits` in `conf/awsbatch.config` (16 CPU / 120 GB / 24 h).
+`tests/test_infra_json.py` fails if those two files drift. `conf/base.config` and the test
+profiles use different limits for local / CI machines; do not copy the numbers into the
+schema. `--collapsed-read-counts` is not a pipeline parameter.
 
 ## Profiles
 

@@ -3,6 +3,10 @@
     "$id": "https://raw.githubusercontent.com/sjoclaudi/nf-codonyat/main/nextflow_schema.json",
     "title": "sjoclaudi/nf-codonyat pipeline parameters",
     "description": "Codon-aware amino acid variant typing of viral amplicon NGS data (FASTQ or SAM); research use only",
+    "x-infra": {
+        "file": "assets/infra.json",
+        "source": "conf/awsbatch.config process.resourceLimits"
+    },
     "type": "object",
     "$defs": {
         "input_output_options": {
@@ -76,12 +80,12 @@
                         "copyNoFollow",
                         "move"
                     ],
-                    "x-ui": "internal"
+                    "x-ui": "infra"
                 },
                 "save_intermediates": {
                     "type": "boolean",
                     "description": "Also publish trimmed FASTQ, per-part BAMs, the strand-branch BAM/codon table, raw iVar output and Kraken2 per-read assignments.",
-                    "x-ui": "internal"
+                    "x-ui": "infra"
                 }
             },
             "required": [
@@ -133,6 +137,36 @@
                     "default": false,
                     "description": "Publish samples/<id>/<id>.aavf (AAVF v1.0). Passes --aavf to codonyat-runner. Off by default so TSV/XML stay unchanged. Research use only; no drug-resistance or clinical annotation.",
                     "x-ui": "basic"
+                },
+                "min_baseq": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 60,
+                    "description": "If set, pass --min-baseq to codonyat-runner: count a codon only when all three bases have Phred-like quality at least this value. Null (default) is off so TSV/XML stay byte-identical.",
+                    "x-ui": "advanced"
+                },
+                "min_freq": {
+                    "type": "number",
+                    "default": 0.01,
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Frequency floor (fraction 0–1) for the stats lowfreq flag and AAVF FILTER. Passed as --min-freq when --emit_stats or --emit_aavf is on.",
+                    "x-ui": "advanced"
+                },
+                "min_coverage": {
+                    "type": "integer",
+                    "default": 10,
+                    "minimum": 1,
+                    "description": "Coverage floor for the stats lowcov flag and AAVF FILTER. Passed as --min-coverage when --emit_stats or --emit_aavf is on.",
+                    "x-ui": "advanced"
+                },
+                "sb_alpha": {
+                    "type": "number",
+                    "default": 0.05,
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Fisher exact p-value cutoff for the stats sb (strand-bias) flag. Passed as --sb-alpha when --emit_stats or --emit_aavf is on.",
+                    "x-ui": "advanced"
                 }
             }
         },
@@ -206,7 +240,7 @@
                     "type": "string",
                     "format": "directory-path",
                     "description": "Kraken2 database folder (e.g. Standard-8), local or s3:// prefix. Required for FASTQ samples unless --skip_contamination. Object-store prefixes are staged into the task (hash.k2d, opts.k2d, taxo.k2d).",
-                    "x-ui": "internal"
+                    "x-ui": "infra"
                 },
                 "skip_contamination": {
                     "type": "boolean",
@@ -224,7 +258,7 @@
                 "kraken2_memory_mapping": {
                     "type": "boolean",
                     "description": "Kraken2 --memory-mapping (database not loaded into RAM).",
-                    "x-ui": "internal"
+                    "x-ui": "infra"
                 },
                 "contamination_warn_target_pct": {
                     "type": "number",
@@ -359,7 +393,7 @@
                     "type": "boolean",
                     "description": "Write nf-prov provenance reports (BCO, WRROC, DAG) under <outdir>/pipeline_info/.",
                     "default": false,
-                    "x-ui": "internal"
+                    "x-ui": "infra"
                 },
                 "pipeline_info_outdir": {
                     "type": "string",
@@ -385,7 +419,7 @@
                     "type": "string",
                     "default": "codonyat-queue",
                     "description": "AWS Batch job queue used by -profile awsbatch (Spot only; no on-demand fallback).",
-                    "x-ui": "internal"
+                    "x-ui": "infra"
                 }
             }
         }

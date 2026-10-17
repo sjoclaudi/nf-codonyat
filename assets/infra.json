@@ -1,0 +1,10 @@
+{
+    "description": "Read-only SaaS infrastructure caps. Not pipeline params; never user-editable.",
+    "source": "conf/awsbatch.config process.resourceLimits",
+    "x-ui": "infra",
+    "resourceLimits": {
+        "cpus": 16,
+        "memory": "120.GB",
+        "time": "24.h"
+    }
+}
