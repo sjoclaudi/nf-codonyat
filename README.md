@@ -115,9 +115,9 @@ Research use only.
 ```bash
 nextflow run sjoclaudi/nf-codonyat \
     -profile awsbatch \
-    -work-dir s3://codonyat-nf-work/work \
-    --kraken2_db s3://... \
-    --outdir s3://...
+    -work-dir s3://codonyat/nf-work \
+    --kraken2_db s3://codonyat/refdb/... \
+    --outdir s3://codonyat/results
 ```
 
 The default queue is `codonyat-queue` (Spot only; override with `--awsbatch_queue`). Region

@@ -14,8 +14,8 @@
  *    nextflow run sjoclaudi/nf-codonyat -profile test,docker
  *
  *    nextflow run sjoclaudi/nf-codonyat -profile awsbatch \
- *        -work-dir s3://codonyat-nf-work/work \
- *        --kraken2_db s3://... --outdir s3://...
+ *        -work-dir s3://codonyat/nf-work \
+ *        --kraken2_db s3://codonyat/refdb/... --outdir s3://codonyat/results
  *
  *  Research use only.
  */

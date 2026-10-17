@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Changed
+- Docs and examples use the single `s3://codonyat` bucket (`samples/`, `results/`, `refdb/`, `nf-work/`) instead of `s3://codonyat-nf-work` / `s3://codonyat-refdb`. `tests/test_infra_json.py` leak-check flags any `s3://` URI and `codonyat/`-style bucket paths, not the plain word in version fields.
+
 ## [0.7.0] - 2026-10-17
 
 ### Added
