@@ -21,4 +21,9 @@ process STRAND_METRICS {
     strand_metrics.py --sample "${meta.id}" --merged "${merged_tsv}" --unmerged "${unmerged_tsv}" \\
         > "${meta.id}.strand_metrics_unmerged.tsv"
     """
+
+    stub:
+    """
+    touch "${meta.id}.strand_metrics_unmerged.tsv"
+    """
 }

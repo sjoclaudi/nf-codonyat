@@ -60,4 +60,10 @@ process CODONYAT_RUN {
         ${stats_arg} \\
         ${aavf_arg}
     """
+
+    stub:
+    prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    touch "${prefix}.tsv" "${prefix}.xml"
+    """
 }

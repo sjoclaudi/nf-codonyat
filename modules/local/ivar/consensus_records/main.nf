@@ -51,4 +51,10 @@ process IVAR_CONSENSUS_RECORDS {
         done
     fi
     """
+
+    stub:
+    prefix = task.ext.prefix ?: "${meta.id}.ivar"
+    """
+    touch "${prefix}.fa" "${prefix}.mpileup"
+    """
 }

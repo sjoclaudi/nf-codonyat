@@ -51,6 +51,13 @@ process PREPARE_REFERENCE {
         --protein '${meta.protein ?: 'all'}' \\
         --outdir .
     """
+
+    stub:
+    """
+    printf '%s\\n' '{' '"valid": true,' '"errors": [],' '"warnings": []' '}' > validation.json
+    touch reference_used.fasta annotation_used.tsv amplicons_used.tsv
+    echo '{}' > run_mode.json
+    """
 }
 
 process CHECK_VALIDATION {
@@ -68,5 +75,10 @@ process CHECK_VALIDATION {
     script:
     """
     check_validation.py "${json}"
+    """
+
+    stub:
+    """
+    echo stub
     """
 }

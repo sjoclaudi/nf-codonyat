@@ -20,31 +20,31 @@
                     "type": "string",
                     "format": "file-path",
                     "exists": true,
-                    "description": "CSV with columns sample,fastq_1,fastq_2,sam (one row per sample: FASTQ or SAM). Relative paths are resolved against the CSV's folder."
+                    "description": "CSV with columns sample,fastq_1,fastq_2,sam (one row per sample: FASTQ or SAM). Relative paths are resolved against the CSV's folder. Paths may be local or s3:// URIs."
                 },
                 "reference": {
                     "type": "string",
                     "format": "file-path",
                     "exists": true,
-                    "description": "Reference FASTA; can be annotated in header or via --annotation. Required when preset=custom."
+                    "description": "Reference FASTA; can be annotated in header or via --annotation. Required when preset=custom. Local path or s3:// URI."
                 },
                 "primer_bed": {
                     "type": "string",
                     "format": "file-path",
                     "exists": true,
-                    "description": "6-column primer BED: chrom,start,end,name,pool,strand. Name must be <amplicon>_LEFT or <amplicon>_RIGHT. Required for custom preset without --amplicons."
+                    "description": "6-column primer BED: chrom,start,end,name,pool,strand. Name must be <amplicon>_LEFT or <amplicon>_RIGHT. Required for custom preset without --amplicons. Local path or s3:// URI."
                 },
                 "amplicons": {
                     "type": "string",
                     "format": "file-path",
                     "exists": true,
-                    "description": "Amplicons TSV: label,protein,reference,5p_seq,3p_seq,start,end. Mutually exclusive with --primer-bed. For backward compatibility only."
+                    "description": "Amplicons TSV: label,protein,reference,5p_seq,3p_seq,start,end. Mutually exclusive with --primer-bed. For backward compatibility only. Local path or s3:// URI."
                 },
                 "annotation": {
                     "type": "string",
                     "format": "file-path",
                     "exists": true,
-                    "description": "Annotation: GFF3 (CDS features) or BED (4 columns: chrom,start,end,name). If null, FASTA header annotation is used."
+                    "description": "Annotation: GFF3 (CDS features) or BED (4 columns: chrom,start,end,name). If null, FASTA header annotation is used. Local path or s3:// URI."
                 },
                 "validate_only": {
                     "type": "boolean",
@@ -53,7 +53,7 @@
                 "outdir": {
                     "type": "string",
                     "default": "results",
-                    "description": "Output folder.",
+                    "description": "Output folder (local or s3:// URI).",
                     "format": "directory-path"
                 },
                 "publish_dir_mode": {
@@ -172,7 +172,7 @@
                 "kraken2_db": {
                     "type": "string",
                     "format": "directory-path",
-                    "description": "Kraken2 database folder (e.g. Standard-8). Required for FASTQ samples unless --skip_contamination."
+                    "description": "Kraken2 database folder (e.g. Standard-8), local or s3:// prefix. Required for FASTQ samples unless --skip_contamination. Object-store prefixes are staged into the task (hash.k2d, opts.k2d, taxo.k2d)."
                 },
                 "skip_contamination": {
                     "type": "boolean",
@@ -213,7 +213,7 @@
                 "subtype_panel": {
                     "type": "string",
                     "format": "directory-path",
-                    "description": "Panel folder with <bin>.fa per bin and panel.tsv. Null for presets except hiv1 (which uses bundled panel)."
+                    "description": "Panel folder with <bin>.fa per bin and panel.tsv (local or s3:// prefix). Null for presets except hiv1 (which uses bundled panel)."
                 },
                 "skip_subtype": {
                     "type": "boolean",
@@ -304,6 +304,11 @@
                     "description": "Show hidden parameters in the help message.",
                     "default": false,
                     "hidden": true
+                },
+                "awsbatch_queue": {
+                    "type": "string",
+                    "default": "codonyat-queue",
+                    "description": "AWS Batch job queue used by -profile awsbatch (Spot only; no on-demand fallback)."
                 }
             }
         }

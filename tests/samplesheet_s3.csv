@@ -1,0 +1,2 @@
+sample,fastq_1,fastq_2,sam
+S1,s3://nf-codonyat-no-such-bucket/S1_R1.fastq.gz,s3://nf-codonyat-no-such-bucket/S1_R2.fastq.gz,
