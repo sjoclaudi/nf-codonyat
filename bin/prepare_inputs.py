@@ -255,7 +255,16 @@ def validate_primers(bed_path: str, state: State) -> None:
             if left.chrom != right.chrom:
                 state.err("BED_CHROM_MISMATCH", bed_path, f"Amplicon '{amplicon}' primers on different chromosomes")
             elif left.start >= right.end:
-                state.err("BED_ORDER", bed_path, f"Amplicon '{amplicon}' LEFT primer not before RIGHT primer")
+                # Origin-crossing on a circular record: LEFT in the second half,
+                # RIGHT in the first half (e.g. HBV f3d7635a_5).
+                seq_len = len(state.records.get(left.chrom, ""))
+                half = seq_len // 2 if seq_len else 0
+                if not (seq_len and left.start > half and right.end < half):
+                    state.err(
+                        "BED_ORDER",
+                        bed_path,
+                        f"Amplicon '{amplicon}' LEFT primer not before RIGHT primer",
+                    )
 
 
 def bed_to_amplicon_rows(state: State) -> list[dict]:
@@ -437,13 +446,18 @@ def amplicon_overlaps_cds(state: State) -> None:
         except (KeyError, ValueError, TypeError):
             continue
         rec = row.get("reference")
+        seq_len = len(state.records.get(rec, ""))
+        windows = [(a0, a1)] if a0 <= a1 else [(a0, seq_len), (1, a1)]
         overlaps = False
         for p in state.proteins:
             if p.record != rec:
                 continue
             for iv in p.intervals:
-                if not (a1 < iv.start or a0 > iv.end):
-                    overlaps = True
+                for w0, w1 in windows:
+                    if not (w1 < iv.start or w0 > iv.end):
+                        overlaps = True
+                        break
+                if overlaps:
                     break
         if not overlaps:
             state.warn(
@@ -651,7 +665,11 @@ def main(argv: list[str] | None = None) -> int:
         except Exception as exc:
             state.err("AMP_READ_ERROR", str(args.amplicons), f"Failed to read amplicons TSV: {exc}")
     else:
-        state.err("AMP_OR_BED", "primers", "Must provide either --amplicons (TSV) or --primer-bed (6-column BED)")
+        state.warn(
+            "NO_PRIMERS",
+            "primers",
+            "No --amplicons or --primer-bed: primer trimming skipped",
+        )
 
     amplicon_overlaps_cds(state)
     maybe_samplesheet(args.samplesheet, state)

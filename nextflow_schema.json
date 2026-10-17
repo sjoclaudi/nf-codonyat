@@ -17,8 +17,8 @@
                 "preset": {
                     "type": "string",
                     "default": "hiv1",
-                    "description": "Preset: hiv1 (default), sars-cov-2, influenza-a, rsv, hbv, hcv, or custom.",
-                    "enum": ["hiv1", "sars-cov-2", "influenza-a", "rsv", "hbv", "hcv", "custom"],
+                    "description": "Preset: hiv1 (default), sars-cov-2, influenza-a, influenza-b, rsv, hbv, hcv, or custom.",
+                    "enum": ["hiv1", "sars-cov-2", "influenza-a", "influenza-b", "rsv", "hbv", "hcv", "custom"],
                     "x-ui": "basic"
                 },
                 "samplesheet": {
@@ -39,7 +39,7 @@
                     "type": "string",
                     "format": "file-path",
                     "exists": true,
-                    "description": "6-column primer BED: chrom,start,end,name,pool,strand. Name must be <amplicon>_LEFT or <amplicon>_RIGHT. Required for custom preset without --amplicons. Local path or s3:// URI.",
+                    "description": "6-column primer BED: chrom,start,end,name,pool,strand. Name must be <amplicon>_LEFT or <amplicon>_RIGHT. Required for custom preset without --amplicons. Optional when a preset sets requires_primer_bed false. Local path or s3:// URI.",
                     "x-ui": "internal"
                 },
                 "amplicons": {
