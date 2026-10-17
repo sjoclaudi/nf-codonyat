@@ -1,10 +1,24 @@
 {
-    "description": "Read-only SaaS infrastructure caps. Not pipeline params; never user-editable.",
-    "source": "conf/awsbatch.config process.resourceLimits",
+    "description": "Read-only SaaS infrastructure info. Not pipeline params; never user-editable.",
     "x-ui": "infra",
+    "kraken2_db_name": "k2_standard_08_GB_20260626",
     "resourceLimits": {
         "cpus": 16,
         "memory": "120.GB",
         "time": "24.h"
+    },
+    "region": "eu-central-1",
+    "versions": {
+        "pipeline": "0.7.0-dev",
+        "container": "0.7.0-dev",
+        "codonyat": "1.3.1"
+    },
+    "sources": {
+        "kraken2_db_name": "last path component of the hosted Kraken2 database (params.kraken2_db is internal)",
+        "resourceLimits": "conf/awsbatch.config process.resourceLimits",
+        "region": "conf/awsbatch.config aws.region",
+        "versions.pipeline": "nextflow.config manifest.version",
+        "versions.container": "tag of modules/local/codonyat/run/main.nf container",
+        "versions.codonyat": "modules/local/codonyat/run/environment.yml"
     }
 }

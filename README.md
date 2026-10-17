@@ -216,9 +216,10 @@ or split between bins (flagged when the margin between the top two bins is below
 
 All parameters are also described in `nextflow_schema.json`. Each parameter has an `x-ui` level
 (`basic`, `advanced`, `infra`, or `internal`) so a hosted UI can build its config tab from the
-schema. `infra` values are shown read-only. CPU, memory and time caps are
-`process.resourceLimits` (SaaS reads [`assets/infra.json`](assets/infra.json), kept in sync
-with `conf/awsbatch.config`). See [docs/usage.md](docs/usage.md#config-tab-visibility-x-ui).
+schema. `infra` values are shown read-only. The SaaS reads [`assets/infra.json`](assets/infra.json)
+for the Kraken2 database **name** (last path component only), resource limits, region and
+versions — never S3 URIs, bucket names or the queue. See
+[docs/usage.md](docs/usage.md#config-tab-visibility-x-ui).
 
 ---
 

@@ -190,15 +190,17 @@ settings are shown read-only.
 |-------|-------------------------|------------|
 | `basic` | Primary, editable | `preset`, `protein`, `emit_stats`, `emit_aavf`, `skip_contamination`, `skip_subtype`, `skip_consensus`, `min_mapq`, `consensus_threshold`, `consensus_min_depth` |
 | `advanced` | Advanced, editable | Strand-ratio and entropy thresholds, `min_baseq`, `min_freq`, `min_coverage`, `sb_alpha`, trim/merge/align extra args, `exclude_flags`, Kraken2 confidence and warning %, `target_taxid` / `target_label`, subtype min reads/margin, consensus insertion threshold and min base quality |
-| `infra` | Shown, read-only | `kraken2_db`, `kraken2_memory_mapping`, `awsbatch_queue`, `publish_dir_mode`, `save_intermediates`, `prov_enabled` |
-| `internal` | Hidden | Inputs and paths (`samplesheet` / `input`, `reference`, `primer_bed`, `amplicons`, `annotation`, `subtype_panel`, `outdir`), `validate_only`, `help`, `helpFull`, `showHidden`, `validate_params`, `pipeline_info_outdir`, deprecated aliases (`contamination_warn_hiv_pct`) |
+| `infra` | Shown, read-only | `kraken2_memory_mapping`, `publish_dir_mode`, `save_intermediates`, `prov_enabled` |
+| `internal` | Hidden | Inputs and paths (`samplesheet` / `input`, `reference`, `primer_bed`, `amplicons`, `annotation`, `subtype_panel`, `outdir`, `kraken2_db`), `awsbatch_queue`, `validate_only`, `help`, `helpFull`, `showHidden`, `validate_params`, `pipeline_info_outdir`, deprecated aliases (`contamination_warn_hiv_pct`) |
 
-CPU, memory and time limits are Nextflow `process.resourceLimits`, not params. The SaaS reads
-the read-only caps from [`assets/infra.json`](../assets/infra.json), which is a projection of
-`process.resourceLimits` in `conf/awsbatch.config` (16 CPU / 120 GB / 24 h).
-`tests/test_infra_json.py` fails if those two files drift. `conf/base.config` and the test
-profiles use different limits for local / CI machines; do not copy the numbers into the
-schema. `--collapsed-read-counts` is not a pipeline parameter.
+The read-only infra pane is [`assets/infra.json`](../assets/infra.json): Kraken2 database
+**name** (last path component only, e.g. `k2_standard_08_GB_20260626`), AWS Batch
+`process.resourceLimits` (16 CPU / 120 GB / 24 h), region, and pipeline / container /
+codonyat versions. Never show S3 URIs, bucket names or the queue name (`--awsbatch_queue`
+and the full `--kraken2_db` path stay `internal`). `tests/test_infra_json.py` fails if the
+file drifts from config or contains a URI / queue / bucket. `conf/base.config` and the test
+profiles use different limits for local / CI machines. `--collapsed-read-counts` is not a
+pipeline parameter.
 
 ## Profiles
 

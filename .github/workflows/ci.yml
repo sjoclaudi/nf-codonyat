@@ -37,7 +37,7 @@ jobs:
       - name: contamination_summary stub tests
         run: python3 tests/test_contamination_summary.py
 
-      - name: infra.json matches awsbatch resourceLimits
+      - name: infra.json matches config and hides URIs
         run: python3 tests/test_infra_json.py
 
       - name: default research flags leave TSV/XML byte-identical
