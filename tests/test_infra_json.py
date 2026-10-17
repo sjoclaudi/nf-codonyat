@@ -32,7 +32,7 @@ CONTAINER_RE = re.compile(r"container\s+'ghcr\.io/sjoclaudi/nf-codonyat:([^']+)'
 CODONYAT_RE = re.compile(r'codonyat==([0-9.]+)')
 KRAKEN_NAME_RE = re.compile(r"infra\.kraken2_db_name\s*=\s*(\S+)")
 FORBIDDEN = re.compile(
-    r"s3://|awsbatch_queue|codonyat-queue|codonyat-nf-work|bucket",
+    r"s3://|awsbatch_queue|codonyat-queue|codonyat-nf-work|codonyat-refdb|codonyat/|bucket",
     re.I,
 )
 
