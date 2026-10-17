@@ -117,8 +117,9 @@ v0.2.0 (below). With several proteins each protein's positions sit inside a `<Pr
 ## Opt-in stats (`samples/{sample}/{sample}.stats.tsv`)
 
 Published only with `--emit_stats`. Written by codonyat (`--stats`). Research use only:
-Wilson 95% CI, strand-bias p-value, flags and diversity indices. Default TSV/XML are unchanged
-whether this flag is on or off.
+Wilson 95% CI, strand-bias p-value, flags and diversity indices. Flag thresholds come from
+`--min_freq` (default 0.01), `--min_coverage` (10) and `--sb_alpha` (0.05). Default TSV/XML
+are unchanged whether this flag is on or off (`--min_baseq` null).
 
 | Column | Description |
 |--------|-------------|

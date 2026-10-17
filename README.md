@@ -187,6 +187,8 @@ or split between bins (flagged when the margin between the top two bins is below
 | `--entropy_threshold` | `0.0` | Minimum Shannon entropy per position |
 | `--emit_stats` | `false` | Publish `samples/<id>/<id>.stats.tsv` (codonyat `--stats`; research use only) |
 | `--emit_aavf` | `false` | Publish `samples/<id>/<id>.aavf` (codonyat `--aavf`; AAVF v1.0, research use only) |
+| `--min_baseq` | *off* | Optional `--min-baseq` (0–60). Null keeps TSV/XML byte-identical |
+| `--min_freq` / `--min_coverage` / `--sb_alpha` | `0.01` / `10` / `0.05` | Stats / AAVF FILTER floors; passed only with `--emit_stats` or `--emit_aavf` |
 | `--fastp_args` | `--qualified_quality_phred 20 --unqualified_percent_limit 40 --length_required 50 --cut_tail --cut_tail_mean_quality 20` | fastp options; `--detect_adapter_for_pe` is added for paired-end |
 | `--kraken2_db` | — | Kraken2 database folder, local or `s3://` (required for FASTQ unless `--skip_contamination`) |
 | `--skip_contamination` | `false` | Skip the Kraken2 report |
@@ -212,7 +214,12 @@ or split between bins (flagged when the margin between the top two bins is below
 | `--publish_dir_mode` | `copy` | How to publish files |
 | `--awsbatch_queue` | `codonyat-queue` | AWS Batch job queue for `-profile awsbatch` (Spot only) |
 
-All parameters are also described in `nextflow_schema.json`.
+All parameters are also described in `nextflow_schema.json`. Each parameter has an `x-ui` level
+(`basic`, `advanced`, `infra`, or `internal`) so a hosted UI can build its config tab from the
+schema. `infra` values are shown read-only. The SaaS reads [`assets/infra.json`](assets/infra.json)
+for the Kraken2 database **name** (last path component only), resource limits, region and
+versions — never S3 URIs, bucket names or the queue. See
+[docs/usage.md](docs/usage.md#config-tab-visibility-x-ui).
 
 ---
 

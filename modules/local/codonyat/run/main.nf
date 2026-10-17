@@ -8,12 +8,16 @@
  *          --protein <name | A,B,C | all> --ratio-upper --ratio-lower
  *          --entropy-threshold --csv-path <prefix>.tsv --xml-path <prefix>.xml
  *          [--stats <prefix>.stats.tsv] [--aavf <prefix>.aavf]
+ *          [--min-baseq] [--min-freq] [--min-coverage] [--sb-alpha]
  *
  *  codonyat 1.3.1 streams the alignments (flat memory) and counts every
  *  requested protein in one pass. Multi-protein XML matches 1.1.0 / v0.4.0
  *  (<Protein name="X"> wrappers). Default TSV/XML match 1.3.0 / 1.2.1 on
  *  uncollapsed names (do not pass --collapsed-read-counts). --stats and
  *  --aavf are opt-in research outputs (params.emit_stats / emit_aavf).
+ *  --min-baseq is passed only when set (null keeps TSV/XML byte-identical).
+ *  --min-freq / --min-coverage / --sb-alpha only affect stats/AAVF flags
+ *  and are passed only when emit_stats or emit_aavf is on.
  *
  *  Input  : tuple val(meta), path(sam); path(reference); path(amplicons)
  *  Output : tuple val(meta), path(<prefix>.tsv), path(<prefix>.xml)
@@ -42,8 +46,11 @@ process CODONYAT_RUN {
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
+    research_on = params.emit_stats || params.emit_aavf
     stats_arg = params.emit_stats ? "--stats ${prefix}.stats.tsv" : ''
     aavf_arg  = params.emit_aavf  ? "--aavf ${prefix}.aavf" : ''
+    min_baseq_arg = params.min_baseq != null ? "--min-baseq ${params.min_baseq}" : ''
+    research_args = research_on ? "--min-freq ${params.min_freq} --min-coverage ${params.min_coverage} --sb-alpha ${params.sb_alpha}" : ''
     """
     [ "${sam}" = "${meta.id}.sam" ] || ln -s "${sam}" "${meta.id}.sam"
 
@@ -58,7 +65,9 @@ process CODONYAT_RUN {
         --csv-path "${prefix}.tsv" \\
         --xml-path "${prefix}.xml" \\
         ${stats_arg} \\
-        ${aavf_arg}
+        ${aavf_arg} \\
+        ${min_baseq_arg} \\
+        ${research_args}
     """
 
     stub:

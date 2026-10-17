@@ -37,6 +37,14 @@ jobs:
       - name: contamination_summary stub tests
         run: python3 tests/test_contamination_summary.py
 
+      - name: infra.json matches config and hides URIs
+        run: python3 tests/test_infra_json.py
+
+      - name: default research flags leave TSV/XML byte-identical
+        run: |
+          python3 -m pip install --user 'codonyat==1.3.1'
+          python3 tests/test_codonyat_research_flags.py
+
   test:
     name: test (${{ matrix.profile }})
     needs: lint

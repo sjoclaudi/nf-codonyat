@@ -3,6 +3,10 @@
     "$id": "https://raw.githubusercontent.com/sjoclaudi/nf-codonyat/main/nextflow_schema.json",
     "title": "sjoclaudi/nf-codonyat pipeline parameters",
     "description": "Codon-aware amino acid variant typing of viral amplicon NGS data (FASTQ or SAM); research use only",
+    "x-infra": {
+        "file": "assets/infra.json",
+        "source": "assets/infra.json (Kraken2 name, resourceLimits, region, versions; no URIs or queue)"
+    },
     "type": "object",
     "$defs": {
         "input_output_options": {
@@ -14,47 +18,55 @@
                     "type": "string",
                     "default": "hiv1",
                     "description": "Preset: hiv1 (default), sars-cov-2, influenza-a, rsv, hbv, hcv, or custom.",
-                    "enum": ["hiv1", "sars-cov-2", "influenza-a", "rsv", "hbv", "hcv", "custom"]
+                    "enum": ["hiv1", "sars-cov-2", "influenza-a", "rsv", "hbv", "hcv", "custom"],
+                    "x-ui": "basic"
                 },
                 "samplesheet": {
                     "type": "string",
                     "format": "file-path",
                     "exists": true,
-                    "description": "CSV with columns sample,fastq_1,fastq_2,sam (one row per sample: FASTQ or SAM). Relative paths are resolved against the CSV's folder. Paths may be local or s3:// URIs."
+                    "description": "CSV with columns sample,fastq_1,fastq_2,sam (one row per sample: FASTQ or SAM). Relative paths are resolved against the CSV's folder. Paths may be local or s3:// URIs.",
+                    "x-ui": "internal"
                 },
                 "reference": {
                     "type": "string",
                     "format": "file-path",
                     "exists": true,
-                    "description": "Reference FASTA; can be annotated in header or via --annotation. Required when preset=custom. Local path or s3:// URI."
+                    "description": "Reference FASTA; can be annotated in header or via --annotation. Required when preset=custom. Local path or s3:// URI.",
+                    "x-ui": "internal"
                 },
                 "primer_bed": {
                     "type": "string",
                     "format": "file-path",
                     "exists": true,
-                    "description": "6-column primer BED: chrom,start,end,name,pool,strand. Name must be <amplicon>_LEFT or <amplicon>_RIGHT. Required for custom preset without --amplicons. Local path or s3:// URI."
+                    "description": "6-column primer BED: chrom,start,end,name,pool,strand. Name must be <amplicon>_LEFT or <amplicon>_RIGHT. Required for custom preset without --amplicons. Local path or s3:// URI.",
+                    "x-ui": "internal"
                 },
                 "amplicons": {
                     "type": "string",
                     "format": "file-path",
                     "exists": true,
-                    "description": "Amplicons TSV: label,protein,reference,5p_seq,3p_seq,start,end. Mutually exclusive with --primer-bed. For backward compatibility only. Local path or s3:// URI."
+                    "description": "Amplicons TSV: label,protein,reference,5p_seq,3p_seq,start,end. Mutually exclusive with --primer-bed. For backward compatibility only. Local path or s3:// URI.",
+                    "x-ui": "internal"
                 },
                 "annotation": {
                     "type": "string",
                     "format": "file-path",
                     "exists": true,
-                    "description": "Annotation: GFF3 (CDS features) or BED (4 columns: chrom,start,end,name). If null, FASTA header annotation is used. Local path or s3:// URI."
+                    "description": "Annotation: GFF3 (CDS features) or BED (4 columns: chrom,start,end,name). If null, FASTA header annotation is used. Local path or s3:// URI.",
+                    "x-ui": "internal"
                 },
                 "validate_only": {
                     "type": "boolean",
-                    "description": "Validate inputs only (reference, primers, annotation). No Kraken2/alignment. Writes reference/validation.json and exits non-zero when valid is false. Fast (seconds)."
+                    "description": "Validate inputs only (reference, primers, annotation). No Kraken2/alignment. Writes reference/validation.json and exits non-zero when valid is false. Fast (seconds).",
+                    "x-ui": "internal"
                 },
                 "outdir": {
                     "type": "string",
                     "default": "results",
                     "description": "Output folder (local or s3:// URI).",
-                    "format": "directory-path"
+                    "format": "directory-path",
+                    "x-ui": "internal"
                 },
                 "publish_dir_mode": {
                     "type": "string",
@@ -67,11 +79,13 @@
                         "copy",
                         "copyNoFollow",
                         "move"
-                    ]
+                    ],
+                    "x-ui": "infra"
                 },
                 "save_intermediates": {
                     "type": "boolean",
-                    "description": "Also publish trimmed FASTQ, per-part BAMs, the strand-branch BAM/codon table, raw iVar output and Kraken2 per-read assignments."
+                    "description": "Also publish trimmed FASTQ, per-part BAMs, the strand-branch BAM/codon table, raw iVar output and Kraken2 per-read assignments.",
+                    "x-ui": "infra"
                 }
             },
             "required": [
@@ -86,32 +100,73 @@
                 "protein": {
                     "type": "string",
                     "default": "all",
-                    "description": "Protein(s) to analyse: one name, a comma-separated list (e.g. PR,RT,INT) or 'all' annotated proteins (one codonyat pass)."
+                    "description": "Protein(s) to analyse: one name, a comma-separated list (e.g. PR,RT,INT) or 'all' annotated proteins (one codonyat pass).",
+                    "x-ui": "basic"
                 },
                 "ratio_upper": {
                     "type": "number",
                     "default": 3.16227766,
-                    "description": "Strand ratio upper threshold (10^0.5)."
+                    "minimum": 1,
+                    "description": "Strand ratio upper threshold (10^0.5).",
+                    "x-ui": "advanced"
                 },
                 "ratio_lower": {
                     "type": "number",
                     "default": 0.316227766,
-                    "description": "Strand ratio lower threshold (10^-0.5)."
+                    "exclusiveMinimum": 0,
+                    "exclusiveMaximum": 1,
+                    "description": "Strand ratio lower threshold (10^-0.5).",
+                    "x-ui": "advanced"
                 },
                 "entropy_threshold": {
                     "type": "number",
                     "default": 0.0,
-                    "description": "Minimum Shannon entropy per position."
+                    "minimum": 0,
+                    "maximum": 4.33,
+                    "description": "Minimum Shannon entropy per position.",
+                    "x-ui": "advanced"
                 },
                 "emit_stats": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Publish samples/<id>/<id>.stats.tsv (Wilson CI, strand-bias, diversity). Passes --stats to codonyat-runner. Off by default so TSV/XML stay unchanged. Research use only."
+                    "description": "Publish samples/<id>/<id>.stats.tsv (Wilson CI, strand-bias, diversity). Passes --stats to codonyat-runner. Off by default so TSV/XML stay unchanged. Research use only.",
+                    "x-ui": "basic"
                 },
                 "emit_aavf": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Publish samples/<id>/<id>.aavf (AAVF v1.0). Passes --aavf to codonyat-runner. Off by default so TSV/XML stay unchanged. Research use only; no drug-resistance or clinical annotation."
+                    "description": "Publish samples/<id>/<id>.aavf (AAVF v1.0). Passes --aavf to codonyat-runner. Off by default so TSV/XML stay unchanged. Research use only; no drug-resistance or clinical annotation.",
+                    "x-ui": "basic"
+                },
+                "min_baseq": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 60,
+                    "description": "If set, pass --min-baseq to codonyat-runner: count a codon only when all three bases have Phred-like quality at least this value. Null (default) is off so TSV/XML stay byte-identical.",
+                    "x-ui": "advanced"
+                },
+                "min_freq": {
+                    "type": "number",
+                    "default": 0.01,
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Frequency floor (fraction 0–1) for the stats lowfreq flag and AAVF FILTER. Passed as --min-freq when --emit_stats or --emit_aavf is on.",
+                    "x-ui": "advanced"
+                },
+                "min_coverage": {
+                    "type": "integer",
+                    "default": 10,
+                    "minimum": 1,
+                    "description": "Coverage floor for the stats lowcov flag and AAVF FILTER. Passed as --min-coverage when --emit_stats or --emit_aavf is on.",
+                    "x-ui": "advanced"
+                },
+                "sb_alpha": {
+                    "type": "number",
+                    "default": 0.05,
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Fisher exact p-value cutoff for the stats sb (strand-bias) flag. Passed as --sb-alpha when --emit_stats or --emit_aavf is on.",
+                    "x-ui": "advanced"
                 }
             }
         },
@@ -123,36 +178,46 @@
                 "fastp_args": {
                     "type": "string",
                     "default": "--qualified_quality_phred 20 --unqualified_percent_limit 40 --length_required 50 --cut_tail --cut_tail_mean_quality 20",
-                    "description": "fastp arguments (paired-end runs add --detect_adapter_for_pe)."
+                    "description": "fastp arguments (paired-end runs add --detect_adapter_for_pe).",
+                    "x-ui": "advanced"
                 },
                 "merge_pairs": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Merge overlapping read pairs with BBMerge before alignment (paired-end only)."
+                    "description": "Merge overlapping read pairs with BBMerge before alignment (paired-end only).",
+                    "x-ui": "advanced"
                 },
                 "bbmerge_args": {
                     "type": "string",
-                    "description": "Extra BBMerge arguments (BBMerge defaults otherwise; ordered=t is always set)."
+                    "description": "Extra BBMerge arguments (BBMerge defaults otherwise; ordered=t is always set).",
+                    "x-ui": "advanced"
                 },
                 "strand_metrics_unmerged": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Also align all trimmed pairs before merging and report FWCOV/RVCOV/RATIO from that alignment (*_UNMERGED columns). Paired-end with --merge_pairs only."
+                    "description": "Also align all trimmed pairs before merging and report FWCOV/RVCOV/RATIO from that alignment (*_UNMERGED columns). Paired-end with --merge_pairs only.",
+                    "x-ui": "advanced"
                 },
                 "bowtie2_args": {
                     "type": "string",
                     "default": "--very-sensitive-local",
-                    "description": "Bowtie2 arguments (--reorder is always added)."
+                    "description": "Bowtie2 arguments (--reorder is always added).",
+                    "x-ui": "advanced"
                 },
                 "min_mapq": {
                     "type": "integer",
                     "default": 20,
-                    "description": "samtools view -q: minimum MAPQ (FASTQ and SAM samples)."
+                    "minimum": 0,
+                    "maximum": 60,
+                    "description": "samtools view -q: minimum MAPQ (FASTQ and SAM samples).",
+                    "x-ui": "basic"
                 },
                 "exclude_flags": {
                     "type": "string",
                     "default": "0x904",
-                    "description": "samtools view -F: alignments with these flags are removed (unmapped, secondary, supplementary)."
+                    "pattern": "^(0[xX][0-9A-Fa-f]+|[0-9]+)$",
+                    "description": "samtools view -F: alignments with these flags are removed (unmapped, secondary, supplementary).",
+                    "x-ui": "advanced"
                 }
             }
         },
@@ -163,45 +228,62 @@
             "properties": {
                 "target_taxid": {
                     "type": "integer",
-                    "description": "Kraken2 target clade taxid (null → preset value; 11676 for hiv1)."
+                    "description": "Kraken2 target clade taxid (null → preset value; 11676 for hiv1).",
+                    "x-ui": "advanced"
                 },
                 "target_label": {
                     "type": "string",
-                    "description": "Target label for display (null → preset value; HIV1 for hiv1)."
+                    "description": "Target label for display (null → preset value; HIV1 for hiv1).",
+                    "x-ui": "advanced"
                 },
                 "kraken2_db": {
                     "type": "string",
                     "format": "directory-path",
-                    "description": "Kraken2 database folder (e.g. Standard-8), local or s3:// prefix. Required for FASTQ samples unless --skip_contamination. Object-store prefixes are staged into the task (hash.k2d, opts.k2d, taxo.k2d)."
+                    "description": "Kraken2 database folder (e.g. Standard-8), local or s3:// prefix. Required for FASTQ samples unless --skip_contamination. Object-store prefixes are staged into the task (hash.k2d, opts.k2d, taxo.k2d).",
+                    "x-ui": "internal"
                 },
                 "skip_contamination": {
                     "type": "boolean",
-                    "description": "Skip the Kraken2 contamination report."
+                    "description": "Skip the Kraken2 contamination report.",
+                    "x-ui": "basic"
                 },
                 "kraken2_confidence": {
                     "type": "number",
                     "default": 0.0,
-                    "description": "Kraken2 --confidence."
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Kraken2 --confidence.",
+                    "x-ui": "advanced"
                 },
                 "kraken2_memory_mapping": {
                     "type": "boolean",
-                    "description": "Kraken2 --memory-mapping (database not loaded into RAM)."
+                    "description": "Kraken2 --memory-mapping (database not loaded into RAM).",
+                    "x-ui": "infra"
                 },
                 "contamination_warn_target_pct": {
                     "type": "number",
                     "default": 50.0,
-                    "description": "Warn when target is below this % of classified fragments."
+                    "minimum": 0,
+                    "maximum": 100,
+                    "description": "Warn when target is below this % of classified fragments.",
+                    "x-ui": "advanced"
                 },
                 "contamination_warn_hiv_pct": {
                     "type": "number",
                     "default": 50.0,
+                    "minimum": 0,
+                    "maximum": 100,
                     "description": "Deprecated alias for contamination_warn_target_pct (v0.4.0 compatibility).",
-                    "hidden": true
+                    "hidden": true,
+                    "x-ui": "internal"
                 },
                 "contamination_warn_human_pct": {
                     "type": "number",
                     "default": 50.0,
-                    "description": "Warn when human reads exceed this % of all fragments."
+                    "minimum": 0,
+                    "maximum": 100,
+                    "description": "Warn when human reads exceed this % of all fragments.",
+                    "x-ui": "advanced"
                 }
             }
         },
@@ -213,21 +295,29 @@
                 "subtype_panel": {
                     "type": "string",
                     "format": "directory-path",
-                    "description": "Panel folder with <bin>.fa per bin and panel.tsv (local or s3:// prefix). Null for presets except hiv1 (which uses bundled panel)."
+                    "description": "Panel folder with <bin>.fa per bin and panel.tsv (local or s3:// prefix). Null for presets except hiv1 (which uses bundled panel).",
+                    "x-ui": "internal"
                 },
                 "skip_subtype": {
                     "type": "boolean",
-                    "description": "Skip the subtype estimate."
+                    "description": "Skip the subtype estimate.",
+                    "x-ui": "basic"
                 },
                 "subtype_min_reads": {
                     "type": "integer",
                     "default": 100,
-                    "description": "Fewer reads assigned to the panel gives 'undetermined'."
+                    "minimum": 1,
+                    "maximum": 1000000,
+                    "description": "Fewer reads assigned to the panel gives 'undetermined'.",
+                    "x-ui": "advanced"
                 },
                 "subtype_min_margin": {
                     "type": "number",
                     "default": 10.0,
-                    "description": "Minimum difference (percentage points) between the top two bins; below it the call is flagged."
+                    "minimum": 0,
+                    "maximum": 100,
+                    "description": "Minimum difference (percentage points) between the top two bins; below it the call is flagged.",
+                    "x-ui": "advanced"
                 }
             }
         },
@@ -238,27 +328,40 @@
             "properties": {
                 "skip_consensus": {
                     "type": "boolean",
-                    "description": "Skip the consensus sequence."
+                    "description": "Skip the consensus sequence.",
+                    "x-ui": "basic"
                 },
                 "consensus_threshold": {
                     "type": "number",
                     "default": 0.5,
-                    "description": "iVar -t: bases making up at least this fraction of the depth; IUPAC code when more than one base is needed."
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "iVar -t: bases making up at least this fraction of the depth; IUPAC code when more than one base is needed.",
+                    "x-ui": "basic"
                 },
                 "consensus_min_depth": {
                     "type": "integer",
                     "default": 100,
-                    "description": "iVar -m: positions below this depth are N."
+                    "minimum": 1,
+                    "maximum": 100000,
+                    "description": "iVar -m: positions below this depth are N.",
+                    "x-ui": "basic"
                 },
                 "consensus_insertion_threshold": {
                     "type": "number",
                     "default": 0.5,
-                    "description": "iVar -c: insertion frequency threshold (majority deletions are applied)."
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "iVar -c: insertion frequency threshold (majority deletions are applied).",
+                    "x-ui": "advanced"
                 },
                 "consensus_min_bq": {
                     "type": "integer",
                     "default": 20,
-                    "description": "iVar -q: minimum base quality."
+                    "minimum": 0,
+                    "maximum": 60,
+                    "description": "iVar -q: minimum base quality.",
+                    "x-ui": "advanced"
                 }
             }
         },
@@ -270,45 +373,53 @@
                 "help": {
                     "type": "boolean",
                     "description": "Display the short help message and exit.",
-                    "hidden": true
+                    "hidden": true,
+                    "x-ui": "internal"
                 },
                 "helpFull": {
                     "type": "boolean",
                     "description": "Display the full help message and exit.",
-                    "hidden": true
+                    "hidden": true,
+                    "x-ui": "internal"
                 },
                 "validate_params": {
                     "type": "boolean",
                     "description": "Validate parameters against nextflow_schema.json via nf-schema.",
                     "default": true,
-                    "hidden": true
+                    "hidden": true,
+                    "x-ui": "internal"
                 },
                 "prov_enabled": {
                     "type": "boolean",
                     "description": "Write nf-prov provenance reports (BCO, WRROC, DAG) under <outdir>/pipeline_info/.",
-                    "default": false
+                    "default": false,
+                    "x-ui": "infra"
                 },
                 "pipeline_info_outdir": {
                     "type": "string",
                     "description": "Internal: outdir snapshot used for execution reports. Do not set.",
-                    "hidden": true
+                    "hidden": true,
+                    "x-ui": "internal"
                 },
                 "input": {
                     "type": "string",
                     "format": "file-path",
                     "description": "Alias for --samplesheet (CSV: sample,fastq_1,fastq_2,sam).",
-                    "hidden": true
+                    "hidden": true,
+                    "x-ui": "internal"
                 },
                 "showHidden": {
                     "type": "boolean",
                     "description": "Show hidden parameters in the help message.",
                     "default": false,
-                    "hidden": true
+                    "hidden": true,
+                    "x-ui": "internal"
                 },
                 "awsbatch_queue": {
                     "type": "string",
                     "default": "codonyat-queue",
-                    "description": "AWS Batch job queue used by -profile awsbatch (Spot only; no on-demand fallback)."
+                    "description": "AWS Batch job queue used by -profile awsbatch (Spot only; no on-demand fallback).",
+                    "x-ui": "internal"
                 }
             }
         }
