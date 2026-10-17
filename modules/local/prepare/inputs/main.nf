@@ -6,7 +6,7 @@ process PREPARE_REFERENCE {
     label 'process_single'
 
     conda "${moduleDir}/../../codonyat/run/environment.yml"
-    container 'ghcr.io/sjoclaudi/nf-codonyat:0.7.0-dev'
+    container 'ghcr.io/sjoclaudi/nf-codonyat:0.7.0'
 
     input:
     path reference
@@ -64,7 +64,7 @@ process CHECK_VALIDATION {
     label 'process_single'
 
     conda "${moduleDir}/../../codonyat/run/environment.yml"
-    container 'ghcr.io/sjoclaudi/nf-codonyat:0.7.0-dev'
+    container 'ghcr.io/sjoclaudi/nf-codonyat:0.7.0'
 
     input:
     path json

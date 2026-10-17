@@ -136,21 +136,21 @@ def test_module_does_not_pass_research_flags_unconditionally() -> None:
     print("ok  test_module_does_not_pass_research_flags_unconditionally")
 
 
-def test_hiv1_testdata(tmp: Path) -> None:
+def test_hiv1_testdata(tmp_path: Path) -> None:
     sam = ROOT / "assets" / "testdata" / "sample1.sam"
     ref = ROOT / "assets" / "testdata" / "reference.fasta"
     amp = ROOT / "assets" / "testdata" / "amplicons.tsv"
-    assert_default_flags_identical(sam, ref, amp, tmp, "hiv1")
-    high = tmp / "hiv1_bq60"
+    assert_default_flags_identical(sam, ref, amp, tmp_path, "hiv1")
+    high = tmp_path / "hiv1_bq60"
     run_runner(sam, ref, amp, high, ["--min-baseq", "60"])
-    base_tsv = tmp / "hiv1_base.tsv"
+    base_tsv = tmp_path / "hiv1_base.tsv"
     assert md5(base_tsv) != md5(high.with_suffix(".tsv"))
     print("ok  hiv1 --min-baseq 60 changes TSV (null stays identical)")
 
 
-def test_sarscov2_prepared(tmp: Path) -> None:
+def test_sarscov2_prepared(tmp_path: Path) -> None:
     ref, amp = prepare(
-        tmp / "sars_prep",
+        tmp_path / "sars_prep",
         [
             "--reference",
             str(ROOT / "assets" / "testdata" / "sarscov2" / "reference.fasta"),
@@ -162,14 +162,14 @@ def test_sarscov2_prepared(tmp: Path) -> None:
             "custom",
         ],
     )
-    sam = tmp / "sars.sam"
+    sam = tmp_path / "sars.sam"
     write_covering_sam(sam, ref, amp)
-    assert_default_flags_identical(sam, ref, amp, tmp, "test_sarscov2")
+    assert_default_flags_identical(sam, ref, amp, tmp_path, "test_sarscov2")
 
 
-def test_flua_prepared(tmp: Path) -> None:
+def test_flua_prepared(tmp_path: Path) -> None:
     ref, amp = prepare(
-        tmp / "flu_prep",
+        tmp_path / "flu_prep",
         [
             "--reference",
             str(ROOT / "assets" / "testdata" / "influenza" / "reference.fasta"),
@@ -181,19 +181,19 @@ def test_flua_prepared(tmp: Path) -> None:
             "custom",
         ],
     )
-    sam = tmp / "flu.sam"
+    sam = tmp_path / "flu.sam"
     write_covering_sam(sam, ref, amp)
-    assert_default_flags_identical(sam, ref, amp, tmp, "test_flua")
+    assert_default_flags_identical(sam, ref, amp, tmp_path, "test_flua")
 
 
 def main() -> None:
     assert Path(RUNNER).exists(), f"codonyat-runner not found: {RUNNER}"
     test_module_does_not_pass_research_flags_unconditionally()
     with tempfile.TemporaryDirectory() as raw:
-        tmp = Path(raw)
-        test_hiv1_testdata(tmp)
-        test_sarscov2_prepared(tmp)
-        test_flua_prepared(tmp)
+        tmp_path = Path(raw)
+        test_hiv1_testdata(tmp_path)
+        test_sarscov2_prepared(tmp_path)
+        test_flua_prepared(tmp_path)
     print("4 passed")
 
 

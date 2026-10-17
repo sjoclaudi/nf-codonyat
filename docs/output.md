@@ -246,7 +246,7 @@ The normalised FASTA actually given to Bowtie2 / codonyat / iVar. Headers use th
 
 | Field | Notes |
 |-------|-------|
-| `pipeline_version` | Manifest version (0.7.0-dev) |
+| `pipeline_version` | Manifest version (0.7.0) |
 | `preset` | `hiv1` / `sars-cov-2` / … / `custom` |
 | `target_taxid` | Integer or `null` |
 | `target_label` | Display label or `null` |

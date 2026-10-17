@@ -7,7 +7,7 @@ process STRAND_METRICS {
     label 'process_single'
 
     conda "${moduleDir}/../../codonyat/run/environment.yml"
-    container 'ghcr.io/sjoclaudi/nf-codonyat:0.7.0-dev'
+    container 'ghcr.io/sjoclaudi/nf-codonyat:0.7.0'
 
     input:
     tuple val(meta), path(merged_tsv), path(unmerged_tsv)
