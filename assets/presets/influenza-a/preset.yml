@@ -1,16 +1,16 @@
-# Influenza A preset (A/Puerto Rico/8/1934(H1N1), 8 segments)
-# No bundled primer scheme: provide --primer_bed (unverified).
+# Influenza A preset (scheme reference: CA/07/2009 + avian 1934 polymerase)
+# Primer scheme: quick-lab artic-flu-a/800/v1.0.0 (CC BY-SA 4.0, draft)
 # Research use only
 target_taxid: 11320
 target_label: InfluenzaA
-primer_unverified: true
-requires_primer_bed: true
+primer_unverified: false
+requires_primer_bed: false
 reference_accessions:
-  - NC_002023.1
-  - NC_002021.1
-  - NC_002022.1
-  - NC_002017.1
-  - NC_002019.1
-  - NC_002018.1
-  - NC_002016.1
-  - NC_002020.1
+  - pb2_1934_Avian_A_chicken_Rostock_45_1934_Germany_H7N1
+  - pb1_1934_Avian_A_chicken_Germany_1934_Germany_H7N1
+  - pa_1934_Avian_A_chicken_Germany_1934_Germany_H7N1
+  - NC_026433.1
+  - NC_026436.1
+  - NC_026434.1
+  - NC_026431.1
+  - NC_026432.1

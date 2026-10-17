@@ -158,8 +158,10 @@ workflow {
     if (!amplicons && !primer_bed) {
         if (params.preset != 'custom' && (preset_cfg.requires_primer_bed || preset_cfg.primer_unverified)) {
             error "Preset '${params.preset}' has no bundled primer scheme (unverified). Provide --primer_bed or --amplicons."
+        } else if (params.preset == 'custom' || preset_cfg.requires_primer_bed) {
+            error "Must provide either --amplicons (TSV) or --primer_bed (6-column BED)"
         }
-        error "Must provide either --amplicons (TSV) or --primer_bed (6-column BED)"
+        // requires_primer_bed false: skip primer trimming (empty amplicons TSV)
     }
 
     if (params.validate_params) {

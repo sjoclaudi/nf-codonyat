@@ -532,7 +532,7 @@ nextflow_pipeline {
         }
     }
 
-    test("unverified preset without --primer_bed fails with a clear message") {
+    test("influenza-a preset validate_only succeeds with bundled primers") {
 
         when {
             params {
@@ -543,9 +543,52 @@ nextflow_pipeline {
         }
 
         then {
+            assertAll(
+                { assert workflow.success },
+                { assert path("${outputDir}/reference/validation.json").json.valid == true },
+                { assert path("${outputDir}/pipeline_info/run_mode.json").json.preset == 'influenza-a' },
+                { assert path("${outputDir}/pipeline_info/run_mode.json").json.reference_accessions.size() == 8 },
+                { assert path("${outputDir}/reference/amplicons_used.tsv").readLines().size() == 15 }
+            )
+        }
+    }
+
+    test("hcv preset validate_only succeeds without a primer BED") {
+
+        when {
+            params {
+                preset        = "hcv"
+                validate_only = true
+                outdir        = "${outputDir}"
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success },
+                { assert path("${outputDir}/reference/validation.json").json.valid == true },
+                { assert path("${outputDir}/pipeline_info/run_mode.json").json.preset == 'hcv' },
+                { assert path("${outputDir}/pipeline_info/run_mode.json").json.reference_accessions == ['NC_004102.1'] },
+                { assert path("${outputDir}/reference/amplicons_used.tsv").readLines().size() == 1 }
+            )
+        }
+    }
+
+    test("custom preset without --primer_bed fails with a clear message") {
+
+        when {
+            params {
+                preset        = "custom"
+                reference     = "${projectDir}/assets/presets/hcv/reference.fasta"
+                validate_only = true
+                outdir        = "${outputDir}"
+            }
+        }
+
+        then {
             assert workflow.failed
             assert workflow.stdout.any { line ->
-                line.contains('unverified') && line.contains('--primer_bed')
+                line.contains('--primer_bed') || line.contains('--amplicons')
             }
         }
     }

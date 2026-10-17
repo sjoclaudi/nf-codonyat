@@ -34,6 +34,9 @@ jobs:
       - name: prepare_inputs stub tests
         run: python3 tests/test_prepare_inputs.py
 
+      - name: preset FASTA/BED load tests
+        run: python3 tests/test_presets.py
+
       - name: contamination_summary stub tests
         run: python3 tests/test_contamination_summary.py
 
