@@ -2,7 +2,7 @@
 
 Research use only.
 
-## v0.7.0-dev research flags (defaults)
+## v0.7.0 research flags (defaults)
 
 `codonyat-runner --help` (1.3.1): `--min-freq`, `--min-coverage` and `--sb-alpha` only set the
 stats / AAVF FILTER floors (defaults 0.01 / 10 / 0.05). They do not change codon TSV/XML.

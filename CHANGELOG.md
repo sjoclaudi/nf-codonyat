@@ -1,15 +1,18 @@
 # Changelog
 
-## [Unreleased]
+## [0.7.0] - 2026-10-17
 
 ### Added
-- **Schema `x-ui` annotations**: every `nextflow_schema.json` parameter is tagged `basic`, `advanced`, `infra` (shown read-only) or `internal` (hidden) so a SaaS config tab can be built from the schema. Safe `minimum`/`maximum`/`pattern` bounds added (fractions 0–1, percentages 0–100, MAPQ/BQ 0–60, exclusive strand-ratio bounds). `--awsbatch_queue` and `--kraken2_db` are `internal` (queue and bucket paths are never shown). `assets/infra.json` is the read-only pane: Kraken2 database name (last path component only), AWS Batch `process.resourceLimits` (16 CPU / 120 GB / 24 h), region, and pipeline / container / codonyat versions — no S3 URIs, buckets or queue (enforced by `tests/test_infra_json.py`).
-- **Research flag params** (advanced): `--min_baseq` (null / off so TSV/XML stay byte-identical), `--min_freq` (0.01), `--min_coverage` (10), `--sb_alpha` (0.05). The last three are passed to `codonyat-runner` only when `--emit_stats` or `--emit_aavf` is on (they only affect stats/AAVF flags). `--collapsed-read-counts` is not exposed. Default hiv1 / `test_sarscov2` / `test_flua` codon TSV/XML stay byte-identical.
-- **`-profile awsbatch`**: Spot-only AWS Batch executor (`conf/awsbatch.config`, queue `--awsbatch_queue`, default `codonyat-queue`, region `eu-central-1`). No Wave, Fusion or Seqera token. `s3://` inputs, Kraken2 database prefixes and `--outdir` are supported. Research use only.
+- **`-profile awsbatch`**: Spot-only AWS Batch executor (`conf/awsbatch.config`, queue `--awsbatch_queue`, default `codonyat-queue`, region `eu-central-1`). No Wave, Fusion or Seqera token. `s3://` inputs, Kraken2 database prefixes and `--outdir` are supported. Research use only (#14).
+- **Schema `x-ui` annotations**: every `nextflow_schema.json` parameter is tagged `basic`, `advanced`, `infra` (shown read-only) or `internal` (hidden) so a SaaS config tab can be built from the schema. Safe `minimum`/`maximum`/`pattern` bounds added (fractions 0–1, percentages 0–100, MAPQ/BQ 0–60, exclusive strand-ratio bounds). `--awsbatch_queue` and `--kraken2_db` are `internal` (queue and bucket paths are never shown). `assets/infra.json` is the read-only pane: Kraken2 database name (last path component only), AWS Batch `process.resourceLimits` (16 CPU / 120 GB / 24 h), region, and pipeline / container / codonyat versions — no S3 URIs, buckets or queue (enforced by `tests/test_infra_json.py`) (#16).
+- **Research flag params** (advanced): `--min_baseq` (null / off so TSV/XML stay byte-identical), `--min_freq` (0.01), `--min_coverage` (10), `--sb_alpha` (0.05). The last three are passed to `codonyat-runner` only when `--emit_stats` or `--emit_aavf` is on (they only affect stats/AAVF flags). `--collapsed-read-counts` is not exposed. Default hiv1 / `test_sarscov2` / `test_flua` codon TSV/XML stay byte-identical (#16).
+
+### Changed
+- Task image `ghcr.io/sjoclaudi/nf-codonyat:0.7.0` (codonyat remains **1.3.1**)
 
 ### Fixed
-- Samplesheet, reference, primer, annotation, Kraken2 database and subtype panel paths accept `s3://` URIs; Kraken2 DB prefixes stage as a directory (`hash.k2d`, `opts.k2d`, `taxo.k2d`).
-- `s3://` samplesheet rows are detected via the original URI / `toUriString()` (not `file().toString()`, which is `/bucket/key`); the FASTQ header is not read for remote paths. A remote `--kraken2_db` gets a cheap `exists()` check when credentials allow, otherwise a warning.
+- Samplesheet, reference, primer, annotation, Kraken2 database and subtype panel paths accept `s3://` URIs; Kraken2 DB prefixes stage as a directory (`hash.k2d`, `opts.k2d`, `taxo.k2d`) (#14).
+- `s3://` samplesheet rows are detected via the original URI / `toUriString()` (not `file().toString()`, which is `/bucket/key`); the FASTQ header is not read for remote paths. A remote `--kraken2_db` gets a cheap `exists()` check when credentials allow, otherwise a warning (#14).
 
 ## [0.6.0] - 2026-10-16
 
