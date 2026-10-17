@@ -212,7 +212,10 @@ or split between bins (flagged when the margin between the top two bins is below
 | `--publish_dir_mode` | `copy` | How to publish files |
 | `--awsbatch_queue` | `codonyat-queue` | AWS Batch job queue for `-profile awsbatch` (Spot only) |
 
-All parameters are also described in `nextflow_schema.json`.
+All parameters are also described in `nextflow_schema.json`. Each parameter has an `x-ui` level
+(`basic`, `advanced`, or `internal`) so a hosted UI can build its config tab from the schema.
+CPU, memory and time limits are `process.resourceLimits` in config, not params, and are never
+user-editable. See [docs/usage.md](docs/usage.md#config-tab-visibility-x-ui).
 
 ---
 

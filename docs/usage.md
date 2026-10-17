@@ -175,6 +175,21 @@ Nextflow reads `-c` files after the pipeline config has already placed the execu
 new folder, but the reports stay in the earlier `pipeline_info` folder (the profile's or the default
 `results/pipeline_info`); the pipeline prints a warning saying where they went.
 
+## Config-tab visibility (`x-ui`)
+
+Every parameter in `nextflow_schema.json` has an `x-ui` annotation so a hosted UI can build its
+config tab from the schema. `x-ui` is a JSON Schema `x-` vendor annotation: nf-schema ignores it
+during validation. Defaults and runtime behaviour are unchanged.
+
+| Level | Shown in the config tab | Parameters |
+|-------|-------------------------|------------|
+| `basic` | Primary controls | `preset`, `protein`, `emit_stats`, `emit_aavf`, `skip_contamination`, `skip_subtype`, `skip_consensus`, `min_mapq`, `consensus_threshold`, `consensus_min_depth` |
+| `advanced` | Advanced / expert | Strand-ratio and entropy thresholds, trim/merge/align extra args, `exclude_flags`, Kraken2 confidence and warning %, target taxid/label, subtype min reads/margin, consensus insertion threshold and min base quality |
+| `internal` | Hidden | Inputs and paths, `outdir`, `publish_dir_mode`, `save_intermediates`, `kraken2_db`, `kraken2_memory_mapping`, `awsbatch_queue`, `validate_only`, `prov_enabled`, help/hidden flags, and deprecated aliases (`input`, `contamination_warn_hiv_pct`) |
+
+CPU, memory and time limits are Nextflow `process.resourceLimits` in config (see below), not
+pipeline params. They are never user-editable in the config tab.
+
 ## Profiles
 
 Use `-profile` to select an execution environment:

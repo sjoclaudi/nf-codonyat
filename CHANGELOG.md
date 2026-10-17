@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+- **Schema `x-ui` annotations**: every `nextflow_schema.json` parameter is tagged `basic`, `advanced` or `internal` so a SaaS config tab can be built from the schema. Safe `minimum`/`maximum`/`pattern` bounds added (fractions 0–1, percentages 0–100, MAPQ/BQ 0–60, exclusive strand-ratio bounds). Defaults and runtime behaviour are unchanged. CPU/memory/time limits remain `process.resourceLimits` (config), not params.
 - **`-profile awsbatch`**: Spot-only AWS Batch executor (`conf/awsbatch.config`, queue `--awsbatch_queue`, default `codonyat-queue`, region `eu-central-1`). No Wave, Fusion or Seqera token. `s3://` inputs, Kraken2 database prefixes and `--outdir` are supported. Research use only.
 
 ### Fixed
