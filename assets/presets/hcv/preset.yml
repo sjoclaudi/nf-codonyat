@@ -1,9 +1,9 @@
 # HCV preset (genotype 1 H77, NC_004102.1)
-# No bundled primer scheme: provide --primer_bed (unverified).
+# No tiled public primer scheme: optional --primer_bed; default is no primer trimming.
 # Research use only
 target_taxid: 11103
 target_label: HCV
-primer_unverified: true
-requires_primer_bed: true
+primer_unverified: false
+requires_primer_bed: false
 reference_accessions:
   - NC_004102.1

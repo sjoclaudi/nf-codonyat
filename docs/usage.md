@@ -38,7 +38,7 @@ nextflow run sjoclaudi/nf-codonyat \
 | Flag | Description |
 |------|-------------|
 | `--input` (or `--samplesheet`) | Path to samplesheet CSV (not required with `--validate_only`) |
-| `--preset` | Preset: `hiv1` (default), `sars-cov-2`, `influenza-a`, `rsv`, `hbv`, `hcv`, or `custom` |
+| `--preset` | Preset: `hiv1` (default), `sars-cov-2`, `influenza-a`, `influenza-b`, `rsv`, `hbv`, `hcv`, or `custom` |
 
 **For custom preset:**
 | Flag | Description |
@@ -55,10 +55,11 @@ nextflow run sjoclaudi/nf-codonyat \
 |--------|-----------|---------|---------------|-------|
 | `hiv1` (default) | HXB2 `K03455\|HIVHXB2CG` | bundled 7-column amplicons TSV (OQ-10) | bundled A/B/M pol panel | HIV-1 tables match v0.4.0 plus appended `TARGET_*` |
 | `sars-cov-2` | MN908947.3 | ARTIC nCoV-2019 **V4.1** 6-column BED (CC BY 4.0) | none (auto-skipped) | Cite ARTIC if you use this preset |
-| `influenza-a` | PR8, 8 segments | **unverified** — supply `--primer_bed` | none | Primers are not bundled and are not invented |
-| `rsv` | NC_001781.1 | **unverified** — supply `--primer_bed` | none | |
-| `hbv` | NC_003977.2 (origin-crossing P/L) | **unverified** — supply `--primer_bed` | none | |
-| `hcv` | NC_004102.1 | **unverified** — supply `--primer_bed` | none | |
+| `influenza-a` | artic-flu-a scheme refs (CA/07/2009 + avian 1934 polymerase), 8 segments | quick-lab **artic-flu-a/800/v1.0.0** (CC BY-SA 4.0, draft) | none | Cite the scheme if you use this preset |
+| `influenza-b` | B/Lee/1940 NC_002204.1–NC_002211.1 | none bundled (Zhou et al. 2014 full-segment method); optional `--primer_bed` | none | `requires_primer_bed: false` |
+| `rsv` | NC_038235.1 (A) + NC_001781.1 (B) | quick-lab **rsva-rsvb/1000/v1.0.0** (CC BY-SA 4.0, tested) | none | Multi-record FASTA so BED chrom names match |
+| `hbv` | X02763 (circular; origin-crossing P/L) | quick-lab **hbv/600/v2.1.0** (CC BY-SA 4.0) | none | Cite the scheme if you use this preset |
+| `hcv` | NC_004102.1 | none bundled (Bull et al. 2016 ~9 kb amplicon); optional `--primer_bed` | none | `requires_primer_bed: false` |
 | `custom` | `--reference` required | `--primer_bed` or `--amplicons` | optional | Kraken2 auto-skipped if no DB or `--target_taxid` |
 
 See each preset's `assets/presets/<name>/SOURCES.md`.
@@ -213,6 +214,8 @@ Use `-profile` to select an execution environment:
 - `test` — bundled HIV-1 test dataset: two synthetic SAM samples, one real FASTQ pair and a tiny Kraken2 database (combine with one of the above, e.g. `-profile test,docker`)
 - `test_sarscov2` — synthetic MN908947.3 amplicon pairs in custom mode (`--reference`, `--primer_bed`, `--annotation`, `--skip_contamination`)
 - `test_flua` — synthetic influenza A HA+NA pairs in custom mode (`--reference`, `--primer_bed`, `--annotation`, `--skip_contamination`)
+- `test_hbv` — synthetic X02763 pairs with `--preset hbv` (bundled primers, `--skip_contamination`)
+- `test_hcv` — synthetic H77 POLY pairs with `--preset hcv` (no primer BED, `--skip_contamination`)
 - `standard` — local execution; `codonyat-runner` must already be on your `PATH`
 - `awsbatch` — AWS Batch (Spot queue `--awsbatch_queue`, default `codonyat-queue`, region `eu-central-1`). Head node needs no Docker. See the README AWS Batch section. Research use only.
 
@@ -222,7 +225,7 @@ Runs `PREPARE_REFERENCE` (always exits 0 so artefacts publish) then `CHECK_VALID
 
 Each issue in `validation.json` has `code`, `file`, `line` (nullable) and `message`. Codes include:
 
-`REF_EMPTY`, `REF_TOO_LARGE` (total > 100 kb), `REF_READ_ERROR`, `BED_COLUMNS`, `BED_STRAND`, `BED_EMPTY`, `BED_OUT_OF_RANGE`, `CHROM_MISMATCH`, `BED_NAMING`, `BED_UNPAIRED`, `BED_CHROM_MISMATCH`, `BED_ORDER`, `BED_READ_ERROR`, `AMP_COLUMNS`, `AMP_READ_ERROR`, `AMP_XOR_BED`, `AMP_OR_BED`, `ANNOTATION_FORMAT`, `CDS_UNSUPPORTED` (minus strand, including a FASTA-header interval with start > end), `CDS_INVALID_NAME`, `CDS_OUT_OF_RANGE`, `CDS_NOT_MULTIPLE_OF_3`, `SAMPLESHEET`, `PROTEIN_UNKNOWN`. Warnings: `NO_ANNOTATION`, `AMPLICON_NO_CDS`. `AMPLICON_NO_CDS` is not reported when a CDS_* error is already present.
+`REF_EMPTY`, `REF_TOO_LARGE` (total > 100 kb), `REF_READ_ERROR`, `BED_COLUMNS`, `BED_STRAND`, `BED_EMPTY`, `BED_OUT_OF_RANGE`, `CHROM_MISMATCH`, `BED_NAMING`, `BED_UNPAIRED`, `BED_CHROM_MISMATCH`, `BED_ORDER` (LEFT not before RIGHT, unless the pair wraps a circular origin), `BED_READ_ERROR`, `AMP_COLUMNS`, `AMP_READ_ERROR`, `AMP_XOR_BED`, `ANNOTATION_FORMAT`, `CDS_UNSUPPORTED` (minus strand, including a FASTA-header interval with start > end), `CDS_INVALID_NAME`, `CDS_OUT_OF_RANGE`, `CDS_NOT_MULTIPLE_OF_3`, `SAMPLESHEET`, `PROTEIN_UNKNOWN`. Warnings: `NO_ANNOTATION`, `AMPLICON_NO_CDS`, `NO_PRIMERS` (no BED or amplicons TSV; primer trimming skipped). `AMPLICON_NO_CDS` is not reported when a CDS_* error is already present. Custom mode without primers still fails in `main.nf` before validation.
 
 ## Small machines (< 16 GB RAM)
 

@@ -1,9 +1,9 @@
-# HBV preset (strain ayw, NC_003977.2, circular; P/L wrap the origin)
-# No bundled primer scheme: provide --primer_bed (unverified).
+# HBV preset (X02763, circular; P/L wrap the origin)
+# Primer scheme: quick-lab hbv/600/v2.1.0 (CC BY-SA 4.0)
 # Research use only
 target_taxid: 10407
 target_label: HBV
-primer_unverified: true
-requires_primer_bed: true
+primer_unverified: false
+requires_primer_bed: false
 reference_accessions:
-  - NC_003977.2
+  - X02763

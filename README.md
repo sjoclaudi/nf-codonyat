@@ -101,6 +101,10 @@ nextflow run sjoclaudi/nf-codonyat -profile test,docker
 nextflow run sjoclaudi/nf-codonyat -profile test_sarscov2,docker
 # Bundled influenza A custom-mode test (HA+NA, contamination skipped)
 nextflow run sjoclaudi/nf-codonyat -profile test_flua,docker
+# Bundled HBV preset test (X02763, contamination skipped)
+nextflow run sjoclaudi/nf-codonyat -profile test_hbv,docker
+# Bundled HCV preset test (no primer BED, contamination skipped)
+nextflow run sjoclaudi/nf-codonyat -profile test_hcv,docker
 ```
 
 ---
@@ -173,10 +177,10 @@ or split between bins (flagged when the margin between the top two bins is below
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `--preset` | `hiv1` | `hiv1`, `sars-cov-2`, `influenza-a`, `rsv`, `hbv`, `hcv`, or `custom` |
+| `--preset` | `hiv1` | `hiv1`, `sars-cov-2`, `influenza-a`, `influenza-b`, `rsv`, `hbv`, `hcv`, or `custom` |
 | `--input` / `--samplesheet` | *required unless `--validate_only`* | CSV with `sample,fastq_1,fastq_2,sam` columns |
 | `--reference` | from preset | Annotated reference FASTA (required when `preset=custom`) |
-| `--primer_bed` | from preset | 6-column primer BED (`_LEFT`/`_RIGHT`); required for unverified presets |
+| `--primer_bed` | from preset | 6-column primer BED (`_LEFT`/`_RIGHT`); optional when the preset sets `requires_primer_bed: false` |
 | `--amplicons` | from preset | 7-column amplicons TSV (mutually exclusive with `--primer_bed`) |
 | `--annotation` | FASTA header | GFF3 CDS, BED (4 columns), or annotation TSV |
 | `--validate_only` | `false` | Validate inputs only; writes `reference/validation.json`; exits non-zero on failure |

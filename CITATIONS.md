@@ -54,6 +54,18 @@ If you use nf-codonyat for your analysis, please cite it as follows:
 
   > ARTIC Network. nCoV-2019 / SARS-CoV-2 sequencing primers and protocol. https://github.com/artic-network/primer-schemes (V4.1).
 
+- [Quick Lab primer schemes](https://github.com/quick-lab/primerschemes) (influenza A artic-flu-a/800/v1.0.0, RSV rsva-rsvb/1000/v1.0.0, HBV hbv/600/v2.1.0; CC BY-SA 4.0)
+
+  > Quick Lab. primerschemes. https://github.com/quick-lab/primerschemes
+
+- Zhou et al. 2014 (influenza B full-segment amplification; no tiled scheme is bundled)
+
+  > Zhou B, Lin X, Wang W, Halpin RA, Bera J, Stockwell TB, Ghedin E, Wentworth DE. Universal influenza B virus genomic amplification facilitates sequencing, diagnostics, and reverse genetics. J Clin Microbiol. 2014. PubMed PMID: 24501036.
+
+- Bull et al. 2016 (HCV ~9 kb amplicon method; no tiled scheme is bundled)
+
+  > Bull RA, Eltahla AA, Rodrigo C, et al. A method for near full-length amplification and sequencing for six hepatitis C virus genotypes. BMC Genomics. 2016. https://doi.org/10.1186/s12864-016-2575-8
+
 - [MultiQC](https://pubmed.ncbi.nlm.nih.gov/27312411/)
 
   > Ewels P, Magnusson M, Lundin S, Käller M. MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics. 2016 Oct 1;32(19):3047-8. doi: 10.1093/bioinformatics/btw354. PubMed PMID: 27312411.

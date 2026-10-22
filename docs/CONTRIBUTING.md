@@ -60,6 +60,8 @@ nf-test test --profile docker
 nextflow run . -profile test,docker
 nextflow run . -profile test_sarscov2,docker
 nextflow run . -profile test_flua,docker
+nextflow run . -profile test_hbv,docker
+nextflow run . -profile test_hcv,docker
 ```
 
 ## Style Guide

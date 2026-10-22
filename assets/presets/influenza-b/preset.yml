@@ -1,0 +1,16 @@
+# Influenza B preset (B/Lee/1940, 8 segments)
+# No tiled public primer scheme: optional --primer_bed; default is no primer trimming.
+# Research use only
+target_taxid: 11520
+target_label: InfluenzaB
+primer_unverified: false
+requires_primer_bed: false
+reference_accessions:
+  - NC_002204.1
+  - NC_002205.1
+  - NC_002206.1
+  - NC_002207.1
+  - NC_002208.1
+  - NC_002209.1
+  - NC_002210.1
+  - NC_002211.1

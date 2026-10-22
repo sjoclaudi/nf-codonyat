@@ -10,12 +10,24 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+try:
+    import pytest
+
+    @pytest.fixture
+    def tmp(tmp_path: Path) -> Path:
+        return tmp_path
+except ImportError:
+    pass
 PREPARE = ROOT / "bin" / "prepare_inputs.py"
 HIV_FASTA = ROOT / "assets" / "presets" / "hiv1" / "reference.fasta"
 HIV_AMP = ROOT / "assets" / "presets" / "hiv1" / "amplicons.tsv"
 SARS_FASTA = ROOT / "assets" / "presets" / "sars-cov-2" / "reference.fasta"
 SARS_BED = ROOT / "assets" / "presets" / "sars-cov-2" / "primers.bed"
 FLU_FASTA = ROOT / "assets" / "presets" / "influenza-a" / "reference.fasta"
+FLU_BED = ROOT / "assets" / "presets" / "influenza-a" / "primers.bed"
+HCV_FASTA = ROOT / "assets" / "presets" / "hcv" / "reference.fasta"
 
 
 def run(args: list[str], strict: bool = True) -> subprocess.CompletedProcess:
@@ -88,15 +100,34 @@ def test_sars_bed_converter(tmp: Path) -> None:
     assert mode["reference_accessions"] == ["MN908947.3"]
 
 
-def test_flu_requires_primers(tmp: Path) -> None:
-    rc = run(["--reference", str(FLU_FASTA), "--preset", "influenza-a", "--outdir", str(tmp)])
-    assert rc.returncode == 1
+def test_flu_bundled_bed(tmp: Path) -> None:
+    rc = run(
+        [
+            "--reference", str(FLU_FASTA),
+            "--primer-bed", str(FLU_BED),
+            "--preset", "influenza-a",
+            "--outdir", str(tmp),
+        ]
+    )
+    assert rc.returncode == 0, rc.stderr
     val = load_json(tmp / "validation.json")
-    assert val["valid"] is False
-    assert any(e["code"] == "AMP_OR_BED" for e in val["errors"])
+    assert val["valid"] is True, val["errors"]
     mode = load_json(tmp / "run_mode.json")
     assert isinstance(mode["reference_accessions"], list)
     assert len(mode["reference_accessions"]) == 8
+    amps = (tmp / "amplicons_used.tsv").read_text().splitlines()
+    assert len(amps) == 15  # header + 14 amplicons
+
+
+def test_hcv_no_primers(tmp: Path) -> None:
+    rc = run(["--reference", str(HCV_FASTA), "--preset", "hcv", "--outdir", str(tmp)])
+    assert rc.returncode == 0, rc.stderr
+    val = load_json(tmp / "validation.json")
+    assert val["valid"] is True, val["errors"]
+    assert any(w["code"] == "NO_PRIMERS" for w in val["warnings"])
+    amp = (tmp / "amplicons_used.tsv").read_text().splitlines()
+    assert amp[0].split("\t") == ["label", "protein", "reference", "5p_seq", "3p_seq", "start", "end"]
+    assert len(amp) == 1
 
 
 def test_unpaired_bed_nonzero(tmp: Path) -> None:
@@ -184,19 +215,21 @@ def test_amplicon_no_cds_is_warning(tmp: Path) -> None:
 
 
 def test_no_strict_exit_still_zero(tmp: Path) -> None:
-    rc = run(
-        ["--reference", str(FLU_FASTA), "--preset", "influenza-a", "--outdir", str(tmp)],
-        strict=False,
-    )
+    fa = tmp / "big.fasta"
+    fa.write_text(">big Dummy(dummy):1-100001\n" + "A" * 100001 + "\n")
+    amp = tmp / "amp.tsv"
+    amp.write_text("label\tprotein\treference\t5p_seq\t3p_seq\tstart\tend\nA\tall\tbig\tAAA\tTTT\t1\t10\n")
+    rc = run(["--reference", str(fa), "--amplicons", str(amp), "--outdir", str(tmp / "out")], strict=False)
     assert rc.returncode == 0
-    assert load_json(tmp / "validation.json")["valid"] is False
+    assert load_json(tmp / "out" / "validation.json")["valid"] is False
 
 
 def main() -> int:
     tests = [
         test_hiv1_valid,
         test_sars_bed_converter,
-        test_flu_requires_primers,
+        test_flu_bundled_bed,
+        test_hcv_no_primers,
         test_unpaired_bed_nonzero,
         test_header_start_gt_end_is_minus_strand,
         test_minus_strand_rejected,
