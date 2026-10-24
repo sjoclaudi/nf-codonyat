@@ -5,7 +5,7 @@ process CONTAMINATION_COMBINE {
     label 'process_single'
 
     conda "${moduleDir}/../../codonyat/run/environment.yml"
-    container 'ghcr.io/sjoclaudi/nf-codonyat:0.8.0-dev'
+    container 'ghcr.io/sjoclaudi/nf-codonyat:0.8.1'
 
     input:
     path tables, stageAs: 'inputs/*'
