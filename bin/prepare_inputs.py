@@ -516,6 +516,31 @@ def write_annotation_used(path: Path, state: State) -> None:
             )
 
 
+def whole_record_placeholder_rows(state: State) -> list[dict]:
+    """One row per record covering 1..len so codonyat 1.3.1 accepts the TSV.
+
+    Primer-sequence cells must be non-empty: codonyat splits rows on any
+    whitespace, so blank 5p_seq/3p_seq would collapse the column count.
+    """
+    rows = []
+    for rid in state.record_order:
+        seq = state.records.get(rid, "")
+        if not seq:
+            continue
+        rows.append(
+            {
+                "label": f"{rid}_full",
+                "protein": "all",
+                "reference": rid,
+                "5p_seq": "N",
+                "3p_seq": "N",
+                "start": 1,
+                "end": len(seq),
+            }
+        )
+    return rows
+
+
 def write_amplicons_used(path: Path, rows: list[dict]) -> None:
     with open(path, "w", newline="") as fh:
         w = csv.DictWriter(
@@ -670,6 +695,7 @@ def main(argv: list[str] | None = None) -> int:
             "primers",
             "No --amplicons or --primer-bed: primer trimming skipped",
         )
+        state.amplicon_rows = whole_record_placeholder_rows(state)
 
     amplicon_overlaps_cds(state)
     maybe_samplesheet(args.samplesheet, state)

@@ -167,6 +167,30 @@ def test_sarscov2_prepared(tmp_path: Path) -> None:
     assert_default_flags_identical(sam, ref, amp, tmp_path, "test_sarscov2")
 
 
+def test_influenza_b_no_primers_accepted(tmp_path: Path) -> None:
+    """Cheap: prepare influenza-b with no BED and run codonyat-runner on a tiny SAM."""
+    ref, amp = prepare(
+        tmp_path / "ibv_prep",
+        [
+            "--reference",
+            str(ROOT / "assets" / "presets" / "influenza-b" / "reference.fasta"),
+            "--preset",
+            "influenza-b",
+        ],
+    )
+    rows = amp.read_text().splitlines()
+    assert len(rows) == 9
+    first = rows[1].split("\t")
+    assert first[0].endswith("_full")
+    assert first[5] == "1"
+    sam = tmp_path / "ibv.sam"
+    write_covering_sam(sam, ref, amp)
+    run_runner(sam, ref, amp, tmp_path / "ibv", [])
+    tsv = tmp_path / "ibv.tsv"
+    assert tsv.is_file() and tsv.stat().st_size > 0
+    print("ok  influenza-b no primers: placeholder amplicons accepted by codonyat 1.3.1")
+
+
 def test_flua_prepared(tmp_path: Path) -> None:
     ref, amp = prepare(
         tmp_path / "flu_prep",
@@ -194,7 +218,8 @@ def main() -> None:
         test_hiv1_testdata(tmp_path)
         test_sarscov2_prepared(tmp_path)
         test_flua_prepared(tmp_path)
-    print("4 passed")
+        test_influenza_b_no_primers_accepted(tmp_path)
+    print("5 passed")
 
 
 if __name__ == "__main__":

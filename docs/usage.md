@@ -55,7 +55,7 @@ nextflow run sjoclaudi/nf-codonyat \
 |--------|-----------|---------|---------------|-------|
 | `hiv1` (default) | HXB2 `K03455\|HIVHXB2CG` | bundled 7-column amplicons TSV (OQ-10) | bundled A/B/M pol panel | HIV-1 tables match v0.4.0 plus appended `TARGET_*` |
 | `sars-cov-2` | MN908947.3 | ARTIC nCoV-2019 **V4.1** 6-column BED (CC BY 4.0) | none (auto-skipped) | Cite ARTIC if you use this preset |
-| `influenza-a` | artic-flu-a scheme refs (CA/07/2009 + avian 1934 polymerase), 8 segments | quick-lab **artic-flu-a/800/v1.0.0** (CC BY-SA 4.0, draft) | none | Cite the scheme if you use this preset |
+| `influenza-a` | artic-flu-a scheme refs (CA/07/2009 + avian 1934 polymerase), 8 segments | quick-lab **artic-flu-a/800/v1.0.0** (CC BY-SA 4.0, draft) | none | Cite the scheme if you use this preset. Polymerase segments are the 1934 avian ARTIC references, so modern samples will show lineage differences there. |
 | `influenza-b` | B/Lee/1940 NC_002204.1–NC_002211.1 | none bundled (Zhou et al. 2014 full-segment method); optional `--primer_bed` | none | `requires_primer_bed: false` |
 | `rsv` | NC_038235.1 (A) + NC_001781.1 (B) | quick-lab **rsva-rsvb/1000/v1.0.0** (CC BY-SA 4.0, tested) | none | Multi-record FASTA so BED chrom names match |
 | `hbv` | X02763 (circular; origin-crossing P/L) | quick-lab **hbv/600/v2.1.0** (CC BY-SA 4.0) | none | Cite the scheme if you use this preset |

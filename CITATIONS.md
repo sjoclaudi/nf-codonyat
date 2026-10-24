@@ -6,7 +6,7 @@ If you use nf-codonyat for your analysis, please cite it as follows:
 
 > **nf-codonyat: A Nextflow pipeline for codon-aware amino acid variant typing of viral amplicon NGS data**
 >
-> Marc Noguera Julian.
+> Marc Noguera-Julian.
 >
 > _GitHub_ 2026. doi: TBD
 >
