@@ -1,6 +1,6 @@
 # nf-codonyat
 
-**Codon-aware amino acid variant typing of viral amplicon NGS data — Nextflow pipeline (v0.7.0)**
+**Codon-aware amino acid variant typing of viral amplicon NGS data — Nextflow pipeline (v0.8.1)**
 
 Wraps the [`codonyat`](https://github.com/mnoguera/codonyat) Python package in a Nextflow pipeline for viral amplicon NGS analysis.
 
@@ -8,10 +8,10 @@ Wraps the [`codonyat`](https://github.com/mnoguera/codonyat) Python package in a
 > frequencies). The outputs are descriptive: QC, a contamination report, a read-mapping based subtype
 > estimate (bundled for HIV-1), a consensus sequence, and codon and amino-acid frequency tables.
 
-**What's new in v0.7.0:**
-- `-profile awsbatch` (Spot only) and `s3://` inputs / `--outdir`
-- Schema `x-ui` levels (`basic` / `advanced` / `infra` / `internal`) and safe ranges; [`assets/infra.json`](assets/infra.json)
-- Research flag params `--min_baseq` / `--min_freq` / `--min_coverage` / `--sb_alpha` (defaults leave codon TSV/XML identical); codonyat **1.3.1**
+**What's new in v0.8.1:**
+- No-primer runs no longer crash (`amplicons_used.tsv` placeholder rows); influenza-a IUPAC `R`→`A` and PA-X 252 aa; HBV duplicate amplicon removed
+- CI covers `-profile test_hbv` / `test_hcv`; manifest author **Marc Noguera-Julian**
+- v0.8.0: bundled influenza-a / rsv / hbv primer schemes (CC BY-SA 4.0) and an influenza-b preset; research use only
 
 ---
 
@@ -254,7 +254,7 @@ See [docs/output.md](docs/output.md) for the columns of every table.
 ## Software
 
 - **Local steps** (codonyat and the helper scripts in `bin/`, Python standard library only):
-  container `ghcr.io/sjoclaudi/nf-codonyat:0.8.0-dev` built from the `Dockerfile`, or the conda environment
+  container `ghcr.io/sjoclaudi/nf-codonyat:0.8.1` built from the `Dockerfile`, or the conda environment
   `modules/local/codonyat/run/environment.yml`.
   Both install `codonyat==1.3.1` from PyPI.
 - **Third-party steps** use [nf-core modules](https://nf-co.re/modules) (`modules/nf-core/`, pinned in
@@ -306,7 +306,7 @@ git clone https://github.com/sjoclaudi/nf-codonyat.git
 cd nf-codonyat
 
 nextflow lint .                          # must be clean; CI enforces it
-docker build -t ghcr.io/sjoclaudi/nf-codonyat:0.8.0-dev .   # task image (CI builds it for the docker tests)
+docker build -t ghcr.io/sjoclaudi/nf-codonyat:0.8.1 .   # task image (CI builds it for the docker tests)
 nextflow run . -profile test,docker      # or test,conda
 nf-test test --profile docker            # or --profile conda
 ```

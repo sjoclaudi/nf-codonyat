@@ -14,7 +14,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # CI publishes this image on pushes to main / version tags (never from a PR).
-# Local docker tests: docker build -t ghcr.io/sjoclaudi/nf-codonyat:0.8.0-dev .
+# Local docker tests: docker build -t ghcr.io/sjoclaudi/nf-codonyat:0.8.1 .
 RUN pip install --no-cache-dir "biopython==1.85" "codonyat==1.3.1"
 
 CMD ["codonyat-runner", "--help"]
