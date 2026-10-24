@@ -31,7 +31,7 @@ process CODONYAT_RUN {
     label 'process_low'
 
     conda "${moduleDir}/environment.yml"
-    container 'ghcr.io/sjoclaudi/nf-codonyat:0.8.1'
+    container 'ghcr.io/sjoclaudi/nf-codonyat:0.9.0-dev'
 
     input:
     tuple val(meta), path(sam)
