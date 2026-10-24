@@ -117,6 +117,10 @@ def test_flu_bundled_bed(tmp: Path) -> None:
     assert len(mode["reference_accessions"]) == 8
     amps = (tmp / "amplicons_used.tsv").read_text().splitlines()
     assert len(amps) == 15  # header + 14 amplicons
+    annot = (tmp / "annotation_used.tsv").read_text().splitlines()
+    header = annot[0].split("\t")
+    pax = [dict(zip(header, r.split("\t"))) for r in annot[1:] if r.split("\t")[1] == "PA-X"][0]
+    assert pax["intervals"] == "1-570;572-760"
 
 
 def test_hcv_no_primers(tmp: Path) -> None:
@@ -127,7 +131,9 @@ def test_hcv_no_primers(tmp: Path) -> None:
     assert any(w["code"] == "NO_PRIMERS" for w in val["warnings"])
     amp = (tmp / "amplicons_used.tsv").read_text().splitlines()
     assert amp[0].split("\t") == ["label", "protein", "reference", "5p_seq", "3p_seq", "start", "end"]
-    assert len(amp) == 1
+    assert len(amp) == 2
+    row = amp[1].split("\t")
+    assert row == ["NC_004102.1_full", "all", "NC_004102.1", "N", "N", "1", "9646"]
 
 
 def test_unpaired_bed_nonzero(tmp: Path) -> None:

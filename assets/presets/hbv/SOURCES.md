@@ -29,6 +29,9 @@ Research use only.
 - Unpaired LEFT-only spike-in primers (`de464cad_3`, `de464cad_4`, `de464cad_5`)
   are omitted because each amplicon must have exactly one `_LEFT` and one
   `_RIGHT`.
+- `de464cad_2` is omitted: its insert (1107–1692) duplicates `f3d7635a_2`
+  (LEFT starts 2 bp later; same RIGHT). It is an alt of the same tile, not a
+  second amplicon.
 - One amplicon (`f3d7635a_5`) crosses the circular origin (LEFT near the end,
   RIGHT near the start).
 - The seventh sequence column of the upstream ARTIC BED is dropped; primer

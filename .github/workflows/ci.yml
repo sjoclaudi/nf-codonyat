@@ -192,6 +192,68 @@ jobs:
           test -f results-test-flua/samples/FLU_SIM/FLU_SIM.tsv
           test ! -d results-test-flua/contamination
 
+      - name: Run HBV preset test profile
+        if: matrix.profile == 'docker'
+        run: nextflow run . -profile test_hbv,${{ matrix.profile }} --outdir results-test-hbv
+
+      - name: Check HBV outputs
+        if: matrix.profile == 'docker'
+        run: |
+          python3 - <<'PY'
+          import csv, json
+          v = json.load(open("results-test-hbv/reference/validation.json"))
+          assert v["valid"] is True
+          assert v["errors"] == []
+          m = json.load(open("results-test-hbv/pipeline_info/run_mode.json"))
+          assert m["preset"] == "hbv"
+          assert m["reference_accessions"] == ["X02763"]
+          labels = [r.split("\t")[0] for r in open("results-test-hbv/reference/amplicons_used.tsv") if not r.startswith("label")]
+          assert "f3d7635a_0" in labels
+          assert "de464cad_2" not in labels
+          PY
+          test -f results-test-hbv/samples/HBV_SIM/HBV_SIM.tsv
+          test ! -d results-test-hbv/contamination
+
+      - name: Run HCV preset test profile
+        if: matrix.profile == 'docker'
+        run: nextflow run . -profile test_hcv,${{ matrix.profile }} --outdir results-test-hcv
+
+      - name: Check HCV outputs
+        if: matrix.profile == 'docker'
+        run: |
+          python3 - <<'PY'
+          import json
+          v = json.load(open("results-test-hcv/reference/validation.json"))
+          assert v["valid"] is True
+          assert v["errors"] == []
+          assert any(w["code"] == "NO_PRIMERS" for w in v["warnings"])
+          m = json.load(open("results-test-hcv/pipeline_info/run_mode.json"))
+          assert m["preset"] == "hcv"
+          assert m["reference_accessions"] == ["NC_004102.1"]
+          rows = [r.rstrip("\n").split("\t") for r in open("results-test-hcv/reference/amplicons_used.tsv")]
+          assert rows[0] == ["label", "protein", "reference", "5p_seq", "3p_seq", "start", "end"]
+          assert len(rows) == 2
+          assert rows[1][0] == "NC_004102.1_full"
+          assert rows[1][2] == "NC_004102.1"
+          assert rows[1][5] == "1"
+          PY
+          test -f results-test-hcv/samples/HCV_SIM/HCV_SIM.tsv
+          test ! -d results-test-hcv/contamination
+
+      - name: influenza-b validate_only (no primers)
+        if: matrix.profile == 'docker'
+        run: |
+          nextflow run . -profile docker --preset influenza-b --validate_only --outdir results-validate-ibv
+          python3 - <<'PY'
+          import json
+          v = json.load(open("results-validate-ibv/reference/validation.json"))
+          assert v["valid"] is True
+          assert any(w["code"] == "NO_PRIMERS" for w in v["warnings"])
+          rows = [r.rstrip("\n").split("\t") for r in open("results-validate-ibv/reference/amplicons_used.tsv")]
+          assert rows[0][0] == "label"
+          assert len(rows) == 9  # header + 8 segments
+          PY
+
       - name: Upload results on failure
         if: failure()
         uses: actions/upload-artifact@v7
@@ -201,6 +263,9 @@ jobs:
             results-test/
             results-test-sarscov2/
             results-test-flua/
+            results-test-hbv/
+            results-test-hcv/
+            results-validate-ibv/
             .nf-test/tests/*/meta/
             .nextflow.log
           if-no-files-found: ignore

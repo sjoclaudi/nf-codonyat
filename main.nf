@@ -161,7 +161,8 @@ workflow {
         } else if (params.preset == 'custom' || preset_cfg.requires_primer_bed) {
             error "Must provide either --amplicons (TSV) or --primer_bed (6-column BED)"
         }
-        // requires_primer_bed false: skip primer trimming (empty amplicons TSV)
+        // requires_primer_bed false: skip primer trimming; write whole-record
+        // placeholder amplicon rows so codonyat 1.3.1 accepts the TSV
     }
 
     if (params.validate_params) {

@@ -23,21 +23,25 @@ def run(args: list[str], strict: bool = True) -> subprocess.CompletedProcess:
     return subprocess.run(cmd, capture_output=True, text=True)
 
 
-def fasta_ids_and_lens(path: Path) -> dict[str, int]:
-    rec: dict[str, int] = {}
+def fasta_ids_and_seq(path: Path) -> dict[str, str]:
+    rec: dict[str, str] = {}
     rid = None
-    n = 0
+    seq: list[str] = []
     for line in path.read_text().splitlines():
         if line.startswith(">"):
             if rid is not None:
-                rec[rid] = n
+                rec[rid] = "".join(seq)
             rid = line[1:].split()[0]
-            n = 0
+            seq = []
         else:
-            n += len(line.strip())
+            seq.append(line.strip())
     if rid is not None:
-        rec[rid] = n
+        rec[rid] = "".join(seq)
     return rec
+
+
+def fasta_ids_and_lens(path: Path) -> dict[str, int]:
+    return {rid: len(seq) for rid, seq in fasta_ids_and_seq(path).items()}
 
 
 def parse_yml_accessions(path: Path) -> list[str]:
@@ -144,11 +148,32 @@ def test_hcv_and_ibv_load_without_primers(tmp_path: Path) -> None:
         val = json.loads((out / "validation.json").read_text())
         assert val["valid"] is True, val["errors"]
         assert any(w["code"] == "NO_PRIMERS" for w in val["warnings"])
+        recs = fasta_ids_and_lens(d / "reference.fasta")
         amp = (out / "amplicons_used.tsv").read_text().splitlines()
-        assert amp == ["label\tprotein\treference\t5p_seq\t3p_seq\tstart\tend"] or amp[
-            0
-        ].split("\t") == ["label", "protein", "reference", "5p_seq", "3p_seq", "start", "end"]
-        assert len(amp) == 1
+        header = amp[0].split("\t")
+        assert header == ["label", "protein", "reference", "5p_seq", "3p_seq", "start", "end"]
+        rows = [r.split("\t") for r in amp[1:]]
+        assert len(rows) == len(recs), name
+        for row, (rid, slen) in zip(rows, recs.items()):
+            # seven tokens after whitespace split: empty 5p/3p would crash codonyat 1.3.1
+            assert len(row) == 7 and all(row), (name, row)
+            assert row[0] == f"{rid}_full"
+            assert row[1] == "all"
+            assert row[2] == rid
+            assert row[5] == "1"
+            assert row[6] == str(slen)
+
+
+def test_preset_references_acgt_or_acgtn() -> None:
+    allowed = set("ACGTN")
+    for name in BUNDLED:
+        recs = fasta_ids_and_seq(PRESETS / name / "reference.fasta")
+        assert recs, name
+        for rid, seq in recs.items():
+            letters = set(seq.upper())
+            assert letters, (name, rid)
+            extra = letters - allowed
+            assert not extra, (name, rid, extra)
 
 
 def test_hbv_origin_crossing_amplicon(tmp_path: Path) -> None:
@@ -179,6 +204,7 @@ def test_hbv_origin_crossing_amplicon(tmp_path: Path) -> None:
     amps = (out / "amplicons_used.tsv").read_text().splitlines()
     labels = [r.split("\t")[0] for r in amps[1:]]
     assert "f3d7635a_5" in labels
+    assert "de464cad_2" not in labels
     wrap = next(r.split("\t") for r in amps[1:] if r.startswith("f3d7635a_5\t"))
     # start (left.end+1) > end (right.start) for the origin-crossing pair
     assert int(wrap[5]) > int(wrap[6])
@@ -191,6 +217,7 @@ def main() -> int:
         test_preset_yml_accessions_match_fasta,
         test_each_preset_loads,
         test_hcv_and_ibv_load_without_primers,
+        test_preset_references_acgt_or_acgtn,
         test_hbv_origin_crossing_amplicon,
     ]
     failed = 0

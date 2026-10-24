@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.8.0-dev]
 
 ### Added
 - Bundled tiled primer schemes (CC BY-SA 4.0) for **influenza-a** (`artic-flu-a/800/v1.0.0`, draft), **rsv** (`rsva-rsvb/1000/v1.0.0`, tested) and **hbv** (`hbv/600/v2.1.0`). Alt primers collapsed to one `_LEFT`/`_RIGHT` pair per amplicon; 6-column BED; `primer_unverified: false` and `requires_primer_bed: false`. Research use only.
@@ -12,9 +12,16 @@
 - **rsv** is a two-record FASTA (NC_038235.1 RSV-A and NC_001781.1 RSV-B) so BED chrom names match.
 - **hbv** reference is scheme X02763 (NCBI X02763.1 rotated to the scheme origin); origin-crossing P/L/PreS2 annotation is kept.
 - **hcv** keeps NC_004102.1 and no longer requires `--primer_bed` (Bull et al. 2016 single-amplicon method cited; optional user BED still accepted).
-- Primer trimming is skipped when no BED/amplicons are given and `requires_primer_bed` is false (empty `amplicons_used.tsv`, `NO_PRIMERS` warning). Custom mode and HIV-1 / SARS-CoV-2 behaviour are unchanged.
+- Primer trimming is skipped when no BED/amplicons are given and `requires_primer_bed` is false (`NO_PRIMERS` warning plus one whole-record placeholder amplicon per reference so codonyat 1.3.1 accepts the TSV). Custom mode and HIV-1 / SARS-CoV-2 behaviour are unchanged.
+- Manifest author spelled **Marc Noguera-Julian** (hyphen, no accent).
 - Origin-crossing primer pairs on circular references (HBV `f3d7635a_5`) are accepted.
 - Docs and examples use the single `s3://codonyat` bucket (`samples/`, `results/`, `refdb/`, `nf-work/`) instead of `s3://codonyat-nf-work` / `s3://codonyat-refdb`. `tests/test_infra_json.py` leak-check flags any `s3://` URI and `codonyat/`-style bucket paths, not the plain word in version fields.
+
+### Fixed
+- Running without a primer BED no longer crashes `CODONYAT_STRAND` (`ValueError: Amplicon file amplicons_used.tsv contains no definitions`). `amplicons_used.tsv` gets one placeholder row per reference record covering the whole record.
+- **influenza-a** HA `NC_026433.1` positions 716 and 719 and NP `NC_026436.1` position 341: IUPAC `R` resolved to `A` (majority CA/07/2009 GenBank CDS; the ARTIC scheme FASTA still has `R`). PA-X annotation extended from `1-570,572-700` to `1-570,572-760` (252 aa plus the natural stop).
+- HBV primer `de464cad_2` removed: insert 1107–1692 duplicates `f3d7635a_2`.
+- CI docker job runs `-profile test_hbv` and `-profile test_hcv`.
 
 ## [0.7.0] - 2026-10-17
 
