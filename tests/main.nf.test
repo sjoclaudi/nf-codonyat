@@ -569,7 +569,7 @@ nextflow_pipeline {
                 { assert path("${outputDir}/reference/validation.json").json.valid == true },
                 { assert path("${outputDir}/pipeline_info/run_mode.json").json.preset == 'hcv' },
                 { assert path("${outputDir}/pipeline_info/run_mode.json").json.reference_accessions == ['NC_004102.1'] },
-                { assert path("${outputDir}/reference/amplicons_used.tsv").readLines().size() == 1 }
+                { assert path("${outputDir}/reference/amplicons_used.tsv").readLines().size() == 2 }
             )
         }
     }
