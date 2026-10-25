@@ -25,12 +25,14 @@
                     "type": "string",
                     "description": "Public nf-codonyat viral iGenome key (HIV1, HCV, SARS_COV_2, INFLUENZA_A, INFLUENZA_B, RSV or HBV).",
                     "default": null,
-                    "pattern": "^[A-Za-z0-9_ -]+$"
+                    "pattern": "^[A-Za-z0-9_ -]+$",
+                    "x-ui": "basic"
                 },
                 "igenomes_base": {
                     "type": "string",
                     "description": "Directory or HTTPS/S3 base for paths in assets/igenomes/manifest.json.",
-                    "default": null
+                    "default": null,
+                    "x-ui": "internal"
                 },
                 "samplesheet": {
                     "type": "string",
