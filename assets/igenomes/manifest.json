@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "description": "Public viral reference catalog for nf-codonyat. These references support infectious-disease NGS research and clinical assay development, including genotype and resistance surveillance. They are not part of AWS iGenomes and are maintained here because AWS iGenomes has no HIV, HCV, SARS-CoV-2, influenza, RSV, or HBV entries.",
+  "repository": "https://github.com/sjoclaudi/nf-codonyat",
+  "entries": {
+    "HIV1": {
+      "preset": "hiv1",
+      "species": "HIV-1",
+      "assembly": "HXB2",
+      "accessions": ["K03455|HIVHXB2CG"],
+      "reference": "assets/presets/hiv1/reference.fasta",
+      "amplicons": "assets/presets/hiv1/amplicons.tsv",
+      "sha256": "7979e61d337673834c30c2601c09cbfb7e46fac69be7a75c5dd27425c42fbb83",
+      "source": "NCBI K03455.1 / HXB2",
+      "license": "Public domain / NCBI data"
+    },
+    "HCV": {
+      "preset": "hcv",
+      "species": "Hepatitis C virus",
+      "assembly": "H77 genotype 1a",
+      "accessions": ["NC_004102.1"],
+      "reference": "assets/presets/hcv/reference.fasta",
+      "sha256": "34d383d75e419c477858801c158c75e0d7f54e6af68426341c1bdea2a59a3933",
+      "source": "NCBI RefSeq NC_004102.1",
+      "license": "Public domain / NCBI data"
+    },
+    "SARS_COV_2": {
+      "preset": "sars-cov-2",
+      "species": "Severe acute respiratory syndrome coronavirus 2",
+      "assembly": "Wuhan-Hu-1",
+      "accessions": ["MN908947.3"],
+      "reference": "assets/presets/sars-cov-2/reference.fasta",
+      "primer_bed": "assets/presets/sars-cov-2/primers.bed",
+      "sha256": "aa6f7a9212ace8ac4fd34d752a0ed29999acb0ef85179027d0bb9dc5ba267f50",
+      "source": "NCBI GenBank MN908947.3; ARTIC nCoV-2019 V4.1 primers",
+      "license": "NCBI data; primers CC BY 4.0"
+    },
+    "INFLUENZA_A": {
+      "preset": "influenza-a",
+      "species": "Influenza A virus",
+      "assembly": "artic-flu-a scheme reference",
+      "accessions": ["NC_026433.1", "NC_026434.1", "NC_026435.1", "NC_026436.1", "NC_026437.1", "NC_026438.1", "NC_026439.1", "NC_026440.1"],
+      "reference": "assets/presets/influenza-a/reference.fasta",
+      "primer_bed": "assets/presets/influenza-a/primers.bed",
+      "sha256": "13f9e64d82e79c7a45d916ac1ce17531974706b4406b621b8456e00c7019f79e",
+      "source": "NCBI RefSeq records used by the artic-flu-a scheme",
+      "license": "NCBI data; see assets/presets/influenza-a/SOURCES.md"
+    },
+    "INFLUENZA_B": {
+      "preset": "influenza-b",
+      "species": "Influenza B virus",
+      "assembly": "B/Lee/1940",
+      "accessions": ["NC_002204.1", "NC_002205.1", "NC_002206.1", "NC_002207.1", "NC_002208.1", "NC_002209.1", "NC_002210.1", "NC_002211.1"],
+      "reference": "assets/presets/influenza-b/reference.fasta",
+      "sha256": "0379a602236b3fd3c6b7b9ab5b6f3b8308989cd16ff98a0f43fe98f07df88c04",
+      "source": "NCBI RefSeq B/Lee/1940",
+      "license": "Public domain / NCBI data"
+    },
+    "RSV": {
+      "preset": "rsv",
+      "species": "Respiratory syncytial virus",
+      "assembly": "RSV-A/B complete genomes",
+      "accessions": ["NC_038235.1", "NC_001781.1"],
+      "reference": "assets/presets/rsv/reference.fasta",
+      "primer_bed": "assets/presets/rsv/primers.bed",
+      "sha256": "5d8e38d7e3f739bbe086345031f0aa264202285752ccfb1ea71e03b42c0f7e41",
+      "source": "NCBI RefSeq NC_038235.1 and NC_001781.1",
+      "license": "Public domain / NCBI data"
+    },
+    "HBV": {
+      "preset": "hbv",
+      "species": "Hepatitis B virus",
+      "assembly": "X02763 scheme reference",
+      "accessions": ["X02763.1"],
+      "reference": "assets/presets/hbv/reference.fasta",
+      "primer_bed": "assets/presets/hbv/primers.bed",
+      "sha256": "c7781ed2467af04b2a76f877a0bf02c635e3d36598742d28a73e4121f27c9f7e",
+      "source": "NCBI GenBank X02763.1",
+      "license": "Public domain / NCBI data"
+    }
+  }
+}
