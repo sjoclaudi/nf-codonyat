@@ -103,16 +103,43 @@ def loadPreset(String name) {
     ]
 }
 
-def printHeader() {
+def loadIgenome(String name) {
+    if (!name) {
+        return [:]
+    }
+    def manifest = new groovy.json.JsonSlurper().parse(file("${projectDir}/assets/igenomes/manifest.json"))
+    def entry = manifest.entries[name.toString()]
+    if (!entry) {
+        error "Unknown iGenome '${name}'. Available entries: ${manifest.entries.keySet().sort().join(', ')}"
+    }
+    def base = params.igenomes_base ?: projectDir.toString()
+    def resolve = { value ->
+        if (!value) return null
+        if (value.toString() ==~ /^(https?|s3):\/\/.*/) {
+            return value.toString()
+        }
+        return "${base.toString().replaceAll('/$', '')}/${value}"
+    }
+    return [
+        preset     : entry.preset,
+        reference  : resolve.call(entry.reference),
+        amplicons  : resolve.call(entry.amplicons),
+        primer_bed : resolve.call(entry.primer_bed),
+        annotation : resolve.call(entry.annotation),
+        accession  : entry.accessions,
+    ]
+}
+
+def printHeader(String selected_preset, String selected_reference, String selected_primers) {
     log.info """
     nf-codonyat v${workflow.manifest.version}
     Codon-aware amino acid variant typing (research use only)
     ${workflow.manifest.homePage}
     -------------------------------------------------------
-    preset      : ${params.preset}
+    preset      : ${selected_preset}
     samplesheet : ${params.input ?: params.samplesheet}
-    reference   : ${params.reference ?: 'from preset'}
-    primers     : ${params.primer_bed ?: params.amplicons ?: 'from preset'}
+    reference   : ${selected_reference ?: 'from preset'}
+    primers     : ${selected_primers ?: 'from preset'}
     protein     : ${params.protein}
     kraken2_db  : ${params.skip_contamination ? 'skipped' : params.kraken2_db ?: '(none)'}
     subtype     : ${params.skip_subtype ? 'skipped' : params.subtype_panel ?: 'from preset'}
@@ -128,16 +155,22 @@ workflow {
     def help_requested = params.help || params.helpFull
     if (!help_requested) {
 
-    def preset_cfg = loadPreset(params.preset as String)
+    def igenome_cfg = loadIgenome(params.genome as String)
+    def effective_preset = igenome_cfg.preset ?: (params.preset as String)
+    def preset_cfg = loadPreset(effective_preset)
     def samplesheet = params.input ?: params.samplesheet
-    def reference = params.reference ?: preset_cfg.reference
+    def reference = params.reference ?: igenome_cfg.reference ?: preset_cfg.reference
     def amplicons = params.amplicons
     def primer_bed = params.primer_bed
-    def annotation = params.annotation
+    def annotation = params.annotation ?: igenome_cfg.annotation
     def target_taxid = params.target_taxid ?: preset_cfg.target_taxid
     def target_label = params.target_label ?: preset_cfg.target_label
     def subtype_panel = params.subtype_panel ?: preset_cfg.subtype_panel
 
+    if (!amplicons && !primer_bed && igenome_cfg.reference) {
+        amplicons = igenome_cfg.amplicons
+        primer_bed = igenome_cfg.primer_bed
+    }
     if (!amplicons && !primer_bed) {
         amplicons = preset_cfg.amplicons
         primer_bed = preset_cfg.primer_bed
@@ -156,9 +189,9 @@ workflow {
         error "Cannot specify both --amplicons and --primer_bed (mutually exclusive)"
     }
     if (!amplicons && !primer_bed) {
-        if (params.preset != 'custom' && (preset_cfg.requires_primer_bed || preset_cfg.primer_unverified)) {
-            error "Preset '${params.preset}' has no bundled primer scheme (unverified). Provide --primer_bed or --amplicons."
-        } else if (params.preset == 'custom' || preset_cfg.requires_primer_bed) {
+        if (effective_preset != 'custom' && (preset_cfg.requires_primer_bed || preset_cfg.primer_unverified)) {
+            error "Preset '${effective_preset}' has no bundled primer scheme (unverified). Provide --primer_bed or --amplicons."
+        } else if (effective_preset == 'custom' || preset_cfg.requires_primer_bed) {
             error "Must provide either --amplicons (TSV) or --primer_bed (6-column BED)"
         }
         // requires_primer_bed false: skip primer trimming; write whole-record
@@ -176,7 +209,7 @@ workflow {
         warn_target = params.contamination_warn_hiv_pct
     }
 
-    def auto_skip_contamination = (params.preset == 'custom') && (!params.kraken2_db || !target_taxid)
+    def auto_skip_contamination = (effective_preset == 'custom') && (!params.kraken2_db || !target_taxid)
     // hiv1 still requires a DB for FASTQ unless --skip_contamination (checked in VALIDATE_INPUT)
     def run_contamination = !params.skip_contamination && params.kraken2_db && target_taxid && !auto_skip_contamination
     def kraken2_skip_reason = null
@@ -197,10 +230,11 @@ workflow {
                  "Use --outdir or -params-file to keep results and reports together."
     }
 
-    printHeader()
+    printHeader(effective_preset, params.reference ?: igenome_cfg.reference,
+        params.primer_bed ?: params.amplicons ?: igenome_cfg.primer_bed ?: igenome_cfg.amplicons)
 
     def meta = [
-        preset               : params.preset,
+        preset               : effective_preset,
         target_taxid         : target_taxid,
         target_label         : target_label,
         kraken2_skipped      : !run_contamination,
