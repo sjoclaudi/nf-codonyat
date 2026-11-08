@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.9.0-dev]
+## [0.9.0] - 2026-11-08
 
 ### Changed
 - Updated to codonyat **1.3.2** (streaming read view and CIGAR blocks: flat memory and faster on large SAMs). TSV, XML and stats output is unchanged from 1.3.1; AAVF differs only in the `##source` version stamp. The task image and conda environment are pinned to the new release.
