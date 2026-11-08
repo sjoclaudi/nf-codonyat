@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Default research flags leave codon TSV/XML byte-identical.
 
-codonyat 1.3.1: --min-freq / --min-coverage / --sb-alpha only affect stats/AAVF
+codonyat 1.3.2: --min-freq / --min-coverage / --sb-alpha only affect stats/AAVF
 flags (defaults 0.01 / 10 / 0.05). --min-baseq is off when omitted and changes
 counts when set. The pipeline does not pass those three unless emit_stats or
 emit_aavf is on, and does not pass --min-baseq when null.
@@ -188,7 +188,7 @@ def test_influenza_b_no_primers_accepted(tmp_path: Path) -> None:
     run_runner(sam, ref, amp, tmp_path / "ibv", [])
     tsv = tmp_path / "ibv.tsv"
     assert tsv.is_file() and tsv.stat().st_size > 0
-    print("ok  influenza-b no primers: placeholder amplicons accepted by codonyat 1.3.1")
+    print("ok  influenza-b no primers: placeholder amplicons accepted by codonyat 1.3.2")
 
 
 def test_flua_prepared(tmp_path: Path) -> None:

@@ -517,7 +517,7 @@ def write_annotation_used(path: Path, state: State) -> None:
 
 
 def whole_record_placeholder_rows(state: State) -> list[dict]:
-    """One row per record covering 1..len so codonyat 1.3.1 accepts the TSV.
+    """One row per record covering 1..len so codonyat 1.3.2 accepts the TSV.
 
     Primer-sequence cells must be non-empty: codonyat splits rows on any
     whitespace, so blank 5p_seq/3p_seq would collapse the column count.

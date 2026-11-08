@@ -11,7 +11,7 @@
     "versions": {
         "pipeline": "0.9.0-dev",
         "container": "0.9.0-dev",
-        "codonyat": "1.3.1"
+        "codonyat": "1.3.2"
     },
     "sources": {
         "kraken2_db_name": "last path component of the hosted Kraken2 database (params.kraken2_db is internal)",

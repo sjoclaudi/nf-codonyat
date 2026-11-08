@@ -10,7 +10,7 @@
  *          [--stats <prefix>.stats.tsv] [--aavf <prefix>.aavf]
  *          [--min-baseq] [--min-freq] [--min-coverage] [--sb-alpha]
  *
- *  codonyat 1.3.1 streams the alignments (flat memory) and counts every
+ *  codonyat 1.3.2 streams the alignments (flat memory) and counts every
  *  requested protein in one pass. Multi-protein XML matches 1.1.0 / v0.4.0
  *  (<Protein name="X"> wrappers). Default TSV/XML match 1.3.0 / 1.2.1 on
  *  uncollapsed names (do not pass --collapsed-read-counts). --stats and

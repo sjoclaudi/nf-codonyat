@@ -238,7 +238,7 @@ Seven columns: `label`, `protein`, `reference`, `5p_seq`, `3p_seq`, `start`, `en
 coordinates). From `--amplicons` or derived from a 6-column `--primer_bed`.
 When the preset has `requires_primer_bed: false` and no BED was given, one
 placeholder row per reference record covers the whole record (`<id>_full`,
-dummy `N` primer sequences) so codonyat 1.3.1 accepts the file; primer
+dummy `N` primer sequences) so codonyat 1.3.2 accepts the file; primer
 trimming is still skipped (`NO_PRIMERS`). A wrapping circular amplicon may have
 `start` > `end`.
 

@@ -141,8 +141,8 @@ Outputs are published to `samples/<sample>/` (TSV, XML), `fastqc/`, `fastp/`, `a
 
 ### 2.8 Software packaging and execution environments
 
-- **codonyat steps** (`CODONYAT_RUN`, `CODONYAT_SUMMARY`) use codonyat 1.0.1 and Biopython 1.85 from either:
-  - a conda environment file (`modules/local/codonyat/run/environment.yml`: conda-forge Python 3.12 and Biopython 1.85, codonyat 1.0.1 via pip); or
+- **codonyat steps** (`CODONYAT_RUN`, `CODONYAT_SUMMARY`) use codonyat 1.3.2 and Biopython 1.85 from either:
+  - a conda environment file (`modules/local/codonyat/run/environment.yml`: conda-forge Python 3.12 and Biopython 1.85, codonyat 1.3.2 via pip); or
   - the container image `ghcr.io/sjoclaudi/nf-codonyat:0.1.0`, built from the repository's `Dockerfile` (python:3.12-slim with the same versions). The CI workflow publishes this image on pushes to `main`. TODO: confirm the image is published and public before submission.
 - **nf-core modules** bring their own BioContainers images and conda environments: FastQC 0.12.1, fastp 1.3.6, bowtie2 2.5.4 (with samtools 1.21 for sorting), samtools 1.24 and MultiQC 1.35.
 - **Profiles:** `docker`, `conda`, `mamba` and `singularity`, plus a `test` profile with the bundled data. The docker and conda profiles are tested (Section 3). The singularity and mamba profiles are defined but have not been tested.

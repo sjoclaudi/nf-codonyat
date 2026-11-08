@@ -4,7 +4,7 @@ Research use only.
 
 ## v0.7.0 research flags (defaults)
 
-`codonyat-runner --help` (1.3.1): `--min-freq`, `--min-coverage` and `--sb-alpha` only set the
+`codonyat-runner --help` (1.3.2): `--min-freq`, `--min-coverage` and `--sb-alpha` only set the
 stats / AAVF FILTER floors (defaults 0.01 / 10 / 0.05). They do not change codon TSV/XML.
 `--min-baseq` is off when omitted; when set it filters counted codons.
 
@@ -16,7 +16,7 @@ nf-codonyat therefore:
 
 So the default hiv1 (`-profile test`), `test_sarscov2` and `test_flua` runner command is
 unchanged, and those profiles' codon TSV/XML stay byte-identical. Proof (no Docker):
-`python3 tests/test_codonyat_research_flags.py` runs the 1.3.1 runner on the hiv1 testdata SAM
+`python3 tests/test_codonyat_research_flags.py` runs the 1.3.2 runner on the hiv1 testdata SAM
 and on references/amplicons prepared like `test_sarscov2` / `test_flua`; TSV/XML MD5s match
 with and without the default extra flags. `--min-baseq 60` changes the hiv1 table (testdata
 qualities are Phred 40).
